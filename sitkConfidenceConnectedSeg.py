@@ -1,7 +1,8 @@
 #Add the location where the Linux virtual machine is installing the SimpleITK module
 import sys
 sys.path.append("/home/shippable/.local/lib/python2.7/site-packages")
-sys.path.appen("/home/shippable/.local/lib/python2.7/site-packages/SimpleITK-0.9.1-py2.7-linux-x86_64.egg")
+sys.path.append("/home/shippable/.local/lib/python2.7/site-packages/SimpleITK-0.9.1-py2.7-linux-x86_64.egg")
+sys.path.append("/usr/local/lib/python2.7/dist-packages/SimpleITK-0.9.1-py2.7-linux-x86_64.egg")
 print(sys.path)
 
 # import numpy as np
