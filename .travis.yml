@@ -14,7 +14,9 @@ python:
 #install: "pip install --upgrade pip"
 before_install:
   #Install SimpleITK
-  - sudo pip install --allow-external SimpleITK --trusted-host www.simpleitk.org
+  - sudo easy_install SimpleITK
+#  - brew install
+#  - sudo pip install --allow-external SimpleITK --trusted-host www.simpleitk.org
 # command to run tests
 script: python sitkConfidenceConnectedSeg.py
 
