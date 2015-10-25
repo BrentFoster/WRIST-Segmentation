@@ -15,6 +15,7 @@ python:
 before_install:
    - "sudo pip install --upgrade pip"
    - "sudo pip install --allow-external SimpleITK --trusted-host www.simpleitk.org"
+   - ls
   #Install SimpleITK
 #  - sudo easy_install SimpleITK
 #  - brew install
