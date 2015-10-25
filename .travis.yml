@@ -14,10 +14,11 @@ python:
 #install: "pip install --upgrade pip"
 before_install:
    -sudo pip install --upgrade pip
+   - sudo pip install --allow-external SimpleITK --trusted-host www.simpleitk.org
   #Install SimpleITK
 #  - sudo easy_install SimpleITK
 #  - brew install
- - sudo pip install --allow-external SimpleITK --trusted-host www.simpleitk.org
+ 
 # command to run tests
 script: python sitkConfidenceConnectedSeg.py
 
