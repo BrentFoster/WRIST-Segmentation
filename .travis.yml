@@ -18,10 +18,11 @@ before_install:
    #- "sudo pip install --allow-external SimpleITK --trusted-host www.simpleitk.org SimpleITK"
    - wget http://sourceforge.net/projects/simpleitk/files/SimpleITK/0.9.1/Python/SimpleITK-0.9.1-py3.4-linux-x86_64.egg
    - ls
-   # - easy_install ##.egg
-   - python setup.py install
-   - "sudo easy_install SimpleITK"
+   - easy_install SimpleITK-0.9.1-py3.4-linux-x86_64.egg
+   # - python setup.py install
    - ls
+   # - "sudo easy_install SimpleITK"
+   # - ls
 #  - brew install
  
 # command to run tests
