@@ -12,7 +12,7 @@ python:
    # - "nightly" # currently points to 3.6-dev
 
 before_cache:
-  - rm -f $HOME/.cache/pip/log/debug.log
+  - cat $HOME/.cache/pip/log/debug.log
   
 before_install:
    - "sudo pip install --upgrade pip"
