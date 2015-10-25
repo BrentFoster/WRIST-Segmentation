@@ -8,6 +8,17 @@ print(sys.path)
 # import numpy as np
 import SimpleITK as sitk
 
+#List all the locally installed python modules
+import pip
+installed_packages = pip.get_installed_distributions()
+installed_packages_list = sorted(["%s==%s" % (i.key, i.version)
+     for i in installed_packages])
+print(installed_packages_list)
+
+
+
+
+
 
 #Read in image
 img = sitk.ReadImage("Volunteer5_VIBE.hdr")
