@@ -11,8 +11,8 @@ python:
    # - "3.5-dev" # 3.5 development branch
    # - "nightly" # currently points to 3.6-dev
 
-before_cache:
-  - cat $HOME/.cache/pip/log/debug.log
+# before_cache:
+#  - cat $HOME/.cache/pip/log/debug.log
   
 before_install:
    - "sudo pip install --upgrade pip"
@@ -24,11 +24,12 @@ before_install:
 script: python sitkConfidenceConnectedSeg.py
 
 cache:
+   - pip
+   - bundler
+   - apt
    directories:
       - $HOME/.cache/pip
-   # - pip
-   # - bundler
-   # - apt
+
 
 # Customize when the notification emails are sent.
 notifications:
