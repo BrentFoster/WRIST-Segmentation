@@ -15,7 +15,7 @@ python:
 before_install:
    - "sudo pip install --upgrade pip"
    #Install SimpleITK
-   - "sudo pip install --allow-external SimpleITK --trusted-host www.simpleitk.org"
+   - "sudo pip install --allow-external SimpleITK --trusted-host www.simpleitk.org" SimpleITK
    - ls
    - "sudo easy_install SimpleITK"
    - ls
