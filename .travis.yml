@@ -39,8 +39,10 @@ before_install:
    # - ls
    
    - sudo apt-get install python-pip
+   - sudo pip install requests[security]
    - sudo pip install --upgrade pip
-   - sudo pip install --allow-external SimpleITK --trusted-host www.simpleitk.org SimpleITK  --timeout 30 SimpleITK
+   - sudo -H pip install SimpleITK
+   # - sudo pip install --allow-external SimpleITK --trusted-host www.simpleitk.org SimpleITK  --timeout 30 SimpleITK
    
    - ls
    - cd /usr/local/lib/python2.7/dist-packages
