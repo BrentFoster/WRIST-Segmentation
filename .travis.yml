@@ -21,8 +21,8 @@ before_install:
 script: python sitkConfidenceConnectedSeg.py
 
 cache:
-   directories:
-      - $HOME/.cache/pip
+   # directories:
+   #    - $HOME/.cache/pip
    - pip
    - bundler
    - apt
