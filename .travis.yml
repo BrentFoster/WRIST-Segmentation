@@ -36,7 +36,7 @@ before_install:
    - which easy_install
    # - sudo easy_install --install-dir /usr/local/lib/python2.7/site-packages SimpleITK
    # - sudo easy_install --user SimpleITK
-   - sudo easy_install SimpleITK
+   - sudo easy_install --user SimpleITK
    
    
    
