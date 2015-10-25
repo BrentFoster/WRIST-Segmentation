@@ -25,6 +25,8 @@ before_install:
    
    
    - sudo apt-get install python-dev libffi-dev libssl-dev
+   - sudo apt-get install libffi-dev libssl-dev
+   - sudo pip install pyopenssl ndg-httpsclient pyasn1
    - sudo pip install requests[security]
    - sudo pip install --upgrade pip
    - sudo -H pip install SimpleITK
