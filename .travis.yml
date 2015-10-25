@@ -1,17 +1,78 @@
 language: python
+sudo: 
+   - required
 python:
-  # - "2.6"
-  # - "2.7"
-  # - "3.2"
-  # - "3.3"
-  # - "3.4"
-  - "3.5"
-  # - "3.5-dev" # 3.5 development branch
-  # - "nightly" # currently points to 3.6-dev
-# command to install dependencies
-#install: "pip install --upgrade pip"
+   - "2.6"
+   - "2.7"
+   - "3.2"
+   - "3.3"
+   - "3.4"
+   - "3.5"
+   - "3.5-dev" # 3.5 development branch
+   - "nightly" # currently points to 3.6-dev
+
+# before_cache:
+#  - cat $HOME/.cache/pip/log/debug.log
+  
+before_install:
+   # - "sudo pip install --upgrade pip"
+   #Install SimpleITK
+   # - wget www.sourceforge.net/projects/simpleitk/files/SimpleITK/0.9.1/Python/SimpleITK-0.9.1-py3.4-linux-x86_64.egg
+   # - easy_install SimpleITK-0.9.1-py3.4-linux-x86_64.egg
+   
+   # - wget www.sourceforge.net/projects/simpleitk/files/SimpleITK/0.9.1/Python/SimpleITK-0.9.1-py2.6-linux-x86_64.egg
+   # - easy_install SimpleITK-0.9.1-py2.6-linux-x86_64.egg
+   
+   
+   # - sudo apt-get install python-dev libffi-dev libssl-dev
+   # - sudo apt-get install libffi-dev libssl-dev
+   # - sudo pip install pyopenssl ndg-httpsclient pyasn1
+   # - sudo pip install requests[security]
+   # - sudo pip install --upgrade pip
+   # - sudo -H pip install SimpleITK
+   
+   
+   
+   - sudo pip install --upgrade pip
+   - wget https://bootstrap.pypa.io/ez_setup.py -O - | sudo python
+   - which easy_install
+   # - sudo easy_install --install-dir /usr/local/lib/python2.7/site-packages SimpleITK
+   # - sudo easy_install SimpleITK
+   - wget www.sourceforge.net/projects/simpleitk/files/SimpleITK/0.9.1/Python/SimpleITK-0.9.1-py2.7-linux-x86_64.egg
+   - easy_install SimpleITK-0.9.1-py2.7-linux-x86_64.egg
+   # - sudo easy_install --user SimpleITK
+   
+   
+   
+   # - ls
+   # - cd /usr/local/lib/python2.7/site-packages
+   # - ls
+   
+   # - sudo apt-get install python-pip
+   # - sudo pip install requests[security]
+   # - sudo pip install --upgrade pip
+   # - sudo -H pip install SimpleITK
+   # - sudo pip install --allow-external SimpleITK --trusted-host www.simpleitk.org SimpleITK  --timeout 30 SimpleITK
+   
+   # - ls
+   # - cd /usr/local/lib/python2.7/dist-packages
+   # - ls
+   
+   
+   # - "sudo pip install --upgrade pip"
+   
+   
+
 # command to run tests
 script: python sitkConfidenceConnectedSeg.py
+
+cache:
+   - pip
+   - bundler
+   - apt
+   # directories:
+      # - $HOME/.cache/pip
+
 
 # Customize when the notification emails are sent.
 notifications:
