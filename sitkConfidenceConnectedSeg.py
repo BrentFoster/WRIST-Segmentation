@@ -17,7 +17,7 @@ for x in range(0, len(intPoints)):
 	initialNeighborhoodRadius = 1, replaceValue=x+1)
 	segmentation = segmentation + seg
 
-sitk.Show(sitk.LabelOverlay(img_T1_255, segmentation))
+# sitk.Show(sitk.LabelOverlay(img_T1_255, segmentation))
 
 
 ##POST-PROCESSING FILTERS##
