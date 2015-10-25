@@ -1,6 +1,11 @@
 import SimpleITK as sitk
 import numpy as np
 
+#Add the location where the Linux virtual machine is installing the SimpleITK module
+import sys
+sys.path.append("/home/shippable/.local/lib/python2.7/site-packages")
+
+
 #Read in image
 img = sitk.ReadImage("Volunteer5_VIBE.hdr")
 img_T1_255 = sitk.Cast(sitk.RescaleIntensity(img), sitk.sitkUInt8)
