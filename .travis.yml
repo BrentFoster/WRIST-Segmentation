@@ -12,7 +12,7 @@ python:
 #install: "pip install --upgrade pip"
 before_install:
   #Install SimpleITK
-  - pip install --allow-external SimpleITK --trusted-host www.simpleitk.org SimpleITK  --timeout 30 SimpleITK
+  - pip install --allow-external SimpleITK --trusted-host www.simpleitk.org
 # command to run tests
 script: python sitkConfidenceConnectedSeg.py
 
