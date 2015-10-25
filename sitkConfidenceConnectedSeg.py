@@ -3,7 +3,7 @@ import sys
 sys.path.append("/home/shippable/.local/lib/python2.7/site-packages")
 print(sys.path)
 
-import numpy as np
+# import numpy as np
 import SimpleITK as sitk
 
 
@@ -16,7 +16,7 @@ segmentation = sitk.Image(img.GetSize(), sitk.sitkUInt8)
 segmentation.CopyInformation(img)
 
 #Array of the seed points
-intPoints = np.array([[150, 150, 87], [170, 100, 87]])
+# intPoints = np.array([[150, 150, 87], [170, 100, 87]])
 #[intPoints[x,:]]
 for x in range(0, len(intPoints)):
 	seg = sitk.ConfidenceConnected(img, [[150,150,87]], numberOfIterations=0, multiplier=1,
