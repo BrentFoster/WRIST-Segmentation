@@ -12,10 +12,10 @@ python:
    # - "nightly" # currently points to 3.6-dev
 
 before_install:
-   # - "sudo pip install --upgrade pip"
+   - "sudo pip install --upgrade pip"
    #Install SimpleITK
-   # - wget www.sourceforge.net/projects/simpleitk/files/SimpleITK/0.9.1/Python/SimpleITK-0.9.1-py3.4-linux-x86_64.egg
-   # - easy_install SimpleITK-0.9.1-py3.4-linux-x86_64.egg
+   - wget www.sourceforge.net/projects/simpleitk/files/SimpleITK/0.9.1/Python/SimpleITK-0.9.1-py3.4-linux-x86_64.egg
+   - easy_install SimpleITK-0.9.1-py3.4-linux-x86_64.egg
 
 # command to run tests
 script: python sitkConfidenceConnectedSeg.py
