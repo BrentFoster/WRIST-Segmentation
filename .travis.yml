@@ -2,43 +2,25 @@ language: python
 sudo: 
    - required
 python:
-   # - "2.6"
-  # - "2.7"
-  # - "3.2"
+   - "2.6"
+   - "2.7"
+   - "3.2"
    - "3.3"
-  # - "3.4"
-   # - "3.5"
-  # - "3.5-dev" # 3.5 development branch
-  # - "nightly" # currently points to 3.6-dev
-# command to install dependencies
-#install: "pip install --upgrade pip"
+   - "3.4"
+   - "3.5"
+   - "3.5-dev" # 3.5 development branch
+   - "nightly" # currently points to 3.6-dev
+
 before_install:
    - "sudo pip install --upgrade pip"
    #Install SimpleITK
-   #- "sudo pip install --allow-external SimpleITK --trusted-host www.simpleitk.org SimpleITK"
-   # - sudo pip install --allow-external SimpleITK --trusted-host www.pypi.python.org/pypi/SimpleITK SimpleITK
    - wget www.sourceforge.net/projects/simpleitk/files/SimpleITK/0.9.1/Python/SimpleITK-0.9.1-py3.4-linux-x86_64.egg
-   - ls
-   # - sudo pip install SimpleITK --allow-external SimpleITK --allow-unverified SimpleITK --trusted-host www.simpleitk.org SimpleITK
-   # - sudo pip install SimpleITK
    - easy_install SimpleITK-0.9.1-py3.4-linux-x86_64.egg
-   # - python setup.py install
-   # pip install -e git+https://git.repo/some_pkg.git#egg=SomeProject          # from git
-   # - sudo pip install SimpleITK-0.9.1-py3.4-linux-x86_64.egg
-   # - unzip SimpleITK-0.9.1-py3.4-linux-x86_64.egg
-   - ls
-   # - python setup.py install
-   - python -c "import SimpleITK"
-   - echo $?
-   # - "sudo easy_install SimpleITK"
-   # - ls
-#  - brew install
- 
+
 # command to run tests
 script: python sitkConfidenceConnectedSeg.py
 
 cache: pip
-
 
 # Customize when the notification emails are sent.
 notifications:
