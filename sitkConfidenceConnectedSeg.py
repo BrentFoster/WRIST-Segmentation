@@ -1,10 +1,14 @@
-import SimpleITK as sitk
+
 import numpy as np
 
 #Add the location where the Linux virtual machine is installing the SimpleITK module
 import sys
 sys.path.append("/home/shippable/.local/lib/python2.7/site-packages")
 print(sys.path)
+
+
+import SimpleITK as sitk
+
 
 #Read in image
 img = sitk.ReadImage("Volunteer5_VIBE.hdr")
