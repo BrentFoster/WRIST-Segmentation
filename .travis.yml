@@ -10,6 +10,9 @@ python:
   # - "nightly" # currently points to 3.6-dev
 # command to install dependencies
 #install: "pip install --upgrade pip"
+before_install:
+  #Install SimpleITK
+  - pip install --allow-external SimpleITK --trusted-host www.simpleitk.org SimpleITK  --timeout 30 SimpleITK
 # command to run tests
 script: python sitkConfidenceConnectedSeg.py
 
