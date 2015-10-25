@@ -2,7 +2,7 @@ import SimpleITK as sitk
 import numpy as np
 
 #Read in image
-img = sitk.ReadImage("/Users/Brent/Desktop/Volunteer5_VIBE.hdr")
+img = sitk.ReadImage("Volunteer5_VIBE.hdr")
 img_T1_255 = sitk.Cast(sitk.RescaleIntensity(img), sitk.sitkUInt8)
 
 #Create empty image to hold the segmentations
