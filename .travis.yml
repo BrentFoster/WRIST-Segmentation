@@ -21,11 +21,11 @@ before_install:
 script: python sitkConfidenceConnectedSeg.py
 
 cache:
-   # directories:
-   #    - $HOME/.cache/pip
-   - pip
-   - bundler
-   - apt
+   directories:
+      - $HOME/.cache/pip
+   # - pip
+   # - bundler
+   # - apt
 
 # Customize when the notification emails are sent.
 notifications:
