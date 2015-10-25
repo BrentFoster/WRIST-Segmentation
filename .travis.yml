@@ -2,25 +2,30 @@ language: python
 sudo: 
    - required
 python:
-   - "2.6"
-   - "2.7"
-   - "3.2"
-   - "3.3"
+   # - "2.6"
+   # - "2.7"
+   # - "3.2"
+   # - "3.3"
    - "3.4"
-   - "3.5"
-   - "3.5-dev" # 3.5 development branch
-   - "nightly" # currently points to 3.6-dev
+   # - "3.5"
+   # - "3.5-dev" # 3.5 development branch
+   # - "nightly" # currently points to 3.6-dev
 
 before_install:
    - "sudo pip install --upgrade pip"
    #Install SimpleITK
-   # - wget www.sourceforge.net/projects/simpleitk/files/SimpleITK/0.9.1/Python/SimpleITK-0.9.1-py3.4-linux-x86_64.egg
-   # - easy_install SimpleITK-0.9.1-py3.4-linux-x86_64.egg
+   - wget www.sourceforge.net/projects/simpleitk/files/SimpleITK/0.9.1/Python/SimpleITK-0.9.1-py3.4-linux-x86_64.egg
+   - easy_install SimpleITK-0.9.1-py3.4-linux-x86_64.egg
 
 # command to run tests
 script: python sitkConfidenceConnectedSeg.py
 
-cache: pip
+cache:
+   directories:
+      - $HOME/.cache/pip
+   - pip
+   - bundler
+   - apt
 
 # Customize when the notification emails are sent.
 notifications:
