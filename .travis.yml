@@ -24,7 +24,8 @@ before_install:
    # - easy_install SimpleITK-0.9.1-py3.4-linux-x86_64.egg
    # - python setup.py install
    # pip install -e git+https://git.repo/some_pkg.git#egg=SomeProject          # from git
-   - sudo pip install SimpleITK-0.9.1-py3.4-linux-x86_64.egg
+   # - sudo pip install SimpleITK-0.9.1-py3.4-linux-x86_64.egg
+   - unzip SimpleITK-0.9.1-py3.4-linux-x86_64.egg
    - ls
    - python setup.py install
    - python -c "import SimpleITK"
