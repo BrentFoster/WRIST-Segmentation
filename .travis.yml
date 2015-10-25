@@ -23,11 +23,11 @@ before_install:
    # - wget www.sourceforge.net/projects/simpleitk/files/SimpleITK/0.9.1/Python/SimpleITK-0.9.1-py2.6-linux-x86_64.egg
    # - easy_install SimpleITK-0.9.1-py2.6-linux-x86_64.egg
    
-   
-   - sudo apt-get install python-dev libffi-dev libssl-dev
-   - sudo pip install requests[security]
-   - sudo pip install --upgrade pip
-   - sudo -H pip install SimpleITK
+   - wget https://bootstrap.pypa.io/ez_setup.py -O - | sudo python
+   # - sudo apt-get install python-dev libffi-dev libssl-dev
+   # - sudo pip install requests[security]
+   # - sudo pip install --upgrade pip
+   # - sudo -H pip install SimpleITK
    - sudo easy_install -U SimpleITK
    
 
