@@ -2,12 +2,12 @@ language: python
 sudo: 
    - required
 python:
-   # - "2.6"
-   # - "2.7"
-   - "3.2"
+   - "2.6"
+   - "2.7"
+   # - "3.2"
    # - "3.3"
-   # - "3.4"
-   # - "3.5"
+   - "3.4"
+   - "3.5"
    # - "3.5-dev" # 3.5 development branch
    # - "nightly" # currently points to 3.6-dev
 
@@ -24,20 +24,20 @@ before_install:
    # - easy_install SimpleITK-0.9.1-py2.6-linux-x86_64.egg
    
    
-   - sudo apt-get install python-dev libffi-dev libssl-dev
-   - sudo apt-get install libffi-dev libssl-dev
-   - sudo pip install pyopenssl ndg-httpsclient pyasn1
-   - sudo pip install requests[security]
-   - sudo pip install --upgrade pip
-   - sudo -H pip install SimpleITK
-   
-   
-   
+   # - sudo apt-get install python-dev libffi-dev libssl-dev
+   # - sudo apt-get install libffi-dev libssl-dev
+   # - sudo pip install pyopenssl ndg-httpsclient pyasn1
+   # - sudo pip install requests[security]
    # - sudo pip install --upgrade pip
-   # - wget https://bootstrap.pypa.io/ez_setup.py -O - | sudo python
-   # - which easy_install
+   # - sudo -H pip install SimpleITK
+   
+   
+   
+   - sudo pip install --upgrade pip
+   - wget https://bootstrap.pypa.io/ez_setup.py -O - | sudo python
+   - which easy_install
    # - sudo easy_install --install-dir /usr/local/lib/python2.7/site-packages SimpleITK
-   # - sudo easy_install --user SimpleITK
+   - sudo easy_install --user SimpleITK
    # - sudo easy_install --user SimpleITK
    
    
@@ -55,6 +55,9 @@ before_install:
    # - ls
    # - cd /usr/local/lib/python2.7/dist-packages
    # - ls
+   
+   
+   # - "sudo pip install --upgrade pip"
    
    
 
