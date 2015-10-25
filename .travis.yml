@@ -21,13 +21,13 @@ before_install:
    - ls
    # - sudo pip install SimpleITK --allow-external SimpleITK --allow-unverified SimpleITK --trusted-host www.simpleitk.org SimpleITK
    # - sudo pip install SimpleITK
-   # - easy_install SimpleITK-0.9.1-py3.4-linux-x86_64.egg
+   - easy_install SimpleITK-0.9.1-py3.4-linux-x86_64.egg
    # - python setup.py install
    # pip install -e git+https://git.repo/some_pkg.git#egg=SomeProject          # from git
    # - sudo pip install SimpleITK-0.9.1-py3.4-linux-x86_64.egg
-   - unzip SimpleITK-0.9.1-py3.4-linux-x86_64.egg
+   # - unzip SimpleITK-0.9.1-py3.4-linux-x86_64.egg
    - ls
-   - python setup.py install
+   # - python setup.py install
    - python -c "import SimpleITK"
    - echo $?
    # - "sudo easy_install SimpleITK"
