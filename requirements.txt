@@ -1,2 +1,2 @@
-SimpleITK >= 0.7.0
+--allow-external SimpleITK >= 0.7.0
 numpy == 1.9.1
