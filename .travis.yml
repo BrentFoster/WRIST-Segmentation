@@ -37,6 +37,9 @@ before_install:
 # command to run tests
 script: python sitkConfidenceConnectedSeg.py
 
+cache: pip
+
+
 # Customize when the notification emails are sent.
 notifications:
     on_success: never
