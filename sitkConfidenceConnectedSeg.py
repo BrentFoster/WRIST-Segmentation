@@ -31,6 +31,7 @@ segmentation.CopyInformation(img)
 #Array of the seed points
 # intPoints = np.array([[150, 150, 87], [170, 100, 87]])
 #[intPoints[x,:]]
+intPoints = [150, 150, 87]
 for x in range(0, len(intPoints)):
 	seg = sitk.ConfidenceConnected(img, [[150,150,87]], numberOfIterations=0, multiplier=1,
 	initialNeighborhoodRadius = 1, replaceValue=x+1)
