@@ -2,12 +2,12 @@ language: python
 sudo: 
    - required
 python:
-   - "2.6"
+   # - "2.6"
    - "2.7"
-   - "3.2"
-   - "3.3"
-   - "3.4"
-   - "pypy"
+   # - "3.2"
+   # - "3.3"
+   # - "3.4"
+   # - "pypy"
 
 
 #Shippable Supports Python ver: 2.6, 2.7, 3.2, 3.3, 3.4 and pypy.
