@@ -2,9 +2,9 @@ language: python
 sudo: 
    - required
 python:
-   # - "2.6"
+   - "2.6"
    - "2.7"
-   # - "3.2"
+   - "3.2"
    - "3.3"
    - "3.4"
    # - "pypy"
@@ -42,21 +42,27 @@ before_install:
    # - sudo easy_install SimpleITK
 
    # - sudo easy_install --user SimpleITK
-   
-   #Works for 2.7, and 3.2
-      - wget www.sourceforge.net/projects/simpleitk/files/SimpleITK/0.9.1/Python/SimpleITK-0.9.1-py2.7-linux-x86_64.egg
-   - easy_install SimpleITK-0.9.1-py2.7-linux-x86_64.egg
-   
-   
-   # - ls
-   # - cd /usr/local/lib/python2.7/site-packages
-   # - ls
-   
-   # - sudo apt-get install python-pip
-   # - sudo pip install requests[security]
-   # - sudo pip install --upgrade pip
    # - sudo -H pip install SimpleITK
-   # - sudo pip install --allow-external SimpleITK --trusted-host www.simpleitk.org SimpleITK  --timeout 30 SimpleITK
+   
+   
+   
+   #Works for 2.7, and 3.2 but not 2.6 or 3.3
+   # - wget https://bootstrap.pypa.io/ez_setup.py -O - | sudo python
+   # - wget www.sourceforge.net/projects/simpleitk/files/SimpleITK/0.9.1/Python/SimpleITK-0.9.1-py2.7-linux-x86_64.egg
+   # - easy_install SimpleITK-0.9.1-py2.7-linux-x86_64.egg
+   
+   
+   
+   
+   - sudo apt-get install python-pip
+   - sudo pip install requests[security]
+   - sudo pip install --upgrade pip
+   
+   - sudo pip install --allow-external SimpleITK --trusted-host www.simpleitk.org SimpleITK  --timeout 30 SimpleITK
+   
+   
+   
+   
    
    # - ls
    # - cd /usr/local/lib/python2.7/dist-packages
