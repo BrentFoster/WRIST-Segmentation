@@ -36,14 +36,16 @@ before_install:
    
    
    # - sudo pip install --upgrade pip
-   - wget https://bootstrap.pypa.io/ez_setup.py -O - | sudo python
+   
    # - which easy_install
    # - sudo easy_install --install-dir /usr/local/lib/python2.7/site-packages SimpleITK
    # - sudo easy_install SimpleITK
-   - wget www.sourceforge.net/projects/simpleitk/files/SimpleITK/0.9.1/Python/SimpleITK-0.9.1-py2.7-linux-x86_64.egg
-   - easy_install SimpleITK-0.9.1-py2.7-linux-x86_64.egg
+
    # - sudo easy_install --user SimpleITK
    
+   #Works for 2.7, and 3.2
+      - wget www.sourceforge.net/projects/simpleitk/files/SimpleITK/0.9.1/Python/SimpleITK-0.9.1-py2.7-linux-x86_64.egg
+   - easy_install SimpleITK-0.9.1-py2.7-linux-x86_64.egg
    
    
    # - ls
