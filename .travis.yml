@@ -57,9 +57,10 @@ before_install:
    - sudo apt-get install python-pip
    - sudo pip install requests[security]
    - sudo pip install --upgrade pip
+   - sudo -H pip install SimpleITK
+   # - sudo pip install --allow-external SimpleITK --trusted-host www.simpleitk.org SimpleITK
    
-   - sudo pip install --allow-external SimpleITK --trusted-host www.simpleitk.org SimpleITK
-   
+   # --allow-unverified
    
    
    
