@@ -2,11 +2,11 @@ language: python
 sudo: 
    - required
 python:
-   - "2.6"
+   # - "2.6"
    - "2.7"
-   - "3.2"
-   - "3.3"
-   - "3.4"
+   # - "3.2"
+   # - "3.3"
+   # - "3.4"
    # - "pypy"
 
 
@@ -57,7 +57,7 @@ before_install:
    - sudo apt-get install python-pip
    - sudo pip install requests[security]
    - sudo pip install --upgrade pip
-   - sudo -H pip install SimpleITK
+   - sudo -H pip install --allow-external SimpleITK
    # - sudo pip install --allow-external SimpleITK --trusted-host www.simpleitk.org SimpleITK
    
    # --allow-unverified
