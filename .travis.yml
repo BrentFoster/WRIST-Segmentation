@@ -59,7 +59,9 @@ before_install:
    - sudo pip install pyopenssl ndg-httpsclient pyasn1
    - sudo pip install requests[security]
    - sudo pip install --upgrade pip
-   - sudo -H pip install SimpleITK --allow-external SimpleITK --allow-unverified SimpleITK --trusted-host www.simpleitk.org 
+   - pip install SimpleITK 
+   
+   #--allow-external SimpleITK --allow-unverified SimpleITK --trusted-host www.simpleitk.org 
    
    # - sudo apt-get install python-pip
    # - sudo pip install requests[security]
