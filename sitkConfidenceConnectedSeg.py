@@ -69,6 +69,7 @@ for x in range(0, 2):
 
 	segXImg = dilateFilter.Execute(segXImg, 0, x+1, False)
 	segXImg = fillFilter.Execute(segXImg, True, x+1)
+	
 	segXImg = erodeFilter.Execute(segXImg, 0, x+1, False)
 
 	segXImg = sitk.Cast(segXImg, segmentation.GetPixelID())
