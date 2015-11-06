@@ -1,13 +1,9 @@
-# #Add the location where the Linux virtual machine is installing the SimpleITK module
-# import sys
-# sys.path.append("/home/shippable/.local/lib/python2.7/site-packages")
-# sys.path.append("/home/shippable/.local/lib/python2.7/site-packages/SimpleITK-0.9.1-py2.7-linux-x86_64.egg")
-# sys.path.append("/usr/local/lib/python2.7/dist-packages/SimpleITK-0.9.1-py2.7-linux-x86_64.egg")
-# print(sys.path)
-
-# import numpy as np
 import SimpleITK as sitk
 import numpy as np
+from progressbar import AnimatedMarker, Bar, BouncingBar, Counter, ETA, \
+    FileTransferSpeed, FormatLabel, Percentage, \
+    ProgressBar, ReverseBar, RotatingMarker, \
+    SimpleProgress, Timer, AdaptiveETA, AbsoluteETA, AdaptiveTransferSpeed
 
 #Read in image
 img = sitk.ReadImage("Volunteer5_VIBE.hdr")
@@ -15,16 +11,12 @@ img_T1_255 = sitk.Cast(sitk.RescaleIntensity(img), sitk.sitkUInt8)
 
 img = sitk.Cast(img,sitk.sitkFloat32)
 
-
 #Create empty image to hold the segmentations
 segmentation = sitk.Image(img.GetSize(), img.GetPixelID())
 segmentation.CopyInformation(img)
 
 #Create empty seed image for the level set filter to use
 seedImage = img*0
-# print(seedImage)
-
-#Array of the seed points
 
 ##POST-PROCESSING FILTERS##
 # Create the filters for filling any holes
@@ -39,74 +31,73 @@ fillFilter = sitk.BinaryFillholeImageFilter()
 
 # intPoints = [[130, 184, 41], [175, 90, 31],[100, 200, 44],[90, 225, 61],[100, 200, 72],[75, 200, 85],[45, 200, 100]]
 
-# # fastMarchingFilter = sitk.FastMarchingUpwindGradientImageFilter()
+# fastMarchingFilter = sitk.FastMarchingUpwindGradientImageFilter()
 # fastMarchingFilter = sitk.FastMarchingBaseImageFilter()
 # fastMarchingFilter.SetTrialPoints (intPoints)
 # fastMarchingFilter.SetStoppingValue(100)
-# # fastMarchingFilter.SetTopologyCheck(True)
+# fastMarchingFilter.SetTopologyCheck(True)
 # print(fastMarchingFilter)
 # fastMarchingImg = fastMarchingFilter.Execute(img)
 
 # segPixels = sitk.GetArrayFromImage(fastMarchingImg)
 # segPixels[segPixels > 10] = 10
 # fastMarchingImg = sitk.GetImageFromArray(segPixels)
-
 # sitk.Show(fastMarchingImg)
 
 ######################################################################
 
-# intPoints = np.array([[150, 150, 87], [170, 100, 87],[100, 200, 97],[90, 225, 114],[100, 200, 125],[75, 200, 138],[45, 200, 153]])
 intPoints = [[130, 184, 41], [175, 90, 31],[100, 200, 44],[90, 225, 61],[100, 200, 72],[75, 200, 85],[45, 200, 100]]
-# len(intPoints)
-for x in range(0, 2):
-	print(x)
-	print([intPoints[x]])
 
+numPoints = len(intPoints)
+
+pbar = ProgressBar(widgets=[Percentage(), Bar()], max_value=(numPoints+1)*5).start()
+for x in range(0, 7):
+
+	pbar.update(x*5+0.0001)
 	segXImg = sitk.ConfidenceConnected(img, [intPoints[x]], numberOfIterations=10, 
 			multiplier=2,	initialNeighborhoodRadius = 5, replaceValue=x+1)
-	# seedImg = segmentation
-	#its = 9 multiplier = 1.75
 
+	pbar.update(x*5+1)
 	segXImg = dilateFilter.Execute(segXImg, 0, x+1, False)
+	pbar.update(x*5+2)
 	segXImg = fillFilter.Execute(segXImg, True, x+1)
-	
+	pbar.update(x*5+3)
 	segXImg = erodeFilter.Execute(segXImg, 0, x+1, False)
-
+	pbar.update(x*5+4)
 	segXImg = sitk.Cast(segXImg, segmentation.GetPixelID())
+	pbar.update(x*5+5)
 	segmentation = segmentation + segXImg
-	# break
 
-	#Range intensities from 0 to 100
+	
+pbar.finish()
 
-	# LevelSetFilter =  sitk.ThresholdSegmentationLevelSetImageFilter()
-
-	# img = sitk.Cast(img,sitk.sitkUInt8)
-	# print(img.GetPixelID())
-	# seedImg = sitk.Cast(seedImg, img.GetPixelID())
-	# LevelSetFilter.SetUpperThreshold(100)
-	# LevelSetFilter.SetNumberOfIterations(5000)
-	# LevelSetFilter.SetMaximumRMSError(0.000001)
-	# seedImage[intPoints[x]] = 1;
-	# seedImage = sitk.Cast(seedImage, img.GetPixelID())
-	# seedImage = seedImage/2
-	# seg = LevelSetFilter.Execute(seedImage, img)
-	# print(LevelSetFilter)
-	# LevelSetFilter.Execute(seedImage, img, double 0, double 100, double maximumRMSError, double propagationScaling, double curvatureScaling, uint32_t numberOfIterations, bool reverseExpansionDirection)
-	# segmentation = segmentation + seg
-	# sitk.Show(segmentation)
-	# break
-
-segmentation = segmentation*10
+segmentation = segmentation*50
 segmentation = sitk.Cast(segmentation, sitk.sitkUInt16)
 
 overlaidSegImage = sitk.LabelOverlay(img_T1_255, segmentation)
 nda = sitk.GetArrayFromImage(overlaidSegImage)
-# nda = nda[:,:,:,1]
+nda = nda[:,:,:,1]
 overlaidSegImage = sitk.GetImageFromArray(nda)
 
-sitk.Show(overlaidSegImage)	
+try:
+	sitk.Show(overlaidSegImage)	
+	sitk.Show(segmentation)
+except: 
+	print("Can't show the image! (Probably tsting through Linux virtual machine")
 
-sitk.Show(segmentation)
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 # segPixels = sitk.GetArrayFromImage(segmentation)
@@ -118,6 +109,29 @@ sitk.Show(segmentation)
 
 
 
+
+
+# break
+
+#Range intensities from 0 to 100
+
+# LevelSetFilter =  sitk.ThresholdSegmentationLevelSetImageFilter()
+
+# img = sitk.Cast(img,sitk.sitkUInt8)
+# print(img.GetPixelID())
+# seedImg = sitk.Cast(seedImg, img.GetPixelID())
+# LevelSetFilter.SetUpperThreshold(100)
+# LevelSetFilter.SetNumberOfIterations(5000)
+# LevelSetFilter.SetMaximumRMSError(0.000001)
+# seedImage[intPoints[x]] = 1;
+# seedImage = sitk.Cast(seedImage, img.GetPixelID())
+# seedImage = seedImage/2
+# seg = LevelSetFilter.Execute(seedImage, img)
+# print(LevelSetFilter)
+# LevelSetFilter.Execute(seedImage, img, double 0, double 100, double maximumRMSError, double propagationScaling, double curvatureScaling, uint32_t numberOfIterations, bool reverseExpansionDirection)
+# segmentation = segmentation + seg
+# sitk.Show(segmentation)
+# break
 
 
 
