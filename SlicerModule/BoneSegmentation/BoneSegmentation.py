@@ -41,16 +41,22 @@ class BoneSegmentationWidget:
 
         # firstTabLayout = qt.QFormLayout()
 
-        # Markup Selector
-        self.markupSelectorLabel = qt.QLabel()
-        self.markupSelectorLabel.setText("Markup list: ")
-        self.markupSelector = slicer.qMRMLNodeComboBox()
-        self.markupSelector.nodeTypes = ("vtkMRMLMarkupsFiducialNode", "")
-        self.markupSelector.noneEnabled = False
-        self.markupSelector.selectNodeUponCreation = True
-        self.markupSelector.setMRMLScene(slicer.mrmlScene)
-        self.markupSelector.setToolTip("Pick the markup list to be filled")
-        firstTabLayout.addRow(self.markupSelectorLabel, self.markupSelector)
+        # # Markup Selector
+        # self.markupSelectorLabel = qt.QLabel()
+        # self.markupSelectorLabel.setText("Markup list: ")
+        # self.markupSelector = slicer.qMRMLNodeComboBox()
+        # # self.markupSelector.nodeTypes = ("vtkMRMLMarkupsFiducialNode", "")
+        # self.markupSelector.nodeTypes = ("vtkMRMLAnnotationFiducialNode", "")
+        # self.markupSelector.noneEnabled = False
+        # self.markupSelector.baseName = "Seed List"
+        # self.markupSelector.selectNodeUponCreation = True
+        # self.markupSelector.setMRMLScene(slicer.mrmlScene)
+        # self.markupSelector.setToolTip("Pick the markup list to be filled")
+        # firstTabLayout.addRow(self.markupSelectorLabel, self.markupSelector)
+        
+        # global markupSelector
+        # markupSelector = self.markupSelector
+
         #
         # Input Volume Selector
         #
@@ -76,8 +82,8 @@ class BoneSegmentationWidget:
         self.UpdatecomputeButtonState()
         # connections
         self.computeButton.connect('clicked()', self.onCompute)
-        self.markupSelector.connect(
-            'currentNodeChanged(vtkMRMLNode*)', self.onMarkupSelect)
+        # self.markupSelector.connect(
+            # 'currentNodeChanged(vtkMRMLNode*)', self.onMarkupSelect)
         self.inputSelector.connect(
             'currentNodeChanged(vtkMRMLNode*)', self.onMarkupSelect)
 
@@ -96,76 +102,20 @@ class BoneSegmentationWidget:
 
         firstTabLayout.addRow(
             self.outputVolumeSelectorLabel, self.outputSelector)
-        #
-        # Add A 2D View of the Input Image
-        #
-
-        layoutManager = slicer.qMRMLLayoutWidget()
-        layoutManager.setMRMLScene(slicer.mrmlScene)
-        layoutManager.setLayout(slicer.vtkMRMLLayoutNode.SlicerLayoutOneUpRedSliceView)
-        firstTabLayout.addWidget(layoutManager)
-
-        ###TEST###
-        # lm = slicer.app.layoutManager()
-        # redWidget = lm.sliceWidget('Red')
-        # redView = redWidget.sliceView()
-        # wti = vtk.vtkWindowToImageFilter()
-        # wti.SetInput(redView.renderWindow())
-        # wti.Update()
-        # v = vtk.vtkImageViewer()
-        # v.SetColorWindow(255)
-        # v.SetColorLevel(128)
-        # v.SetInputConnection(wti.GetOutputPort())
-        # v.Render()
-
-
-
-
-        # Path collapsible button
-        pathCollapsibleButton = ctk.ctkCollapsibleButton()
-        pathCollapsibleButton.text = "Fiducial Markers"
-        firstTabLayout.addWidget(pathCollapsibleButton)
-
-        #
-        # Add fiducial marker button
-        #
-        self.addMarkerButton = qt.QPushButton("Add Marker")
-        self.addMarkerButton.toolTip = "Compute information for the selected markup"
-        firstTabLayout.addWidget(self.addMarkerButton)
-        self.addMarkerButton.connect(
-            'clicked()', self.enableOrDisableFiducialeButton)
-
-
-        self.printMarkersButton = qt.QPushButton("Print Markers")
-        self.printMarkersButton.toolTip = "Compute information for the selected markup"
-        firstTabLayout.addWidget(self.printMarkersButton)
-        self.printMarkersButton.connect(
-            'clicked()', self.printMarkers)
-
+        
 
         
 
         #
         # the output volume label
         #
-        self.outputVolumeSelectorFrame = qt.QFrame(self.parent)
-        self.outputVolumeSelectorFrame.setLayout(qt.QHBoxLayout())
-        self.parent.layout().addWidget(self.outputVolumeSelectorFrame)
+        # self.outputVolumeSelectorFrame = qt.QFrame(self.parent)
+        # self.outputVolumeSelectorFrame.setLayout(qt.QHBoxLayout())
+        # self.parent.layout().addWidget(self.outputVolumeSelectorFrame)
 
-        self.outputVolumeSelectorLabel = qt.QLabel(
-            "Masked Volume: ", self.outputVolumeSelectorFrame)
-        self.outputVolumeSelectorFrame.layout().addWidget(self.outputVolumeSelectorLabel)
-
-        # Markup selector
-        self.markupSelectorLabel = qt.QLabel()
-        self.markupSelectorLabel.setText("Markup list: ")
-        self.markupSelector = slicer.qMRMLNodeComboBox()
-        self.markupSelector.nodeTypes = ("vtkMRMLMarkupsFiducialNode", "")
-        self.markupSelector.noneEnabled = False
-        self.markupSelector.selectNodeUponCreation = True
-        self.markupSelector.setMRMLScene(slicer.mrmlScene)
-        self.markupSelector.setToolTip("Pick the markup list to be filled")
-        firstTabLayout.addRow(self.markupSelectorLabel, self.markupSelector)
+        # self.outputVolumeSelectorLabel = qt.QLabel(
+        #     "Masked Volume: ", self.outputVolumeSelectorFrame)
+        # self.outputVolumeSelectorFrame.layout().addWidget(self.outputVolumeSelectorLabel)
 
         # Apply button
         # self.applyButton = qt.QPushButton("Apply")
@@ -190,32 +140,14 @@ class BoneSegmentationWidget:
         # self.labelSelector.connect(
             # 'currentNodeChanged(vtkMRMLNode*)', self.onLabelSelect)
 
-    def enableOrDisableFiducialeButton(self):
-        placeModePersistence = 1
-        slicer.modules.markups.logic().AddFiducial(1.0, -2.0, 3.3)
-        slicer.modules.markups.logic().StartPlaceMode(placeModePersistence)
-
-
-    def printMarkers(self):
-        fidList = slicer.util.getNode('MarkupsFiducial')
-        numFids = fidList.GetNumberOfFiducials()
-        for i in range(numFids):
-            ras = [0,0,0]
-            fidList.GetNthFiducialPosition(i,ras)
-            # the world position is the RAS position with any transform matrices applied
-            world = [0,0,0,0]
-            fidList.GetNthFiducialWorldCoordinates(0,world)
-            print i,": RAS =",ras,", world =",world
-
-
-
-
+    
 
 
     def UpdatecomputeButtonState(self):
-        if not self.markupSelector.currentNode():
-            self.computeButton.enabled = False
-        elif self.inputSelector.currentNode():
+        # if not self.markupSelector.currentNode():
+            # self.computeButton.enabled = False
+        # elif self.inputSelector.currentNode():
+        if self.inputSelector.currentNode():
             self.computeButton.enabled = True
         else:
             self.computeButton.enabled = False
@@ -346,7 +278,6 @@ class Slicelet(object):
         # TODO: should have way to pop up python interactor
         self.buttons = qt.QFrame()
         self.buttons.setLayout(qt.QHBoxLayout())
-        self.parent.layout().addWidget(self.buttons)
         self.addDataButton = qt.QPushButton("Add Data")
         self.buttons.layout().addWidget(self.addDataButton)
         self.addDataButton.connect(
@@ -355,6 +286,59 @@ class Slicelet(object):
         self.buttons.layout().addWidget(self.loadSceneButton)
         self.loadSceneButton.connect(
             "clicked()", slicer.app.ioManager().openLoadSceneDialog)
+
+
+
+        self.parent.layout().addWidget(self.buttons)
+
+        #Add a second column of buttons
+        self.buttonsColTwo = qt.QFrame()
+        self.buttonsColTwo.setLayout(qt.QHBoxLayout())
+        self.parent.layout().addWidget(self.buttonsColTwo)
+        #
+        # Add fiducial marker button
+        #
+        self.addMarkerButton = qt.QPushButton("Add Marker")
+        self.addMarkerButton.toolTip = "Compute information for the selected markup"
+        self.buttonsColTwo.layout().addWidget(self.addMarkerButton)
+        self.addMarkerButton.connect(
+            'clicked()', self.enableOrDisableFiducialeButton)
+
+        #
+        # Delete fiducial marker button
+        #
+        self.addMarkerButton = qt.QPushButton("Delete Markers")
+        self.addMarkerButton.toolTip = "Remove all the current fiducial markers."
+        self.buttonsColTwo.layout().addWidget(self.addMarkerButton)
+        self.addMarkerButton.connect(
+            'clicked()', self.deleteFiducialsButton)
+
+
+
+
+        self.printMarkersButton = qt.QPushButton("Print Markers")
+        self.printMarkersButton.toolTip = "Compute information for the selected markup"
+        self.buttonsColTwo.layout().addWidget(self.printMarkersButton)
+        self.printMarkersButton.connect(
+            'clicked()', self.printMarkers)
+
+
+
+        #
+        # Add A 2D View of the Input Image
+        #
+
+        # layoutManager = slicer.qMRMLLayoutWidget()
+        # layoutManager.setMRMLScene(slicer.mrmlScene)
+        
+        # self.viewSlice = qt.QFrame()
+        # self.viewSlice.setLayout()
+        layoutManager = slicer.qMRMLLayoutWidget()
+        layoutManager.setMRMLScene(slicer.mrmlScene)
+        layoutManager.setLayout(slicer.vtkMRMLLayoutNode.SlicerLayoutOneUpRedSliceView)
+        self.parent.layout().addWidget(layoutManager)
+
+
 
         if widgetClass:
             self.widget = widgetClass(self.parent)
@@ -368,6 +352,33 @@ class BoneSegmentationSlicelet(Slicelet):
 
     def __init__(self):
         super(BoneSegmentationSlicelet, self).__init__(BoneSegmentationWidget)
+
+    def enableOrDisableFiducialeButton(self):
+        placeModePersistence = 1
+        slicer.modules.markups.logic().AddFiducial(1.0, -2.0, 3.3)
+        slicer.modules.markups.logic().StartPlaceMode(placeModePersistence)
+
+    def deleteFiducialsButton(self):
+        fidList = getNode("vtkMRMLMarkupsFiducialNode1")
+        fidList.RemoveAllMarkups()
+        print("Removed all markeup points")
+
+
+    def printMarkers(self):
+
+        # global markupSelector
+        # print(markupSelector.GetNodeReferenceID())
+        # fidList = slicer.util.getNode('MarkupsFiducial')
+
+        fidList = getNode("vtkMRMLMarkupsFiducialNode1")
+        numFids = fidList.GetNumberOfFiducials()
+        for i in range(numFids):
+            ras = [0,0,0]
+            fidList.GetNthFiducialPosition(i,ras)
+            # the world position is the RAS position with any transform matrices applied
+            world = [0,0,0,0]
+            fidList.GetNthFiducialWorldCoordinates(0,world)
+            print i,": RAS =",ras,", world =",world
 
 
 if __name__ == "__main__":
