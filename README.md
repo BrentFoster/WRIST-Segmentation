@@ -30,12 +30,12 @@ To use as a Sliclet Application:
 $/path/to/Slicer.exe --no-main-window --python-script /path/to/BoneSegmentation.py 
 ```
 
-* Load image by the *Add Data* button (any Slicer acceptable image format can be used including Analyze and DICOM)
+* Load image by the **Add Data** button (any Slicer acceptable image format can be used including Analyze and DICOM)
 * Enable added fiducial markers (i.e. seed point) by clicking on the *Add Marker* button
 * Add one seed point for each bone of interest 
-* Select the volume in the *Input Volume* and click on *Compute*
+* Select the volume in the **Input Volume** and click on **Compute**
 * The segmentation will take ~45 seconds and will appear as a label type image overlaid onto the original image
-* Save the segmentation by the *Save Data* button and selecting the corresponding image
+* Save the segmentation by the **Save Data** button and selecting the corresponding image
 
 To use as a Slicer Module:
 
