@@ -14,8 +14,7 @@ Usage
 To use as a Sliclet Application:
 
 ```
-$/path/to.Slicer.exe --no-main-window --python-script /path/to/BoneSegmentation.py 
-
+$/path/to/Slicer.exe --no-main-window --python-script /path/to/BoneSegmentation.py 
 ```
 
 To use as a Slicer Module:
@@ -33,18 +32,20 @@ Create Python Requirements.txt
 -------
 
 ```
-
 $pipreqs /path/to/project
-
 ```
-#Build Documentation using Sphinx
+
+Build Documentation using Sphinx
+-------
+
 ``` 
 cd /Documentation
 make html
 ```
 
-#Build Documentation using Doxygen
+Build Documentation using Doxygen
+-------
 
-Use the Doxygen GUI 
+Use the Doxygen GUI (will use commands later if needed). Sphinx may be preferred
 
 
