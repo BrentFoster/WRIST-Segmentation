@@ -8,7 +8,8 @@ Current Build Status for Master Branch
 ![Current Build Status](https://img.shields.io/shippable/562c7f391895ca447420e213.svg?style=plastic)
 
 Usage
-_______
+-------
+
 
 To use as a Sliclet Application:
 
@@ -30,6 +31,7 @@ To use as a Slicer Module:
 
 Create Python Requirements.txt
 -------
+
 ```
 
 $pipreqs /path/to/project
