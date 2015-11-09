@@ -11,6 +11,8 @@ Purpose
 
 Segment the carpal bones from MR images given a set of user defined locations (seed points) within the image. It utilizes the open source [SimpleITK](http://www.simpleitk.org/) library which is a python wrapper for many [ITK](http://www.itk.org/) functions. 
 
+Currently uses the [Confidence Connected Image Filter](http://www.itk.org/SimpleITKDoxygen/html/classitk_1_1simple_1_1ConfidenceConnectedImageFilter.html) along with some post-processing on the segmentation. Pre-processing to enhance edges and decrease the chances of leaking into the background will be added.
+
 
 Segmentation Example
 -------
@@ -36,6 +38,7 @@ To use as a Slicer Module:
 * Or add a path to the folder using the "Additional Module Paths:"
 * Restart Slicer (the GUI is created on start up so restarting is needed when aded a new module)
 
+Add one fiducial marker (i.e. seed point) for each bone of interest. 
 
 Install Python Requirements
 -------
