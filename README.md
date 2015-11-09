@@ -6,6 +6,11 @@ Current Build Status for Master Branch
 
 ![Current Build Status](https://img.shields.io/shippable/562c7f391895ca447420e213.svg?style=plastic)
 
+Purpose 
+-------
+
+Segment the carpal bones from MR images given a set of user defined locations (seed points) within the image. It utilizes the open source [SimpleITK](http://www.simpleitk.org/) library which is a python wrapper for many [ITK](http://www.itk.org/) functions. 
+
 
 Segmentation Example
 -------
