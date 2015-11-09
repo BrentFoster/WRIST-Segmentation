@@ -32,17 +32,31 @@ To use as a Slicer Module:
 * Restart Slicer (the GUI is created on start up so restarting is needed when aded a new module)
 
 
+Install Python Requirements
+-------
+Install pip (installation manager for adding python libraries)
+```
+python get-pip.py
+```
 
+Use the Requirements.txt to install only the needed libraries. This will also check the version number and update if needed.
+```
+pip install -r /path/to/requirements.txt
+```
+
+Build Commands
+-------
 
 Create Python Requirements.txt
--------
+-----
 
 ```
 $pipreqs /path/to/project
 ```
 
+
 Build Documentation using Sphinx
--------
+-----
 
 ``` 
 cd /Documentation
@@ -50,7 +64,7 @@ make html
 ```
 
 Build Documentation using Doxygen
--------
+-----
 
 Use the Doxygen GUI (will use commands later if needed). Sphinx may be preferred
 
