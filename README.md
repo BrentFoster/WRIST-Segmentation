@@ -9,9 +9,9 @@ Current Build Status for Master Branch
 Purpose 
 -------
 
-Segment the carpal bones from MR images given a set of user defined locations (seed points) within the image. It utilizes the open source [SimpleITK](http://www.simpleitk.org/) library which is a python wrapper for many [ITK](http://www.itk.org/) functions. 
+Segment the carpal bones from MR images given a set of user defined locations (seed points) within the image. It utilizes the open source [SimpleITK](http://www.simpleitk.org/) library which is a python wrapper for many [ITK](http://www.itk.org/) functions which are mainly implemented in C++. 
 
-Currently uses the [Confidence Connected Image Filter](http://www.itk.org/SimpleITKDoxygen/html/classitk_1_1simple_1_1ConfidenceConnectedImageFilter.html) along with some post-processing on the segmentation. Pre-processing to enhance edges and decrease the chances of leaking into the background will be added.
+BoneSegmentation currently uses the [Confidence Connected Image Filter](http://www.itk.org/SimpleITKDoxygen/html/classitk_1_1simple_1_1ConfidenceConnectedImageFilter.html) along with some post-processing on the binary image to fill holes/smooth edges. Pre-processing to enhance edges and decrease the chances of leaking into the background will be added.
 
 
 Segmentation Example
@@ -30,6 +30,13 @@ To use as a Sliclet Application:
 $/path/to/Slicer.exe --no-main-window --python-script /path/to/BoneSegmentation.py 
 ```
 
+* Load image by the *Add Data* button (any Slicer acceptable image format can be used including Analyze and DICOM)
+* Enable added fiducial markers (i.e. seed point) by clicking on the *Add Marker* button
+* Add one seed point for each bone of interest 
+* Select the volume in the *Input Volume* and click on *Compute*
+* The segmentation will take ~45 seconds and will appear as a label type image overlaid onto the original image
+* Save the segmentation by the *Save Data* button and selecting the corresponding image
+
 To use as a Slicer Module:
 
 * Open Slicer
@@ -38,7 +45,7 @@ To use as a Slicer Module:
 * Or add a path to the folder using the "Additional Module Paths:"
 * Restart Slicer (the GUI is created on start up so restarting is needed when aded a new module)
 
-Add one fiducial marker (i.e. seed point) for each bone of interest. 
+
 
 Install Python Requirements
 -------
