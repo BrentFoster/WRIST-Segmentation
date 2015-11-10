@@ -18,7 +18,7 @@ def ConfidenceConnectedSeg(image, seedPoints):
 
 	###PRE-PROCESSING FILTERS###
 	anisotropicFilter = sitk.CurvatureAnisotropicDiffusionImageFilter()
-	anisotropicFilter.SetNumberOfIterations(10)
+	anisotropicFilter.SetNumberOfIterations(5)
 	anisotropicFilter.SetTimeStep(0.01)
 	anisotropicFilter.SetConductanceParameter(3)
 
@@ -53,12 +53,14 @@ def ConfidenceConnectedSeg(image, seedPoints):
 		print(tempPoint)
 
 		#its = 25, multiplyer = 2
-		segXImg = sitk.ConfidenceConnected(image, tempPoint, numberOfIterations=25, multiplier=2,	initialNeighborhoodRadius = 5, replaceValue=x+1)
+		segXImg = sitk.ConfidenceConnected(image, tempPoint, numberOfIterations=30, multiplier=2,	initialNeighborhoodRadius = 5, replaceValue=x+1)
 
 		print('\033[93m' + "Filling Segmentation Holes...")
 		#Apply the filters to the binary image
+		dilateFilter.SetKernelRadius(1)
 		segXImg = dilateFilter.Execute(segXImg, 0, x+1, False)
 		segXImg = fillFilter.Execute(segXImg, True, x+1)
+		erodeFilter.SetKernelRadius(1)
 		segXImg = erodeFilter.Execute(segXImg, 0, x+1, False)
 
 
@@ -68,6 +70,7 @@ def ConfidenceConnectedSeg(image, seedPoints):
 		#Try to remove leakage areas by first eroding the binary and
 		#get the labels that are still connected to the original seed location
 
+		erodeFilter.SetKernelRadius(3)
 		segXImg = erodeFilter.Execute(segXImg, 0, x+1, False)
 
 		connectedXImg = connectedComponentFilter.Execute(segXImg)
@@ -79,19 +82,32 @@ def ConfidenceConnectedSeg(image, seedPoints):
 		tempPoint = tempPoint[0]
 		val = nda[tempPoint[2]][tempPoint[1]][tempPoint[0]]
 		#TODO Check this
-		nda[nda != x+2] = 0 #Keep only the label that intersects with the seed point
+		nda[nda != val] = 0 #Keep only the label that intersects with the seed point
 		nda[nda != 0] = x+1
 
 		segXImg = sitk.GetImageFromArray(nda)
-
-
+		
+		dilateFilter.SetKernelRadius(3)
+		segXImg = dilateFilter.Execute(segXImg, 0, x+1, False)
 
 		segXImg = sitk.Cast(segXImg, segmentation.GetPixelID())
 		segXImg.CopyInformation(segmentation)
-		
-		#Combine with the previous segmentations
-		segmentation = segmentation + segXImg
-		print("  ")
+
+		print('\033[96m' + "Checking volume for potential leakage... "), #Comma keeps printing on the same line
+		volume = len(nda[nda == x+1])
+		maxVolume = 25000
+		if volume > maxVolume:
+			print('\033[97m' + "Failed check with volume "),
+			print(volume)
+			print("Skipping this label")
+		else:
+			print('\033[96m' + "Passed with volume "),
+			print(volume)
+
+			#Combine with the previous segmentations
+			print('\033[96m' + "Combining Segmentations...")
+			segmentation = segmentation + segXImg
+			print("  ")
 
 
 	segmentation = sitk.Cast(segmentation, sitk.sitkUInt16)
@@ -121,7 +137,7 @@ if __name__ == '__main__':
 	seedPoints = [[99, 206, 50]]
 
 	#Read in image
-	image = sitk.ReadImage("Volunteer5_VIBE_scaled.hdr")
+	image = sitk.ReadImage("Volunteer5_VIBE.hdr")
 
 	segmentation = ConfidenceConnectedSeg(image, seedPoints)
 

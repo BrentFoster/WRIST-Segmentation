@@ -172,7 +172,10 @@ class BoneSegmentationWidget:
         # seedPoints[0] = []
 
         # print("Image Data:")
-        image = sitkUtils.PullFromSlicer('Volunteer5_VIBE')
+        imageID = getNode("vtkMRMLScalarVolumeNode2") #Get the name of the image
+        print(imageID.GetName())
+
+        image = sitkUtils.PullFromSlicer(imageID.GetName())
         
         # print(seedPoints)
 
