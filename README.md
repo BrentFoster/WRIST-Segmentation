@@ -42,9 +42,11 @@ To use as a Slicer Module:
 * Open Slicer
 * Edit -> Application Settings -> Modules
 * Copy and paste both .py (python) files into the module path
-* Or add a path to the folder using the "Additional Module Paths:"
+* Or add a path to the folder using the "Additional Module Paths"
 * Restart Slicer (the GUI is created on start up so restarting is needed when aded a new module)
-
+* Use the fiduical marker module to create the seed points
+* Select the volume in the **Input Volume** and click on **Compute**
+* The segmentation will take ~45 seconds and will appear as a label type image overlaid onto the original image
 
 
 Install Python Requirements
