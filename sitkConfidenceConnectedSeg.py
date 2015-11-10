@@ -20,7 +20,7 @@ def ConfidenceConnectedSeg(image, seedPoints):
 	anisotropicFilter = sitk.CurvatureAnisotropicDiffusionImageFilter()
 	anisotropicFilter.SetNumberOfIterations(5)
 	anisotropicFilter.SetTimeStep(0.01)
-	anisotropicFilter.SetConductanceParameter(3)
+	anisotropicFilter.SetConductanceParameter(2)
 
 	###POST-PROCESSING FILTERS###
 	dilateFilter = sitk.BinaryDilateImageFilter()
@@ -53,7 +53,7 @@ def ConfidenceConnectedSeg(image, seedPoints):
 		print(tempPoint)
 
 		#its = 25, multiplyer = 2
-		segXImg = sitk.ConfidenceConnected(image, tempPoint, numberOfIterations=30, multiplier=2,	initialNeighborhoodRadius = 5, replaceValue=x+1)
+		segXImg = sitk.ConfidenceConnected(image, tempPoint, numberOfIterations=30, multiplier=2.1,	initialNeighborhoodRadius = 5, replaceValue=x+1)
 
 		print('\033[93m' + "Filling Segmentation Holes...")
 		#Apply the filters to the binary image
@@ -70,7 +70,7 @@ def ConfidenceConnectedSeg(image, seedPoints):
 		#Try to remove leakage areas by first eroding the binary and
 		#get the labels that are still connected to the original seed location
 
-		erodeFilter.SetKernelRadius(3)
+		erodeFilter.SetKernelRadius(1)
 		segXImg = erodeFilter.Execute(segXImg, 0, x+1, False)
 
 		connectedXImg = connectedComponentFilter.Execute(segXImg)
@@ -87,7 +87,7 @@ def ConfidenceConnectedSeg(image, seedPoints):
 
 		segXImg = sitk.GetImageFromArray(nda)
 		
-		dilateFilter.SetKernelRadius(3)
+		dilateFilter.SetKernelRadius(1)
 		segXImg = dilateFilter.Execute(segXImg, 0, x+1, False)
 
 		segXImg = sitk.Cast(segXImg, segmentation.GetPixelID())
@@ -95,7 +95,7 @@ def ConfidenceConnectedSeg(image, seedPoints):
 
 		print('\033[96m' + "Checking volume for potential leakage... "), #Comma keeps printing on the same line
 		volume = len(nda[nda == x+1])
-		maxVolume = 25000
+		maxVolume = 90000
 		if volume > maxVolume:
 			print('\033[97m' + "Failed check with volume "),
 			print(volume)
