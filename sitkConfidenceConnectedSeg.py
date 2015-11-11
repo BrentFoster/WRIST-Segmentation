@@ -66,6 +66,7 @@ def ConfidenceConnectedSeg(image, seedPoints):
 	print("  ")
 
 
+
 	# sitk.Show(image)
 
 
