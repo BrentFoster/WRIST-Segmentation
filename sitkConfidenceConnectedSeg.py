@@ -33,7 +33,7 @@ def ConfidenceConnectedSeg(image, seedPoints):
 	erodeFilter.SetKernelRadius(1)
 	fillFilter = sitk.BinaryFillholeImageFilter()
 	laplacianFilter = sitk.LaplacianSegmentationLevelSetImageFilter()
-
+	laplacianFilter.SetReverseExpansionDirection (True)
 	print(laplacianFilter)
 
 
@@ -99,7 +99,32 @@ def ConfidenceConnectedSeg(image, seedPoints):
 		# segmentation = segmentation + segXImg
 		###TEMP###
 
+		segXImg = sitk.Cast(segXImg, segmentation.GetPixelID())
+		segXImg.CopyInformation(segmentation)
+
+		
+		print('\033[95m' + "Running Laplacian Level Set...")
+		#Additional post-processing (Lapacian Level Set Filter)
+		#Binary image needs to have a value of 0 and 1/2*(x+1)
+		segXImg = segXImg/(2)
+		segXImg = laplacianFilter.Execute(segXImg, image)
+		# sitk.Show(segXImg)	
+
+		nda = sitk.GetArrayFromImage(segXImg)
+		nda = np.asarray(nda)
+
+		#Fix the intensities of the output of the laplcian; 0 = 1 and ~! 1 is 0 then 1 == x+1
+		nda[nda <= 0.10] = 0
+		nda[nda != 0] = x+1
+
+		segXImg = sitk.GetImageFromArray(nda)
+		segXImg = sitk.Cast(segXImg, segmentation.GetPixelID())
+		segXImg.CopyInformation(segmentation)
+
+
 		print('\033[95m' + "Running Connected Component...")
+		segXImg = sitk.Cast(segXImg, 1) #Can't be a 32 bit float
+		segXImg.CopyInformation(segmentation)
 
 		#Try to remove leakage areas by first eroding the binary and
 		#get the labels that are still connected to the original seed location
@@ -127,23 +152,6 @@ def ConfidenceConnectedSeg(image, seedPoints):
 		segXImg = sitk.Cast(segXImg, segmentation.GetPixelID())
 		segXImg.CopyInformation(segmentation)
 
-
-		print('\033[95m' + "Running Laplacian Level Set...")
-		#Additional post-processing (Lapacian Level Set Filter)
-		#Binary image needs to have a value of 0 and 1/2*(x+1)
-		segXImg = segXImg/(2)
-		segXImg = laplacianFilter.Execute(segXImg, image)
-
-		nda = sitk.GetArrayFromImage(segXImg)
-		nda = np.asarray(nda)
-
-		#Fix the intensities of the output of the laplcian; 0 = 1 and ~! 1 is 0 then 1 == x+1
-		nda[nda <= 0.20] = 0
-		nda[nda != 0] = x+1
-
-		segXImg = sitk.GetImageFromArray(nda)
-		segXImg = sitk.Cast(segXImg, segmentation.GetPixelID())
-		segXImg.CopyInformation(segmentation)
 
 
 
