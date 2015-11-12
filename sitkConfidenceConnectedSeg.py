@@ -74,8 +74,27 @@ def LaplacianLevelSet(segXImg, image, laplacianFilter, x):
 
 	#Additional post-processing (Lapacian Level Set Filter)
 	#Binary image needs to have a value of 0 and 1/2*(x+1)
-	segXImg = segXImg/(2)
-	segXImg = laplacianFilter.Execute(segXImg, image)
+	nda = sitk.GetArrayFromImage(segXImg)
+	nda = np.asarray(nda)
+
+	#Fix the intensities of the output of the laplcian; 0 = 1 and ~! 1 is 0 then 1 == x+1
+	nda[nda == x+1] = (x+1)/2
+
+	segXImg = sitk.GetImageFromArray(nda)
+	segXImg = sitk.Cast(segXImg, image.GetPixelID())
+	segXImg.CopyInformation(image)
+
+	try:
+		segXImg = laplacianFilter.Execute(segXImg, image)
+	except:
+		print("Laplacian Filter Failed!")
+		print("segXImg size & type:")
+		print(segXImg.GetSize())
+		print(segXImg.GetPixelID())
+		print("image size & type:")
+		print(image.GetSize())
+		print(image.GetPixelID())
+
 	# sitk.Show(segXImg)	
 
 	nda = sitk.GetArrayFromImage(segXImg)
@@ -227,8 +246,8 @@ def ConfidenceConnectedSeg(image, inputLabel, seedPoints):
 		print('\033[93m' + "Filling Segmentation Holes...")
 		segXImg = fillHoles(segXImg, dilateFilter, fillFilter, erodeFilter,x)
 
-		segXImg = sitk.Cast(segXImg, segmentation.GetPixelID())
-		segXImg.CopyInformation(segmentation)
+		# segXImg = sitk.Cast(segXImg, segmentation.GetPixelID())
+		# segXImg.CopyInformation(segmentation)
 		
 		print('\033[95m' + "Running Laplacian Level Set...")
 		segXImg = LaplacianLevelSet(segXImg, image, laplacianFilter, x)
