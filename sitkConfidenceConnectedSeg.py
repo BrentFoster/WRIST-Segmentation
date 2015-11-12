@@ -67,6 +67,11 @@ def fillHoles(segXImg, dilateFilter, fillFilter, erodeFilter, x):
 
 
 def LaplacianLevelSet(segXImg, image, laplacianFilter, x):
+	#Check the image type of segXImg and image are the same (for Python 3.3 and 3.4)
+	segXImg = sitk.Cast(segXImg, image.GetPixelID()) #Can't be a 32 bit float
+	segXImg.CopyInformation(image)
+
+
 	#Additional post-processing (Lapacian Level Set Filter)
 	#Binary image needs to have a value of 0 and 1/2*(x+1)
 	segXImg = segXImg/(2)
@@ -123,6 +128,10 @@ def ConnectedComponent(segXImg, seedPoint, segmentation, connectedComponentFilte
 	return segXImg
 
 def LeakageCheck(segXImg, segmentation, x):
+
+	#Check the image type of segXImg and image are the same (for Python 3.3 and 3.4)
+	segXImg = sitk.Cast(segXImg, segmentation.GetPixelID()) #Can't be a 32 bit float
+	segXImg.CopyInformation(segmentation)
 
 	nda = sitk.GetArrayFromImage(segXImg)
 	nda = np.asarray(nda)
