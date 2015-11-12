@@ -249,8 +249,10 @@ if __name__ == '__main__':
     ### sitkConfidenceConnectedSeg.py executed as script starts here##
 	##For the remote Linux automated testing##
 	seedPoints = [[99, 206, 50]] #TODO Use the .txt file to load points
-	image = sitk.ReadImage("/Users/Brent/Google Drive/Research/Wrist MRI/VIBE/Volunteer5_VIBE.hdr")
-	##
+	# image = sitk.ReadImage("/Users/Brent/Google Drive/Research/Wrist MRI/VIBE/Volunteer5_VIBE.hdr")
+	image = sitk.ReadImage("Volunteer5_VIBE.hdr")
+	
+	###
 
 	#TODO Fix this: Need to flip the image if loading from the terminal vs. Slicer/Slicelet
 	flipFilter = sitk.FlipImageFilter()
