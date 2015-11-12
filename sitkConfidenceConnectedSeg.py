@@ -259,10 +259,16 @@ if __name__ == '__main__':
 	flipFilter.SetFlipAxes((False,True,False))
 	image = flipFilter.Execute(image)
 
-	#Create an empty inputLabel image
-	inputLabel = image*0
+	###Create an empty inputLabel image###
 
-	
+	nda = sitk.GetArrayFromImage(image)
+	nda = np.asarray(nda)
+	nda = nda*0
+	inputLabel = sitk.Cast(sitk.GetImageFromArray(nda), image.GetPixelID())
+	inputLabel.CopyInformation(image)
+	##Done creating empty inputLabel##
+
+	#Run the algorithm
 	segmentation = ConfidenceConnectedSeg(image, inputLabel, seedPoints)
 
 
