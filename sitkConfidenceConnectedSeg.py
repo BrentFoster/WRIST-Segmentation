@@ -1,19 +1,26 @@
 import SimpleITK as sitk
 import numpy as np
 
-def ConfidenceConnectedSeg(image, seedPoints):
 
-	#Save the user defined points in a .txt for automatimating testing (TODO)
-	text_file = open("PointList.txt", "r+")
-	text_file.readlines()
-	text_file.write("%s\n" % seedPoints)
-	text_file.close()
+def apply_AnisotropicFilter(image, anisotropicFilter):
+	image = anisotropicFilter.Execute(image)
+
+	return image
+
+def savePointList(seedPoints):
+	try:
+		#Save the user defined points in a .txt for automatimating testing (TODO)
+		text_file = open("PointList.txt", "r+")
+		text_file.readlines()
+		text_file.write("%s\n" % seedPoints)
+		text_file.close()
+	except:
+		print("Saving to .txt failed...")
 
 
-	scalingFactor = [2, 2, 1] #X,Y,Z
+def initiateFilters(scalingFactor):
 
 	### LOAD FILTERS ###
-
 	shrinkFilter = sitk.ShrinkImageFilter()
 	shrinkFilter.SetShrinkFactors(scalingFactor)
 
@@ -34,16 +41,118 @@ def ConfidenceConnectedSeg(image, seedPoints):
 	fillFilter = sitk.BinaryFillholeImageFilter()
 	laplacianFilter = sitk.LaplacianSegmentationLevelSetImageFilter()
 	laplacianFilter.SetReverseExpansionDirection (True)
-	print(laplacianFilter)
-
 
 	#Filter to attempt to remove the leakage areas
 	connectedComponentFilter = sitk.ScalarConnectedComponentImageFilter()
 	connectedComponentFilter.SetFullyConnected(True)
 	connectedComponentFilter.SetDistanceThreshold(0.01) #Distance=Intensity difference NOT location
-
 	### END FILTERS ###
 
+	return(shrinkFilter,expandFilter,anisotropicFilter,dilateFilter,erodeFilter,fillFilter,laplacianFilter,connectedComponentFilter)
+
+def ConfidenceConnectedSegmentation(image,seedPoint,x):
+	#numberOfIterations = 25, multiplier = 2
+	segXImg = sitk.ConfidenceConnected(image, seedPoint, numberOfIterations=0, multiplier=1.8, initialNeighborhoodRadius=3, replaceValue=x+1)
+	return segXImg
+
+
+def fillHoles(segXImg, dilateFilter, fillFilter, erodeFilter, x):
+	#Apply the filters to the binary image
+	dilateFilter.SetKernelRadius(1)
+	segXImg = dilateFilter.Execute(segXImg, 0, x+1, False)
+	segXImg = fillFilter.Execute(segXImg, True, x+1)
+	erodeFilter.SetKernelRadius(1)
+	segXImg = erodeFilter.Execute(segXImg, 0, x+1, False)	
+	return segXImg
+
+
+def LaplacianLevelSet(segXImg, image, laplacianFilter, x):
+	#Additional post-processing (Lapacian Level Set Filter)
+	#Binary image needs to have a value of 0 and 1/2*(x+1)
+	segXImg = segXImg/(2)
+	segXImg = laplacianFilter.Execute(segXImg, image)
+	# sitk.Show(segXImg)	
+
+	nda = sitk.GetArrayFromImage(segXImg)
+	nda = np.asarray(nda)
+
+	#Fix the intensities of the output of the laplcian; 0 = 1 and ~! 1 is 0 then 1 == x+1
+	nda[nda <= 0.01] = 0
+	nda[nda != 0] = x+1
+
+	segXImg = sitk.GetImageFromArray(nda)
+	segXImg = sitk.Cast(segXImg, image.GetPixelID())
+	segXImg.CopyInformation(image)
+
+	return segXImg
+
+
+def ConnectedComponent(segXImg, seedPoint, segmentation, connectedComponentFilter, erodeFilter, dilateFilter, x):
+
+	segXImg = sitk.Cast(segXImg, 1) #Can't be a 32 bit float
+	segXImg.CopyInformation(segmentation)
+
+	#Try to remove leakage areas by first eroding the binary and
+	#get the labels that are still connected to the original seed location
+
+	erodeFilter.SetKernelRadius(3)
+	segXImg = erodeFilter.Execute(segXImg, 0, x+1, False)
+
+	connectedXImg = connectedComponentFilter.Execute(segXImg)
+
+	nda = sitk.GetArrayFromImage(connectedXImg)
+	nda = np.asarray(nda)
+
+	#In numpy an array is indexed in the opposite order (z,y,x)
+	seedPoint = seedPoint[0]
+	val = nda[seedPoint[2]][seedPoint[1]][seedPoint[0]]
+
+	#Keep only the label that intersects with the seed point
+	nda[nda != val] = 0 
+	nda[nda != 0] = x+1
+
+	segXImg = sitk.GetImageFromArray(nda)
+
+	#Undo the earlier erode filter by dilating by same radius
+	dilateFilter.SetKernelRadius(3)
+	segXImg = dilateFilter.Execute(segXImg, 0, x+1, False)
+
+	segXImg = sitk.Cast(segXImg, segmentation.GetPixelID())
+	segXImg.CopyInformation(segmentation)
+
+	return segXImg
+
+def LeakageCheck(segXImg, segmentation, x):
+
+	nda = sitk.GetArrayFromImage(segXImg)
+	nda = np.asarray(nda)
+
+	volume = len(nda[nda == x+1])
+	maxVolume = 200000
+	if volume > maxVolume:
+		print('\033[97m' + "Failed check with volume "),
+		print(volume)
+		print("Skipping this label")
+	else:
+		print('\033[96m' + "Passed with volume "),
+		print(volume)
+
+		#Combine with the previous segmentations
+		print('\033[96m' + "Combining Segmentations...")
+		segmentation = segmentation + segXImg
+		print("  ")
+
+	return segmentation
+
+def ConfidenceConnectedSeg(image, seedPoints):
+	print('\033[92m' + "Saving Seed Points to txt file...")
+	savePointList(seedPoints)
+
+
+	scalingFactor = [2, 2, 1] #X,Y,Z
+
+	print('\033[90m' + "Initiating filters...")
+	(shrinkFilter,expandFilter,anisotropicFilter,dilateFilter,erodeFilter,fillFilter,laplacianFilter,connectedComponentFilter) = initiateFilters(scalingFactor)
 
 	print('\033[90m' + "Scaling image down...")
 	image = shrinkFilter.Execute(image)
@@ -51,7 +160,6 @@ def ConfidenceConnectedSeg(image, seedPoints):
 	print('\033[91m' + "### SEGMENTING ###")
 	print("  ")
 
-	# sitkFloat32
 	image = sitk.Cast(image,sitk.sitkFloat32)
 
 	#Copy the orignal image for plotting later
@@ -61,15 +169,9 @@ def ConfidenceConnectedSeg(image, seedPoints):
 	segmentation = sitk.Image(image.GetSize(), image.GetPixelID())
 	segmentation.CopyInformation(image)
 
-	
 
-
-	###Apply the Anisotropic Filter###
 	print('\033[92m' + "Applying the Anisotropic Filter...")
-	# image = anisotropicFilter.Execute(image)
-	print("  ")
-
-	# sitk.Show(image)
+	image = apply_AnisotropicFilter(image, anisotropicFilter)
 
 	#Need to round the seedPoints because integers are required for indexing
 	seedPoints = np.array(seedPoints).astype(int)
@@ -82,113 +184,33 @@ def ConfidenceConnectedSeg(image, seedPoints):
 		print('\033[94m' + "Current Seed Point: ")
 		print(tempPoint)
 
-		#numberOfIterations = 25, multiplier = 2
-		segXImg = sitk.ConfidenceConnected(image, tempPoint, numberOfIterations=0, multiplier=1.8, initialNeighborhoodRadius=3, replaceValue=x+1)
+		print('\033[93m' + "Segmenting via confidence connected...")
+		segXImg = ConfidenceConnectedSegmentation(image,tempPoint,x)
 
 		print('\033[93m' + "Filling Segmentation Holes...")
-		#Apply the filters to the binary image
-		dilateFilter.SetKernelRadius(1)
-		segXImg = dilateFilter.Execute(segXImg, 0, x+1, False)
-		segXImg = fillFilter.Execute(segXImg, True, x+1)
-		erodeFilter.SetKernelRadius(1)
-		segXImg = erodeFilter.Execute(segXImg, 0, x+1, False)
-
-		###TEMP###
-		# segXImg = sitk.Cast(segXImg, segmentation.GetPixelID())
-		# segXImg.CopyInformation(segmentation)
-		# segmentation = segmentation + segXImg
-		###TEMP###
+		segXImg = fillHoles(segXImg, dilateFilter, fillFilter, erodeFilter,x)
 
 		segXImg = sitk.Cast(segXImg, segmentation.GetPixelID())
 		segXImg.CopyInformation(segmentation)
-
 		
 		print('\033[95m' + "Running Laplacian Level Set...")
-		#Additional post-processing (Lapacian Level Set Filter)
-		#Binary image needs to have a value of 0 and 1/2*(x+1)
-		segXImg = segXImg/(2)
-		segXImg = laplacianFilter.Execute(segXImg, image)
-		# sitk.Show(segXImg)	
-
-		nda = sitk.GetArrayFromImage(segXImg)
-		nda = np.asarray(nda)
-
-		#Fix the intensities of the output of the laplcian; 0 = 1 and ~! 1 is 0 then 1 == x+1
-		nda[nda <= 0.10] = 0
-		nda[nda != 0] = x+1
-
-		segXImg = sitk.GetImageFromArray(nda)
-		segXImg = sitk.Cast(segXImg, segmentation.GetPixelID())
-		segXImg.CopyInformation(segmentation)
-
+		segXImg = LaplacianLevelSet(segXImg, image, laplacianFilter, x)
 
 		print('\033[95m' + "Running Connected Component...")
-		segXImg = sitk.Cast(segXImg, 1) #Can't be a 32 bit float
-		segXImg.CopyInformation(segmentation)
-
-		#Try to remove leakage areas by first eroding the binary and
-		#get the labels that are still connected to the original seed location
-
-		erodeFilter.SetKernelRadius(3)
-		segXImg = erodeFilter.Execute(segXImg, 0, x+1, False)
-
-		connectedXImg = connectedComponentFilter.Execute(segXImg)
-
-		nda = sitk.GetArrayFromImage(connectedXImg)
-		nda = np.asarray(nda)
-
-		#In numpy an array is indexed in the opposite order (z,y,x)
-		tempPoint = tempPoint[0]
-		val = nda[tempPoint[2]][tempPoint[1]][tempPoint[0]]
-		#TODO Check this
-		nda[nda != val] = 0 #Keep only the label that intersects with the seed point
-		nda[nda != 0] = x+1
-
-		segXImg = sitk.GetImageFromArray(nda)
-		
-		dilateFilter.SetKernelRadius(3)
-		segXImg = dilateFilter.Execute(segXImg, 0, x+1, False)
-
-		segXImg = sitk.Cast(segXImg, segmentation.GetPixelID())
-		segXImg.CopyInformation(segmentation)
-
-
-
-
+		segXImg = ConnectedComponent(segXImg, tempPoint, segmentation, connectedComponentFilter, erodeFilter, dilateFilter, x)
 
 		print('\033[96m' + "Checking volume for potential leakage... "), #Comma keeps printing on the same line
-		volume = len(nda[nda == x+1])
-		maxVolume = 200000
-		if volume > maxVolume:
-			print('\033[97m' + "Failed check with volume "),
-			print(volume)
-			print("Skipping this label")
-		else:
-			print('\033[96m' + "Passed with volume "),
-			print(volume)
-
-			#Combine with the previous segmentations
-			print('\033[96m' + "Combining Segmentations...")
-			segmentation = segmentation + segXImg
-			print("  ")
-
-
+		segmentation = LeakageCheck(segXImg, segmentation, x)
+		
 	segmentation  = sitk.Cast(segmentation, sitk.sitkUInt16)
 	originalImage = sitk.Cast(originalImage, sitk.sitkUInt16)
 
 	try:
-		sitk.Show(segmentation)
-
+		# sitk.Show(segmentation)
 		overlaidSegImage = sitk.LabelOverlay(originalImage, segmentation)
-		# nda = sitk.GetArrayFromImage(overlaidSegImage)
-		# nda = nda[:,:,:,0] + nda[:,:,:,1] + nda[:,:,:,2]
-		# overlaidSegImage = sitk.GetImageFromArray(nda)
-
 		sitk.Show(overlaidSegImage)
 	except:
 		print("Can't show the image with ImageJ! (Probably testing through Linux virtual machine)")
-
-
 
 	print('\033[90m' + "Scaling image back...")
 	segmentation = expandFilter.Execute(segmentation)
@@ -197,39 +219,19 @@ def ConfidenceConnectedSeg(image, seedPoints):
 	return segmentation
 
 if __name__ == '__main__':
-    ### sitkConfidenceConnectedSeg.py executed as script ##
 
-	#Create a list for the seed points
-	# seedPoints = [[130, 184, 42], [175.987, 90.123, 31.0], [100, 200, 47]]
-
-	#Test for leakage
-	# seedPoints = [[99, 206, 50]]
-	# seedPoints = [[141, 290, 119]]
-
-	#Could load the points from a saved text file (PointList.txt)
-	# seedPoints = [(-373.1014570105204, -615.4203026139975, 110.3448307613415), (-204.98551149614664, -670.5623327427121, 110.3448307613415), (-346.2029057282207, -667.8724776144821, 134.48276249038494), (-266.8521794454362, -698.8058115891268, 134.48276249038494), (-209.02029418849162, -679.976825691517, 141.3793144129688), (-242.64348329136638, -623.4898679986875, 141.3793144129688), (-288.37102047127604, -626.1797231269175, 172.41379806459608)]
-	# seedPoints = [(-266.8521794454362, -698.8058115891268, 134.48276249038494)]
-	# seedPoints = [(342, 678, 142)]
-	# seedPoints = [(-204.98551149614664, -670.5623327427121, 110.3448307613415)]
-	#Read in image
-	# image = sitk.ReadImage("Volunteer5_VIBE.hdr")
-
-
+    ### sitkConfidenceConnectedSeg.py executed as script starts here##
 	##For the remote Linux automated testing##
-	seedPoints = [[99, 206, 50]]	
+	seedPoints = [[99, 206, 50]] #TODO Use the .txt file to load points
 	image = sitk.ReadImage("/Users/Brent/Google Drive/Research/Wrist MRI/VIBE/Volunteer5_VIBE.hdr")
 	##
 
-	#Need to flip the image if loading from the terminal vs. Slicer/Slicelet. Need to fix this
-
+	#TODO Fix this: Need to flip the image if loading from the terminal vs. Slicer/Slicelet
 	flipFilter = sitk.FlipImageFilter()
 	flipFilter.SetFlipAxes((False,True,False))
 	image = flipFilter.Execute(image)
 
 	segmentation = ConfidenceConnectedSeg(image, seedPoints)
-
-
-
 
 
 

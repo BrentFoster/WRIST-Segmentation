@@ -32,7 +32,7 @@ x = (textSeeds['x'][1], textSeeds['x'][1], textSeeds['x'][1])
 image = sitk.ReadImage("/Users/Brent/Google Drive/Research/Wrist MRI/VIBE/Volunteer2_VIBE.hdr")
 
 seeds = []
-for i in [9]: #Select which bone (or all of them) from the csv file
+for i in xrange(1,9): #Select which bone (or all of them) from the csv file
 	#Convert from string to float
 	tempFloat = [float(textSeeds['x'][i]), float(textSeeds['y'][i]), float(textSeeds['z'][i])]
 	print(tempFloat)
@@ -49,11 +49,5 @@ segmentation = sitkConfidenceConnectedSeg.ConfidenceConnectedSeg(image,seeds)
 elapsed = timeit.default_timer() - start_time
 
 print "Time Elapsed:", elapsed, "seconds"
-
-
-
-
-
-
 
 

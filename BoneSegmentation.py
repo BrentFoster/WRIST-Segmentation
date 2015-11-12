@@ -170,7 +170,7 @@ class BoneSegmentationWidget:
             seedPoints.append(ras)
             print i,": RAS =",ras
         # seedPoints[0] = []
-
+        print(fidList)
         # print("Image Data:")
         imageID = getNode("vtkMRMLScalarVolumeNode2") #Get the name of the image
         print(imageID.GetName())
