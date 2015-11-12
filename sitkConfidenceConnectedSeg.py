@@ -32,6 +32,10 @@ def ConfidenceConnectedSeg(image, seedPoints):
 	erodeFilter = sitk.BinaryErodeImageFilter()
 	erodeFilter.SetKernelRadius(1)
 	fillFilter = sitk.BinaryFillholeImageFilter()
+	laplacianFilter = sitk.LaplacianSegmentationLevelSetImageFilter()
+
+	print(laplacianFilter)
+
 
 	#Filter to attempt to remove the leakage areas
 	connectedComponentFilter = sitk.ScalarConnectedComponentImageFilter()
@@ -65,10 +69,7 @@ def ConfidenceConnectedSeg(image, seedPoints):
 	# image = anisotropicFilter.Execute(image)
 	print("  ")
 
-
-
 	# sitk.Show(image)
-
 
 	#Need to round the seedPoints because integers are required for indexing
 	seedPoints = np.array(seedPoints).astype(int)
@@ -82,7 +83,7 @@ def ConfidenceConnectedSeg(image, seedPoints):
 		print(tempPoint)
 
 		#numberOfIterations = 25, multiplier = 2
-		segXImg = sitk.ConfidenceConnected(image, tempPoint, numberOfIterations=20, multiplier=2, initialNeighborhoodRadius=2, replaceValue=x+1)
+		segXImg = sitk.ConfidenceConnected(image, tempPoint, numberOfIterations=0, multiplier=1.8, initialNeighborhoodRadius=3, replaceValue=x+1)
 
 		print('\033[93m' + "Filling Segmentation Holes...")
 		#Apply the filters to the binary image
@@ -103,7 +104,7 @@ def ConfidenceConnectedSeg(image, seedPoints):
 		#Try to remove leakage areas by first eroding the binary and
 		#get the labels that are still connected to the original seed location
 
-		erodeFilter.SetKernelRadius(1)
+		erodeFilter.SetKernelRadius(3)
 		segXImg = erodeFilter.Execute(segXImg, 0, x+1, False)
 
 		connectedXImg = connectedComponentFilter.Execute(segXImg)
@@ -120,15 +121,36 @@ def ConfidenceConnectedSeg(image, seedPoints):
 
 		segXImg = sitk.GetImageFromArray(nda)
 		
-		dilateFilter.SetKernelRadius(1)
+		dilateFilter.SetKernelRadius(3)
 		segXImg = dilateFilter.Execute(segXImg, 0, x+1, False)
 
 		segXImg = sitk.Cast(segXImg, segmentation.GetPixelID())
 		segXImg.CopyInformation(segmentation)
 
+
+		print('\033[95m' + "Running Laplacian Level Set...")
+		#Additional post-processing (Lapacian Level Set Filter)
+		#Binary image needs to have a value of 0 and 1/2*(x+1)
+		segXImg = segXImg/(2)
+		segXImg = laplacianFilter.Execute(segXImg, image)
+
+		nda = sitk.GetArrayFromImage(segXImg)
+		nda = np.asarray(nda)
+
+		#Fix the intensities of the output of the laplcian; 0 = 1 and ~! 1 is 0 then 1 == x+1
+		nda[nda <= 0.20] = 0
+		nda[nda != 0] = x+1
+
+		segXImg = sitk.GetImageFromArray(nda)
+		segXImg = sitk.Cast(segXImg, segmentation.GetPixelID())
+		segXImg.CopyInformation(segmentation)
+
+
+
+
 		print('\033[96m' + "Checking volume for potential leakage... "), #Comma keeps printing on the same line
 		volume = len(nda[nda == x+1])
-		maxVolume = 90000
+		maxVolume = 200000
 		if volume > maxVolume:
 			print('\033[97m' + "Failed check with volume "),
 			print(volume)
@@ -143,7 +165,7 @@ def ConfidenceConnectedSeg(image, seedPoints):
 			print("  ")
 
 
-	segmentation = sitk.Cast(segmentation, sitk.sitkUInt16)
+	segmentation  = sitk.Cast(segmentation, sitk.sitkUInt16)
 	originalImage = sitk.Cast(originalImage, sitk.sitkUInt16)
 
 	try:
@@ -185,10 +207,10 @@ if __name__ == '__main__':
 	# image = sitk.ReadImage("Volunteer5_VIBE.hdr")
 
 
-	##For the remote Linux automated testing
+	##For the remote Linux automated testing##
 	seedPoints = [[99, 206, 50]]	
 	image = sitk.ReadImage("/Users/Brent/Google Drive/Research/Wrist MRI/VIBE/Volunteer5_VIBE.hdr")
-
+	##
 
 	#Need to flip the image if loading from the terminal vs. Slicer/Slicelet. Need to fix this
 
