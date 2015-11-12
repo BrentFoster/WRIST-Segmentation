@@ -259,7 +259,11 @@ if __name__ == '__main__':
 	flipFilter.SetFlipAxes((False,True,False))
 	image = flipFilter.Execute(image)
 
-	segmentation = ConfidenceConnectedSeg(image, seedPoints)
+	#Create an empty inputLabel image
+	inputLabel = image*0
+
+	
+	segmentation = ConfidenceConnectedSeg(image, inputLabel, seedPoints)
 
 
 
