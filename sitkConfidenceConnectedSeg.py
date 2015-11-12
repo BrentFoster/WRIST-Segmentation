@@ -203,6 +203,8 @@ def ConfidenceConnectedSeg(image, inputLabel, seedPoints):
 	seedPoints = np.array(seedPoints).astype(int)
 	seedPoints = abs(seedPoints)
 	seedPoints = seedPoints/scalingFactor #Scale the points down as well
+	seedPoints = seedPoints.round() #Need to round it again for Python 3.3
+	seedPoints = np.array(seedPoints).astype(int) #Just to be safe make it int again
 
 	for x in range(0, len(seedPoints)):
 
