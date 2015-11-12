@@ -52,7 +52,7 @@ def initiateFilters(scalingFactor):
 
 def ConfidenceConnectedSegmentation(image,seedPoint,x):
 	#numberOfIterations = 25, multiplier = 2
-	segXImg = sitk.ConfidenceConnected(image, seedPoint, numberOfIterations=0, multiplier=1.8, initialNeighborhoodRadius=3, replaceValue=x+1)
+	segXImg = sitk.ConfidenceConnected(image, seedPoint, numberOfIterations=2, multiplier=2, initialNeighborhoodRadius=3, replaceValue=x+1)
 	return segXImg
 
 
@@ -77,7 +77,7 @@ def LaplacianLevelSet(segXImg, image, laplacianFilter, x):
 	nda = np.asarray(nda)
 
 	#Fix the intensities of the output of the laplcian; 0 = 1 and ~! 1 is 0 then 1 == x+1
-	nda[nda <= 0.01] = 0
+	nda[nda <= 0.1] = 0
 	nda[nda != 0] = x+1
 
 	segXImg = sitk.GetImageFromArray(nda)
@@ -144,7 +144,33 @@ def LeakageCheck(segXImg, segmentation, x):
 
 	return segmentation
 
-def ConfidenceConnectedSeg(image, seedPoints):
+
+def segmentationWall(image,inputLabel):
+	#This takes a user defined label map and uses the voxels with an intensity of
+	#1 to modify the original image to prevent the segmentation from crossing the boundary
+	
+	imageArray = np.asarray(sitk.GetArrayFromImage(image))
+	labelArray = np.asarray(sitk.GetArrayFromImage(inputLabel))
+
+	#Just a very large number to prevent segmentation from crossing the boundary
+	imageArray[labelArray == 1] = 2000 
+
+	#Take this array and make a SimpleITK image with it again
+	image = sitk.GetImageFromArray(imageArray)
+
+	#This may not be necessary
+	image = sitk.Cast(image, inputLabel.GetPixelID())
+	image.CopyInformation(inputLabel)
+
+	return image
+
+def ConfidenceConnectedSeg(image, inputLabel, seedPoints):
+
+	#If inputLabel is not empty, use it to slightly modify the input image to prevent leakage
+	image = segmentationWall(image,inputLabel)
+
+	# sitk.Show(image)
+
 	print('\033[92m' + "Saving Seed Points to txt file...")
 	savePointList(seedPoints)
 

@@ -73,6 +73,23 @@ class BoneSegmentationWidget:
             self.inputVolumeSelectorLabel, self.inputSelector)
 
         #
+        # Input Label Selector
+        #
+
+        self.inputLabelSelectorLabel = qt.QLabel()
+        self.inputLabelSelectorLabel.setText("Input Label: ")
+        self.inputLabelSelectorLabel.setToolTip(
+            "Use the 'editor' to create lines to prevent leakage")
+        self.inputLabelSelector = slicer.qMRMLNodeComboBox()
+        self.inputLabelSelector.nodeTypes = ("vtkMRMLScalarVolumeNode", "")
+        self.inputLabelSelector.noneEnabled = True
+        self.inputLabelSelector.selectNodeUponCreation = True
+        self.inputLabelSelector.setMRMLScene(slicer.mrmlScene)
+        firstTabLayout.addRow(
+            self.inputLabelSelectorLabel, self.inputLabelSelector)
+
+
+        #
         # Apply button
         #
         self.computeButton = qt.QPushButton("Compute")
@@ -171,25 +188,19 @@ class BoneSegmentationWidget:
             print i,": RAS =",ras
         # seedPoints[0] = []
         print(fidList)
-        # print("Image Data:")
-        imageID = getNode("vtkMRMLScalarVolumeNode2") #Get the name of the image
-        print(imageID.GetName())
+        # imageID = getNode("vtkMRMLScalarVolumeNode2") #Get the name of the image
+        # print(imageID.GetName())
+
+        imageID = self.inputSelector.currentNode()
+        inputLabelID = self.inputLabelSelector.currentNode()
 
         image = sitkUtils.PullFromSlicer(imageID.GetName())
+
+        inputLabelimage = sitkUtils.PullFromSlicer(inputLabelID.GetName())
+
+        # inputLabelID = getNode(self.inputLabelSelector)
+        # inputLabel = sitkUtils.PullFromSlicer(inputLabelID.GetName())
         
-        # print(seedPoints)
-
-        
-
-        # import os    
-        # Load the sitkConfidenceConnectedSeg.py file
-        # full_path = os.path.abspath('sitkConfidenceConnectedSeg.py')
-
-        # image = sitkUtils.PullFromSlicer('Volunteer5_VIBE.hdr')
-
-        #Transform the seed locations to voxel coordinates
-        
-        # print(image.TransformPhysicalPointToContinuousIndex([-105, -105, 30 ]))
 
         for i in range(numFids):
             seedPoints[i] = image.TransformPhysicalPointToContinuousIndex(seedPoints[i])
@@ -198,7 +209,7 @@ class BoneSegmentationWidget:
 
 
         import sitkConfidenceConnectedSeg
-        segmentation = sitkConfidenceConnectedSeg.ConfidenceConnectedSeg(image,seedPoints)
+        segmentation = sitkConfidenceConnectedSeg.ConfidenceConnectedSeg(image, inputLabelimage, seedPoints)
         
          # compositeViewMap = {0:'background',
          #                1:'foreground',

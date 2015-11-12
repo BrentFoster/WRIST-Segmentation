@@ -43,7 +43,7 @@ for i in xrange(1,9): #Select which bone (or all of them) from the csv file
 	seeds.append(tempVoxelCoordinates)
 
 #Segment using the seeds and the loaded image
-segmentation = sitkConfidenceConnectedSeg.ConfidenceConnectedSeg(image,seeds)
+# segmentation = sitkConfidenceConnectedSeg.ConfidenceConnectedSeg(image,seeds)
 
 #Determine how long the algorithm took to run
 elapsed = timeit.default_timer() - start_time
