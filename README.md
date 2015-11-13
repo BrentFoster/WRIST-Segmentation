@@ -85,4 +85,21 @@ Build Documentation using Doxygen
 
 Use the Doxygen GUI (will use commands later if needed). Sphinx may be preferred
 
+Version Number
+-----
 
+Will be following the [Semantic Versioning convention](http://semver.org/) where a given version number is  MAJOR.MINOR.PATCH, increment when:
+
+0. MAJOR version when you make incompatible API changes,
+0. MINOR version when you add functionality in a backwards-compatible manner, and
+0. PATCH version when you make backwards-compatible bug fixes.
+
+Additional labels for pre-release and build metadata are available as extensions to the MAJOR.MINOR.PATCH format.
+
+Github Flow
+-----
+
+Branches will roughly follow this github work flow with three branches a Master that always contains working code, a release branch when working towards the next version, and a Develop branch for adding and fixing features.
+
+
+![Example Github Flow](http://2.bp.blogspot.com/-yoWbDW3NmcU/U2Ph7o77BXI/AAAAAAAAAUQ/zlETRqFMHsk/s1600/git_workflow_gitflow.jpg)
