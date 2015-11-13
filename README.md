@@ -102,4 +102,6 @@ Github Flow
 Branches will roughly follow this github work flow with three branches a Master that always contains working code, a release branch when working towards the next version, and a Develop branch for adding and fixing features.
 
 
+
+
 ![Example Github Flow](http://2.bp.blogspot.com/-yoWbDW3NmcU/U2Ph7o77BXI/AAAAAAAAAUQ/zlETRqFMHsk/s1600/git_workflow_gitflow.jpg)
