@@ -194,6 +194,10 @@ def segmentationWall(image,inputLabel):
 
 def ConfidenceConnectedSeg(image, inputLabel, seedPoints):
 
+	#Copy the orignal image for plotting later
+	originalImage = sitk.Cast(image, image.GetPixelID())
+
+
 	#If inputLabel is not empty, use it to slightly modify the input image to prevent leakage
 	image = segmentationWall(image,inputLabel)
 
@@ -203,7 +207,7 @@ def ConfidenceConnectedSeg(image, inputLabel, seedPoints):
 	savePointList(seedPoints)
 
 
-	scalingFactor = [2, 2, 1] #X,Y,Z
+	scalingFactor = [2, 2, 2] #X,Y,Z
 
 	print('\033[90m' + "Initiating filters...")
 	(shrinkFilter,expandFilter,anisotropicFilter,dilateFilter,erodeFilter,fillFilter,laplacianFilter,connectedComponentFilter) = initiateFilters(scalingFactor)
@@ -215,9 +219,6 @@ def ConfidenceConnectedSeg(image, inputLabel, seedPoints):
 	print("  ")
 
 	image = sitk.Cast(image,sitk.sitkFloat32)
-
-	#Copy the orignal image for plotting later
-	originalImage = sitk.Cast(sitk.RescaleIntensity(image), image.GetPixelID())
 
 	#Create empty image to hold the segmentations
 	segmentation = sitk.Image(image.GetSize(), image.GetPixelID())
@@ -257,20 +258,22 @@ def ConfidenceConnectedSeg(image, inputLabel, seedPoints):
 
 		print('\033[96m' + "Checking volume for potential leakage... "), #Comma keeps printing on the same line
 		segmentation = LeakageCheck(segXImg, segmentation, x)
-		
-	segmentation  = sitk.Cast(segmentation, sitk.sitkUInt16)
-	originalImage = sitk.Cast(originalImage, sitk.sitkUInt16)
 
+	print('\033[90m' + "Scaling image back...")
+	segmentation = expandFilter.Execute(segmentation)
+
+	print('\033[90m' + "Casting image type...")
+
+	originalImage = sitk.Cast(originalImage, sitk.sitkUInt16)
+	segmentation  = sitk.Cast(segmentation, sitk.sitkUInt16)
+	# segmentation.CopyInformation(originalImage)
+		
 	try:
 		# sitk.Show(segmentation)
 		overlaidSegImage = sitk.LabelOverlay(originalImage, segmentation)
 		sitk.Show(overlaidSegImage)
 	except:
 		print("Can't show the image with ImageJ! (Probably testing through Linux virtual machine)")
-
-	print('\033[90m' + "Scaling image back...")
-	segmentation = expandFilter.Execute(segmentation)
-
 
 	return segmentation
 
@@ -290,7 +293,6 @@ if __name__ == '__main__':
 	image = flipFilter.Execute(image)
 
 	###Create an empty inputLabel image###
-
 	nda = sitk.GetArrayFromImage(image)
 	nda = np.asarray(nda)
 	nda = nda*0

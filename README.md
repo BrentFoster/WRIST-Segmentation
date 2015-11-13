@@ -96,12 +96,22 @@ Will be following the [Semantic Versioning convention](http://semver.org/) where
 
 Additional labels for pre-release and build metadata are available as extensions to the MAJOR.MINOR.PATCH format.
 
+Note: Use the following commands to create a version tag in the git repository (it doesn't automatically upload the tag so I'm not sure how frequently the push to remote tag needs to happen). See the [Git documentation](https://git-scm.com/book/en/v2/Git-Basics-Tagging) as a reference.
+```
+git tag v0.1.0
+git push origin v0.1.0
+```
+
+
+
 Github Flow
 -----
 
-Branches will roughly follow this github work flow with three branches a Master that always contains working code, a release branch when working towards the next version, and a Develop branch for adding and fixing features.
+Branches will (hopefully) roughly follow this github work flow with three branches 
 
-
+0. **Master** branch that always contains working code (validated and sharable)
+0. **Release** branch when working towards the next version (stable code)
+0. **Develop** branch for adding and fixing features (not ready for sharing and may not work yet)
 
 
 ![Example Github Flow](http://2.bp.blogspot.com/-yoWbDW3NmcU/U2Ph7o77BXI/AAAAAAAAAUQ/zlETRqFMHsk/s1600/git_workflow_gitflow.jpg)
