@@ -171,7 +171,7 @@ class BoneSeg(object):
 		return self
 
 	def scaleUpImage(self):
-		self.image = self.expandFilter.Execute(self.segImg)
+		self.segImg = self.expandFilter.Execute(self.segImg)
 		return self
 
 

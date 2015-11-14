@@ -18,8 +18,9 @@ output = segmentationClass.Execute()
 segmentation  = sitk.Cast(output, MRI_Image.GetPixelID())
 segmentation.CopyInformation(MRI_Image)
 
-print(MRI_Image.GetSize())
-print(segmentation.GetSize())
 
-overlaidSegImage = sitk.LabelOverlay(MRI_Image, output)
+segmentation  = sitk.Cast(segmentation, sitk.sitkUInt16)
+MRI_Image = sitk.Cast(MRI_Image, sitk.sitkUInt16)
+
+overlaidSegImage = sitk.LabelOverlay(MRI_Image, segmentation)
 sitk.Show(overlaidSegImage)
