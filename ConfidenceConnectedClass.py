@@ -103,8 +103,14 @@ class BoneSeg(object):
 
 	###Main algorithm execution here###
 	def Execute(self):
+
+		#Convert from the arrays back into ITK images (due to multiprocessing)
+		self.image = sitk.Cast(sitk.GetImageFromArray(self.image), sitk.sitkFloat32)
+		self.inputLabel = sitk.Cast(sitk.GetImageFromArray(self.inputLabel), sitk.sitkFloat32)
+
+
 		#Convert images to float 32 first	
-		self.inputLabelImage = sitk.Cast(self.inputLabel, sitk.sitkFloat32)
+		self.inputLabel = sitk.Cast(self.inputLabel, sitk.sitkFloat32)
 		self.image = sitk.Cast(self.image, sitk.sitkFloat32)
 
 		print('\033[94m' + "Current Seed Point: "),

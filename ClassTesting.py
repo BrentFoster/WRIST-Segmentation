@@ -9,7 +9,7 @@ import numpy as np
 #Single Thread: 121.8 seconds
 
 #Timing Test: 8 bones
-#Multiprocessing: 267.4 seconds  207.4
+#Multiprocessing:207.4 seconds  
 #Single Thread: 379.91 seconds 
 
 
@@ -29,6 +29,16 @@ nda = np.asarray(nda)
 nda = nda*0
 segmenationArray = nda
 ##Done creating empty inputLabel##
+
+##Convert the SimpleITK images to arrays##
+
+MRI_Array = sitk.GetArrayFromImage(MRI_Image)
+inputLabel_Array = sitk.GetArrayFromImage(inputLabel_Image)
+
+#####
+
+
+
 
 # #Single core! time = 57.6 seconds
 # start_time = timeit.default_timer()
@@ -59,8 +69,8 @@ def loadSeedPoints(filename):
 
 #Multiprocessing time = 33 seconds
 start_time = timeit.default_timer()
-def f(x,SeedPoints,q):
-	segmentationClass = BrentSeg.BoneSeg(MRI_Image,inputLabel_Image,[SeedPoints[x]])
+def f(x,SeedPoints,MRI_Array,inputLabel_Array,q):
+	segmentationClass = BrentSeg.BoneSeg(MRI_Array,inputLabel_Array,[SeedPoints[x]])
 	output = segmentationClass.Execute()
 	print('Finished with process:'),
 	print(x)
@@ -84,7 +94,7 @@ if __name__ == '__main__':
 	#Store the output image arrays into a 'Queue'
 	q = multiprocessing.Queue() 
 	for x in range(8):
-		p = multiprocessing.Process(target=f, args=(x,SeedPoints,q,))
+		p = multiprocessing.Process(target=f, args=(x,SeedPoints,MRI_Array,inputLabel_Array,q,))
 		p.start()
 		procs.append(p) #List of current processes
 
