@@ -2,7 +2,7 @@ import SimpleITK as sitk
 import numpy as np
 import multiprocessing
 
-import pathos.multiprocessing as mp
+# import pathos.multiprocessing as mp
 
 
 def segmentBone(instance, x, seedPoints, image):#, dilateFilter, fillFilter, erodeFilter, laplacianFilter, connectedComponentFilter):

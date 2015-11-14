@@ -9,8 +9,8 @@ import numpy as np
 #Single Thread: 121.8 seconds
 
 #Timing Test: 8 bones
-#Multiprocessing: 267.4 seconds 
-#Single Thread: 379.91 seconds (1.5 GB RAM)
+#Multiprocessing: 267.4 seconds  207.4
+#Single Thread: 379.91 seconds 
 
 
 #easy_install -f . pathos
