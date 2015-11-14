@@ -141,7 +141,14 @@ class BoneSeg(object):
 		print('\033[96m' + "Finished with seed point "),
 		print(self.seedPoint)
 
-		return self.segImg
+
+
+		#Return an array instead of a sitk.Image due to contraints on the multiprocessing library
+		####TEST####
+		nda = sitk.GetArrayFromImage(self.segImg)
+		nda = np.asarray(nda)
+		return  nda #For the multiprocessing testing need to pass an array and not sitk.image type
+		####TEST#### 
 
 	###Main algorithm end###
 
