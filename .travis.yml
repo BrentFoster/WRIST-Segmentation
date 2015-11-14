@@ -15,8 +15,10 @@ before_install:
    - wget www.sourceforge.net/projects/simpleitk/files/SimpleITK/0.9.1/Python/SimpleITK-0.9.1-py2.7-linux-x86_64.egg
    - easy_install SimpleITK-0.9.1-py2.7-linux-x86_64.egg
    ####################################################
-
-script: python sitkConfidenceConnectedSeg.py
+   #Install any other dependencies
+   pip install -r requirements.txt
+   
+script: python ClassTesting.py
 
 # Customize when the notification emails are sent.
 notifications:
