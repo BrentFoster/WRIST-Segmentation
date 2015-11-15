@@ -42,7 +42,7 @@ inputLabelFilename = '/Users/Brent/Google Drive/Research/Wrist MRI/Constrained R
 # SeedPoints = [[-36.7324,-142.645,26.51],[-50.1293,-157.158,26.51],[-57.6651,-153.251,36.09],[-57.386,-170.276,36.09],[-68.4105,-160.647,40.15],[-76.0858, -176.277, 36.67],[-80.2723, -157.437, 36.67],[-88.2267, -165.671, 36.67],[-92.6923, -167.764, 23.62]]
 #Trapezium for Volunteer 1
 # SeedPoints = [[-50.1293,-157.158,26.51],[-68.4105,-160.647,40.15]]
-#4 seesd for Volunteer 1
+#4 seeds for Volunteer 1
 # SeedPoints = [[-57.386,-170.276,36.09],[-68.4105,-160.647,40.15],[-76.0858, -176.277, 36.67],[-80.2723, -157.437, 36.67]]
 
 
@@ -112,14 +112,14 @@ def RunMultiprocessing(WorkerNumbers,segmenationArray):
 	return segmenationArray
 
 
-def SplitJobs(arr, size):
-     arrs = []
-     while len(arr) > size:
-         pice = arr[:size]
-         arrs.append(pice)
-         arr   = arr[size:]
-     arrs.append(arr)
-     return arrs
+def SplitJobs(jobs, size):
+     jobs = []
+     while len(jobs) > size:
+         pice = jobs[:size]
+         jobs.append(pice)
+         jobs   = jobs[size:]
+     arrs.append(jobs)
+     return jobs
 
 if __name__ == '__main__':	
 
