@@ -21,8 +21,6 @@ def loadSeedPoints(filename):
 		image.append(currLine[4])
 	return {'x':x, 'y':y ,'z':z , 'label':label, 'image':image}
 
-#Multiprocessing time = 33 seconds
-start_time = timeit.default_timer()
 def f(x,SeedPoints,MRI_Array,inputLabel_Array,q):
 	segmentationClass = BrentSeg.BoneSeg(MRI_Array,inputLabel_Array,[SeedPoints[x]])
 	output = segmentationClass.Execute()
@@ -70,7 +68,6 @@ if __name__ == '__main__':
 		for x in range(8):
 			segmentationClass = BrentSeg.BoneSeg(MRI_Image,inputLabel_Image,[SeedPoints[x]])
 			output = segmentationClass.Execute()
-		elapsed = timeit.default_timer() - start_time
 		print('\033[90m' + "Single Thread test PASSED")
 	except:
 		print('\033[90m' + "Single Thread test FAILED")
