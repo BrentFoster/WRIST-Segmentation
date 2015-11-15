@@ -57,7 +57,8 @@ class Multiprocessor(object):
 	#Helper functions for the multiprocessing
 	def RunMultiprocessing(self,jobOrder):
 		procs = []
-		q = multiprocessing.Queue()
+		maxSize = 4
+		q = multiprocessing.Queue(maxSize)
 		for x in jobOrder:
 			p = multiprocessing.Process(target=self.f, args=(self.MRI_Array, self.seedList[x],q,))
 			p.start()

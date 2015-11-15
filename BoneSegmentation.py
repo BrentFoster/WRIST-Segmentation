@@ -946,5 +946,8 @@ class BoneSeg(object):
 
         return self
 
-
+#############################################################################################
+#$/path/to/Slicer.exe --no-main-window --python-script /path/to/BoneSegmentation.py 
+#For mac
+#/Applications/Slicer.app/Contents/MacOS/Slicer --no-main-window --python-script /Applications/Slicer.app/Contents/Extensions-24735/BoneSegmentation/BoneSegmentation.py
 #############################################################################################
