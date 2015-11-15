@@ -5,8 +5,8 @@ sudo:
 #Shippable Supports Python ver: 2.6, 2.7, 3.2, 3.3, 3.4 and pypy
 python:
    - "2.7"
-   - "3.3"
-   - "3.4"
+   #- "3.3"
+   #- "3.4"
    
 before_install:
    ####################################################
