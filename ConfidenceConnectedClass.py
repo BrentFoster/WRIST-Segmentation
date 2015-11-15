@@ -46,7 +46,7 @@ class BoneSeg(object):
 		self.SetMaxVolume(400000) #Pixel counts (TODO change to mm^3)	
 		self.SetBinaryMorphologicalRadius(1)	
 		self.SetLaplacianExpansionDirection(True) #Laplacian Level Set
-		self.SetLaplacianError(0.001)
+		self.SetLaplacianError(0.002)
 		self.SetConnectedComponentFullyConnected(True)	
 		self.SetConnectedComponentDistance(0.01) 
 		self.SeedListFilename = "PointList.txt"
@@ -120,7 +120,7 @@ class BoneSeg(object):
 		self.scaleDownImage()
 
 		print('\033[92m' + "Applying the Anisotropic Filter...")
-		self.apply_AnisotropicFilter()
+		# self.apply_AnisotropicFilter()
 
 		print("Testing the threshold level set segmentation...")
 		self.ThresholdLevelSet() 
@@ -129,16 +129,16 @@ class BoneSeg(object):
 		# self.ConfidenceConnectedSegmentation()
 
 		print('\033[93m' + "Filling Segmentation Holes...")
-		self.HoleFilling()
+		# self.HoleFilling()
 
 		print('\033[95m' + "Running Laplacian Level Set...")
-		self.LaplacianLevelSet()
+		# self.LaplacianLevelSet()
 
 		print('\033[95m' + "Finding connected regions...")
-		self.ConnectedComponent()
+		# self.ConnectedComponent()
 
 		print('\033[96m' + "Checking volume for potential leakage... "), #Comma keeps printing on the same line
-		self.LeakageCheck()
+		# self.LeakageCheck()
 
 		print('\033[90m' + "Scaling image back...")
 		self.scaleUpImage()
@@ -226,7 +226,7 @@ class BoneSeg(object):
 
 
 		self.segImg = self.laplacianFilter.Execute(self.segImg, self.image)
-		print(laplacianFilter)
+		print(self.laplacianFilter)
 
 		nda = sitk.GetArrayFromImage(self.segImg)
 		nda = np.asarray(nda)
@@ -409,8 +409,8 @@ class BoneSeg(object):
 		thresholdLevelSet = sitk.ThresholdSegmentationLevelSetImageFilter()
 		
 		thresholdLevelSet.SetLowerThreshold(0)
-		thresholdLevelSet.SetUpperThreshold(60)
-		thresholdLevelSet.SetNumberOfIterations(2000)
+		thresholdLevelSet.SetUpperThreshold(90)
+		thresholdLevelSet.SetNumberOfIterations(1000)
 		thresholdLevelSet.SetReverseExpansionDirection(True)
 		thresholdLevelSet.SetMaximumRMSError(0.005)
 		# thresholdLevelSet.SetPropagationScaling(1)

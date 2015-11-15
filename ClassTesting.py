@@ -4,6 +4,9 @@ import timeit
 import multiprocessing
 import numpy as np
 
+#TODO: Do pre-processing beforehand since it doesn't make sense to redo the anisotropic filter
+#for each bone
+
 #Timing Test: 4 bones
 #Multiprocessing: 72.9 seconds
 #Single Thread: 121.8 seconds
@@ -87,7 +90,7 @@ def f(SeedPoint,MRI_Array,q):
 	output = segmentationClass.Execute()
 	q.put(output)
 
-def RunMultiprocessing(WorkerNumbers):
+def RunMultiprocessing(WorkerNumbers,segmenationArray):
 	procs = []
 	q = multiprocessing.Queue()
 	for x in WorkerNumbers:
@@ -98,7 +101,7 @@ def RunMultiprocessing(WorkerNumbers):
 	print("Printing multiprocessing queue:")
 	for i in range(len(WorkerNumbers)):
 		#Outputs an array (due to multiprocessing 'pickle' constraints)
-		segmenationArray = q.get() 
+		segmenationArray = segmenationArray + q.get() 
 	# Wait for all worker processes to finish by using .join()
 	for p in procs:
 		p.join()
@@ -138,7 +141,11 @@ if __name__ == '__main__':
 	#Need to convert pixels to voxel coordinates because I only pass the image array
 	#for the multiprocessing so the header information isn't there
 
-	SeedPoints = [[-50.1293,-157.158,26.51],[-68.4105,-160.647,40.15]]
+	#All seeds for Volunteer 1
+	SeedPoints = [[-36.7324,-142.645,26.51],[-50.1293,-157.158,26.51],[-57.6651,-153.251,36.09],[-57.386,-170.276,36.09],[-68.4105,-160.647,40.15],[-76.0858, -176.277, 36.67],[-80.2723, -157.437, 36.67],[-88.2267, -165.671, 36.67],[-92.6923, -167.764, 23.62]]
+	
+	SeedPoints = [SeedPoints[5]]
+	print(SeedPoints)
 	SeedPoints = RoundSeedPoints(SeedPoints, MRI_Image) 
 
 	##Convert the SimpleITK images to arrays##
@@ -161,14 +168,14 @@ if __name__ == '__main__':
 	print(num_CPUs)
 	if (len(SeedPoints) <= num_CPUs):
 		jobOrder = range(0, len(SeedPoints))
-		segmenationArray = RunMultiprocessing(jobOrder)
+		segmenationArray = RunMultiprocessing(jobOrder, segmenationArray)
 
 	elif (len(SeedPoints) > num_CPUs):
 		print("Splitting jobs since number of CPUs < number of seed points")
 		#Run the multiprocessing several times since there wasn't enough CPU's before
 		jobOrder = SplitJobs(range(len(SeedPoints)), num_CPUs)
 		for x in range(len(jobOrder)):
-			segmenationArray = segmenationArray + RunMultiprocessing(jobOrder[x])
+			segmenationArray = segmenationArray + RunMultiprocessing(jobOrder[x], segmenationArray)
 
 	#Convert segmentationArray back into an image
 	segmenationLabel = sitk.Cast(sitk.GetImageFromArray(segmenationArray), MRI_Image.GetPixelID())
