@@ -44,7 +44,7 @@ class BoneSeg(object):
 		self.SetConfidenceConnectedIts(0)
 		self.SetConfidenceConnectedMultiplier(0.5)
 		self.SetConfidenceConnectedRadius(2)
-		self.SetMaxVolume(200000) #Pixel counts (TODO change to mm^3)	
+		self.SetMaxVolume(400000) #Pixel counts (TODO change to mm^3)	
 		self.SetBinaryMorphologicalRadius(1)	
 		self.SetLaplacianExpansionDirection(True) #Laplacian Level Set
 		self.SetConnectedComponentFullyConnected(True)	
@@ -108,7 +108,6 @@ class BoneSeg(object):
 		self.image = sitk.Cast(sitk.GetImageFromArray(self.image), sitk.sitkFloat32)
 		self.inputLabel = sitk.Cast(sitk.GetImageFromArray(self.inputLabel), sitk.sitkFloat32)
 
-
 		#Convert images to float 32 first	
 		self.inputLabel = sitk.Cast(self.inputLabel, sitk.sitkFloat32)
 		self.image = sitk.Cast(self.image, sitk.sitkFloat32)
@@ -125,6 +124,9 @@ class BoneSeg(object):
 
 		print('\033[92m' + "Applying the Anisotropic Filter...")
 		# self.apply_AnisotropicFilter()
+
+		# print("Testing the threshold level set segmentation...")
+		# self.ThresholdLevelSet() #Not working currently
 
 		print('\033[93m' + "Segmenting via confidence connected...")
 		self.ConfidenceConnectedSegmentation()
@@ -147,14 +149,11 @@ class BoneSeg(object):
 		print('\033[96m' + "Finished with seed point "),
 		print(self.seedPoint)
 
-
-
 		#Return an array instead of a sitk.Image due to contraints on the multiprocessing library
-		####TEST####
 		nda = sitk.GetArrayFromImage(self.segImg)
 		nda = np.asarray(nda)
 		return  nda #For the multiprocessing testing need to pass an array and not sitk.image type
-		####TEST#### 
+		
 
 	###Main algorithm end###
 
@@ -165,8 +164,9 @@ class BoneSeg(object):
 		#Convert from physical to image domain
 		tempFloat = [float(tempseedPoint[0]), float(tempseedPoint[1]), float(tempseedPoint[2])]
 		#Convert from physical units to voxel coordinates
-		tempVoxelCoordinates = self.image.TransformPhysicalPointToContinuousIndex(tempFloat)
-		self.seedPoint = tempVoxelCoordinates
+		# tempVoxelCoordinates = self.image.TransformPhysicalPointToContinuousIndex(tempFloat)
+		# self.seedPoint = tempVoxelCoordinates
+		self.seedPoint = tempFloat
 
 		#Need to round the seedPoints because integers are required for indexing
 		ScalingFactor = np.array(self.ScalingFactor)
@@ -327,5 +327,148 @@ class BoneSeg(object):
 		self.image.CopyInformation(self.inputLabel)
 
 		return self
+
+
+
+		
+
+#################################################################################
+####Below is experimental (not working currently)################################
+#################################################################################
+
+
+	def ThresholdLevelSet(self):
+
+		#####################################
+
+		# ###Create the seed image###
+		# nda = sitk.GetArrayFromImage(self.image)
+		# nda = np.asarray(nda)
+		# nda = nda*0
+
+		# seedPoint = self.seedPoint[0]
+		# print(seedPoint)
+		# # nda[seedPoint[2]][seedPoint[1]][seedPoint[0]] = 1
+		# #In numpy an array is indexed in the opposite order (z,y,x)
+		# nda[47][100][50] = 1
+
+		# self.seedImage = sitk.Cast(sitk.GetImageFromArray(nda), sitk.sitkUInt16)
+		# self.seedImage.CopyInformation(self.image)
+
+		# for x in range(5):
+		# 	self.seedImage = self.dilateFilter.Execute(self.seedImage, 0, 1, False)
+		# 	print(x)
+
+		# nda = sitk.GetArrayFromImage(self.seedImage)
+		# nda = np.asarray(nda, dtype=np.float32)
+		# nda[nda > 0] = 0.5
+		# print(nda[nda != 0])
+		# # return
+
+		# self.seedImage = sitk.Cast(sitk.GetImageFromArray(nda), sitk.sitkFloat32)
+		# self.seedImage.CopyInformation(self.image)
+
+		# sitk.Show(self.seedImage)
+
+
+		# self.image = sitk.Cast(self.image, sitk.sitkFloat32)
+
+		# print(type(tuple(self.seedPoint[0])) == type((18,71,26)))
+		# print(type((60,90,43)))
+
+		# # sitk.Show(self.image)
+		# # idx = (60,90,43)
+		# idx = (self.seedPoint[0][0],self.seedPoint[0][1],self.seedPoint[0][2])
+		# idx = tuple(idx)
+		# print(idx)
+		# # idx = (18,71,26)
+		# # pt = self.image.TransformIndexToPhysicalPoint(self.seedPoint[0])
+		# seg = sitk.Image(self.image.GetSize(), sitk.sitkUInt8)
+		# seg.CopyInformation(self.image)
+		# seg[tuple(list(self.seedPoint[0][0],self.seedPoint[0][1],self.seedPoint[0][2]))] = 1
+		# seg = sitk.BinaryDilate(seg, 3)
+
+
+		###Create the seed image###
+		nda = sitk.GetArrayFromImage(self.image)
+		nda = np.asarray(nda)
+		nda = nda*0
+
+		seedPoint = self.seedPoint[0]
+		print(seedPoint)
+		nda[seedPoint[2]][seedPoint[1]][seedPoint[0]] = 1
+		#In numpy an array is indexed in the opposite order (z,y,x)
+		# nda[47][100][50] = 1
+
+		seg = sitk.Cast(sitk.GetImageFromArray(nda), sitk.sitkUInt16)
+		seg.CopyInformation(self.image)
+
+		seg = sitk.BinaryDilate(seg, 3)
+
+		# seg = sitk.Cast(seg, sitk.sitkFloat32)
+
+		init_ls = sitk.SignedMaurerDistanceMap(seg, insideIsPositive=True, useImageSpacing=True)
+
+		thresholdLevelSet = sitk.ThresholdSegmentationLevelSetImageFilter()
+		
+		thresholdLevelSet.SetLowerThreshold(0)
+		thresholdLevelSet.SetUpperThreshold(150)
+		thresholdLevelSet.SetNumberOfIterations(1000)
+		thresholdLevelSet.SetReverseExpansionDirection(True)
+		thresholdLevelSet.SetMaximumRMSError(0.001)
+		# thresholdLevelSet.SetPropagationScaling(1)
+		# thresholdLevelSet.SetCurvatureScaling(1)
+
+		threshOutput = thresholdLevelSet.Execute(init_ls, self.image)
+		print(thresholdLevelSet)
+
+
+
+		nda = sitk.GetArrayFromImage(threshOutput)
+		nda = np.asarray(nda)
+
+		#Fix the intensities of the output of the laplcian; 0 = 1 and ~! 1 is 0 then 1 == x+1
+		nda[nda > 0] = 0.5
+		nda[nda < 0] = 0
+
+		self.segImg = sitk.GetImageFromArray(nda)
+		self.segImg = sitk.Cast(self.segImg, self.image.GetPixelID())
+		self.segImg.CopyInformation(self.image)
+
+
+		sitk.Show(self.segImg)
+
+		print("Testing with the Laplacian level set now...")
+
+		self.laplacianFilter.SetMaximumRMSError(0.001)
+		self.segImg = self.laplacianFilter.Execute(self.segImg, self.image)
+
+		print(self.laplacianFilter)
+
+		nda = sitk.GetArrayFromImage(self.segImg)
+		nda = np.asarray(nda)
+
+		#Fix the intensities of the output of the laplcian; 0 = 1 and ~! 1 is 0 then 1 == x+1
+		nda[nda <= 0.1] = 0
+		nda[nda != 0] = 1
+
+		self.segImg = sitk.GetImageFromArray(nda)
+		self.segImg = sitk.Cast(self.segImg, self.image.GetPixelID())
+		self.segImg.CopyInformation(self.image)
+		
+		self.segImg  = sitk.Cast(self.segImg, sitk.sitkUInt16)
+		self.image = sitk.Cast(self.image, sitk.sitkUInt16)
+
+		overlaidSegImage = sitk.LabelOverlay(self.image, self.segImg)
+		# sitk.Show(overlaidSegImage)
+
+		return self
+
+
+
+
+		print("Finished with thresholdLevelSet test!")
+		#####################################
+
 
 

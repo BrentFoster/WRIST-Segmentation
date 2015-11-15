@@ -4,7 +4,6 @@ import multiprocessing
 
 # import pathos.multiprocessing as mp
 
-
 def segmentBone(instance, x, seedPoints, image):#, dilateFilter, fillFilter, erodeFilter, laplacianFilter, connectedComponentFilter):
 
 	print('\033[94m' + "Current Seed Point: ")
