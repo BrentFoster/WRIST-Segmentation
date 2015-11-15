@@ -2,10 +2,9 @@ import SimpleITK as sitk
 import numpy as np
 
 class BoneSeg(object):
-	"""Class of BoneSegmentation. REQUIRED: BoneSeg(MRI_Image,inputLabelImage,SeedPoint)"""
-	def __init__(self, image, inputLabel, seedPoint):
+	"""Class of BoneSegmentation. REQUIRED: BoneSeg(MRI_Image,SeedPoint)"""
+	def __init__(self, image, seedPoint):
 		self.image = image
-		self.inputLabel = inputLabel
 		self.seedPoint = seedPoint
 
 		self.ScalingFactor = []
@@ -47,16 +46,13 @@ class BoneSeg(object):
 		self.SetMaxVolume(400000) #Pixel counts (TODO change to mm^3)	
 		self.SetBinaryMorphologicalRadius(1)	
 		self.SetLaplacianExpansionDirection(True) #Laplacian Level Set
+		self.SetLaplacianError(0.001)
 		self.SetConnectedComponentFullyConnected(True)	
 		self.SetConnectedComponentDistance(0.01) 
 		self.SeedListFilename = "PointList.txt"
 
-
 	def SetImage(self, image):
 		self.image = image
-	
-	def SetInputLabel(self, inputLabel):
-		self.inputLabel = inputLabel
 
 	def SefSeedPoint(self, SeedPoint):
 		self.SeedPoint = SeedPoint
@@ -94,6 +90,9 @@ class BoneSeg(object):
 	def SetLaplacianExpansionDirection(self, expansionDirection):		
 		self.laplacianFilter.SetReverseExpansionDirection(expansionDirection)
 
+	def SetLaplacianError(self, RMSError):
+		self.laplacianFilter.SetMaximumRMSError(RMSError)
+
 	def SetConnectedComponentFullyConnected(self, fullyConnected):
 		self.connectedComponentFilter.SetFullyConnected(fullyConnected)	
 
@@ -106,10 +105,8 @@ class BoneSeg(object):
 
 		#Convert from the arrays back into ITK images (due to multiprocessing)
 		self.image = sitk.Cast(sitk.GetImageFromArray(self.image), sitk.sitkFloat32)
-		self.inputLabel = sitk.Cast(sitk.GetImageFromArray(self.inputLabel), sitk.sitkFloat32)
 
-		#Convert images to float 32 first	
-		self.inputLabel = sitk.Cast(self.inputLabel, sitk.sitkFloat32)
+		#Convert images to float 32 first
 		self.image = sitk.Cast(self.image, sitk.sitkFloat32)
 
 		print('\033[94m' + "Current Seed Point: "),
@@ -126,7 +123,7 @@ class BoneSeg(object):
 		self.apply_AnisotropicFilter()
 
 		print("Testing the threshold level set segmentation...")
-		self.ThresholdLevelSet() #Not working currently
+		self.ThresholdLevelSet() 
 
 		print('\033[93m' + "Segmenting via confidence connected...")
 		# self.ConfidenceConnectedSegmentation()
@@ -141,7 +138,7 @@ class BoneSeg(object):
 		self.ConnectedComponent()
 
 		print('\033[96m' + "Checking volume for potential leakage... "), #Comma keeps printing on the same line
-		# self.LeakageCheck()
+		self.LeakageCheck()
 
 		print('\033[90m' + "Scaling image back...")
 		self.scaleUpImage()
@@ -152,13 +149,11 @@ class BoneSeg(object):
 		#Return an array instead of a sitk.Image due to contraints on the multiprocessing library
 		nda = sitk.GetArrayFromImage(self.segImg)
 		nda = np.asarray(nda)
-		return  nda #For the multiprocessing testing need to pass an array and not sitk.image type
-		
+		return  nda 
 
 	###Main algorithm end###
 
 	def RoundSeedPoint(self):
-
 		tempseedPoint = np.array(self.seedPoint).astype(int) #Just to be safe make it int again
 		tempseedPoint = tempseedPoint[0]
 		#Convert from physical to image domain
@@ -204,12 +199,6 @@ class BoneSeg(object):
 			print("Saving to .txt failed...")
 		return
 
-	def ConfidenceConnectedSegmentation(self):
-		#numberOfIterations = 25, multiplier = 2
-		self.segImg = sitk.ConfidenceConnected(self.image, self.seedPoint, numberOfIterations=self.ConfidenceConnectedIts,
-		 multiplier=self.ConfidenceConnectedMultiplier, initialNeighborhoodRadius=self.ConfidenceConnectedRadius, replaceValue=1)
-		return self
-
 	def HoleFilling(self):
 		self.segImg  = sitk.Cast(self.segImg, sitk.sitkUInt16)
 		#Apply the filters to the binary image
@@ -237,6 +226,7 @@ class BoneSeg(object):
 
 
 		self.segImg = self.laplacianFilter.Execute(self.segImg, self.image)
+		print(laplacianFilter)
 
 		nda = sitk.GetArrayFromImage(self.segImg)
 		nda = np.asarray(nda)
@@ -262,9 +252,9 @@ class BoneSeg(object):
 
 		self.segImg = self.erodeFilter.Execute(self.segImg, 0, 1, False)
 
-		connectedXImg = self.connectedComponentFilter.Execute(self.segImg)
+		self.segImg = self.connectedComponentFilter.Execute(self.segImg)
 
-		nda = sitk.GetArrayFromImage(connectedXImg)
+		nda = sitk.GetArrayFromImage(self.segImg)
 		nda = np.asarray(nda)
 
 		#In numpy an array is indexed in the opposite order (z,y,x)
@@ -310,25 +300,31 @@ class BoneSeg(object):
 		return self
 
 
-	def segmentationWall(self):
-		#This takes a user defined label map and uses the voxels with an intensity of
-		#1 to modify the original image to prevent the segmentation from crossing the boundary
+	#REMOVE BELOW?
+	# def segmentationWall(self): 
+	# 	#This takes a user defined label map and uses the voxels with an intensity of
+	# 	#1 to modify the original image to prevent the segmentation from crossing the boundary
 		
-		imageArray = np.asarray(sitk.GetArrayFromImage(self.image))
-		labelArray = np.asarray(sitk.GetArrayFromImage(self.inputLabel))
+	# 	imageArray = np.asarray(sitk.GetArrayFromImage(self.image))
+	# 	labelArray = np.asarray(sitk.GetArrayFromImage(self.inputLabel))
 
-		#Just a very large number to prevent segmentation from crossing the boundary
-		imageArray[labelArray == 1] = 2000 
+	# 	#Just a very large number to prevent segmentation from crossing the boundary
+	# 	imageArray[labelArray == 1] = 2000 
 
-		#Take this array and make a SimpleITK image with it again
-		self.image = sitk.GetImageFromArray(imageArray)
+	# 	#Take this array and make a SimpleITK image with it again
+	# 	self.image = sitk.GetImageFromArray(imageArray)
 
-		#This may not be necessary
-		self.image = sitk.Cast(self.image, inputLabel.GetPixelID())
-		self.image.CopyInformation(self.inputLabel)
+	# 	#This may not be necessary
+	# 	self.image = sitk.Cast(self.image, inputLabel.GetPixelID())
+	# 	self.image.CopyInformation(self.inputLabel)
 
+	# 	return self
+
+	def ConfidenceConnectedSegmentation(self):
+		#numberOfIterations = 25, multiplier = 2
+		self.segImg = sitk.ConfidenceConnected(self.image, self.seedPoint, numberOfIterations=self.ConfidenceConnectedIts,
+		 multiplier=self.ConfidenceConnectedMultiplier, initialNeighborhoodRadius=self.ConfidenceConnectedRadius, replaceValue=1)
 		return self
-
 
 
 		
@@ -414,9 +410,9 @@ class BoneSeg(object):
 		
 		thresholdLevelSet.SetLowerThreshold(0)
 		thresholdLevelSet.SetUpperThreshold(60)
-		thresholdLevelSet.SetNumberOfIterations(1000)
+		thresholdLevelSet.SetNumberOfIterations(2000)
 		thresholdLevelSet.SetReverseExpansionDirection(True)
-		thresholdLevelSet.SetMaximumRMSError(0.001)
+		thresholdLevelSet.SetMaximumRMSError(0.005)
 		# thresholdLevelSet.SetPropagationScaling(1)
 		# thresholdLevelSet.SetCurvatureScaling(1)
 
