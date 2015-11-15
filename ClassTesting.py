@@ -108,14 +108,14 @@ if __name__ == '__main__':
 	procs = []
 	#Store the output image arrays into a 'Queue'
 	q = multiprocessing.Queue() 
-	for x in range(4):
+	for x in range(1):
 
 		p = multiprocessing.Process(target=f, args=(x,SeedPoints,MRI_Array,inputLabel_Array,q,))
 		p.start()
 		procs.append(p) #List of current processes
 
 	print("Printing multiprocessing queue:")
-	for i in range(4):
+	for i in range(1):
 		#Outputs an array (due to multiprocessing 'pickle' constraints)
 		segmenationArray = segmenationArray + q.get() 
 

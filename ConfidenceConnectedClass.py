@@ -125,26 +125,28 @@ class BoneSeg(object):
 		print('\033[92m' + "Applying the Anisotropic Filter...")
 		# self.apply_AnisotropicFilter()
 
-		# print("Testing the threshold level set segmentation...")
-		# self.ThresholdLevelSet() #Not working currently
+		print("Testing the threshold level set segmentation...")
+		self.ThresholdLevelSet() #Not working currently
+
+		return
 
 		print('\033[93m' + "Segmenting via confidence connected...")
-		self.ConfidenceConnectedSegmentation()
+		# self.ConfidenceConnectedSegmentation()
 
 		print('\033[93m' + "Filling Segmentation Holes...")
-		self.HoleFilling()
+		# self.HoleFilling()
 
 		print('\033[95m' + "Running Laplacian Level Set...")
-		self.LaplacianLevelSet()
+		# self.LaplacianLevelSet()
 
 		print('\033[95m' + "Running Connected Component...")
-		self.ConnectedComponent()
+		# self.ConnectedComponent()
 
 		print('\033[96m' + "Checking volume for potential leakage... "), #Comma keeps printing on the same line
-		self.LeakageCheck()
+		# self.LeakageCheck()
 
 		print('\033[90m' + "Scaling image back...")
-		self.scaleUpImage()
+		# self.scaleUpImage()
 
 		print('\033[96m' + "Finished with seed point "),
 		print(self.seedPoint)
@@ -412,10 +414,10 @@ class BoneSeg(object):
 		thresholdLevelSet = sitk.ThresholdSegmentationLevelSetImageFilter()
 		
 		thresholdLevelSet.SetLowerThreshold(0)
-		thresholdLevelSet.SetUpperThreshold(150)
+		thresholdLevelSet.SetUpperThreshold(80)
 		thresholdLevelSet.SetNumberOfIterations(1000)
 		thresholdLevelSet.SetReverseExpansionDirection(True)
-		thresholdLevelSet.SetMaximumRMSError(0.001)
+		thresholdLevelSet.SetMaximumRMSError(0.005)
 		# thresholdLevelSet.SetPropagationScaling(1)
 		# thresholdLevelSet.SetCurvatureScaling(1)
 
@@ -423,12 +425,11 @@ class BoneSeg(object):
 		print(thresholdLevelSet)
 
 
-
 		nda = sitk.GetArrayFromImage(threshOutput)
 		nda = np.asarray(nda)
 
 		#Fix the intensities of the output of the laplcian; 0 = 1 and ~! 1 is 0 then 1 == x+1
-		nda[nda > 0] = 0.5
+		nda[nda > 0] = 1
 		nda[nda < 0] = 0
 
 		self.segImg = sitk.GetImageFromArray(nda)
@@ -436,7 +437,18 @@ class BoneSeg(object):
 		self.segImg.CopyInformation(self.image)
 
 
-		sitk.Show(self.segImg)
+		self.segImg  = sitk.Cast(self.segImg, sitk.sitkUInt16)
+		self.image = sitk.Cast(self.image, sitk.sitkUInt16)
+
+		print("Filling holes...")
+		self.HoleFilling()
+
+		overlaidSegImage = sitk.LabelOverlay(self.image, self.segImg)
+		sitk.Show(overlaidSegImage)
+
+		return
+
+
 
 		print("Testing with the Laplacian level set now...")
 
