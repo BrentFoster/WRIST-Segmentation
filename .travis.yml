@@ -18,7 +18,7 @@ before_install:
    #Install any other dependencies
    - pip install -r requirements.txt
    
-script: python ClassTesting.py
+script: python AutomatedTesting.py
 
 # Customize when the notification emails are sent.
 notifications:
