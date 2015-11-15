@@ -23,9 +23,15 @@ inputLabelFilename = '/Users/Brent/Google Drive/Research/Wrist MRI/Constrained R
 imageFilename = 'E:\Google Drive\Research\Wrist MRI\VIBE\Volunteer1_VIBE.hdr'
 inputLabelFilename = 'E:\Google Drive\Research\Wrist MRI\Constrained Regions\Volunteer1_VIBE-label.hdr'
 
-
 # SeedPoint = [[-57.6651,	-153.251,	36.09],[-57.6651,	-153.251,	36.09]] #For Volunteer 1
 SeedPoints = [[-36.7324,-142.645,26.51],[-50.1293,-157.158,26.51],[-57.6651,-153.251,36.09],[-57.386,-170.276,36.09],[-68.4105,-160.647,40.15],[-76.0858,-176.277,36.67],[-80.2723,-157.437,36.67],[-88.2267,-165.671,36.67],[-92.6923,-167.764,23.62]]
+
+
+
+#Path for Linux Testing
+imageFilename = 'Volunteer5_VIBE.hdr'
+inputLabelFilename = 'Volunteer5_VIBE.hdr'
+SeedPoints = [[50, 50, 25]]
 
 MRI_Image = sitk.ReadImage(imageFilename)
 inputLabel_Image = sitk.ReadImage(inputLabelFilename)	
