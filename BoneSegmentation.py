@@ -1,6 +1,13 @@
 from __main__ import vtk, qt, ctk, slicer
 import EditorLib
 
+
+import SimpleITK as sitk
+import sitkUtils
+import numpy as np
+import multiprocessing
+
+
 #
 # BoneSegmentation
 #
@@ -173,10 +180,13 @@ class BoneSegmentationWidget:
 
 
     def onCompute(self):
-        # slicer.app.processEvents()
+        slicer.app.processEvents()
 
         #Make list of all the seed point locations
-        fidList = getNode("vtkMRMLMarkupsFiducialNode1")
+
+   
+        # fidList = getNode("vtkMRMLMarkupsFiducialNode1")
+        fidList = self.markupSelector.currentNode()
         numFids = fidList.GetNumberOfFiducials()
         seedPoints = []
         for i in range(numFids):
@@ -192,11 +202,12 @@ class BoneSegmentationWidget:
         # print(imageID.GetName())
 
         imageID = self.inputSelector.currentNode()
-        inputLabelID = self.inputLabelSelector.currentNode()
+        # inputLabelID = self.inputLabelSelector.currentNode()
 
         image = sitkUtils.PullFromSlicer(imageID.GetName())
+        # image = sitkUtils.PullFromSlicer("Volunteer_5_VIBE")
 
-        inputLabelimage = sitkUtils.PullFromSlicer(inputLabelID.GetName())
+        # inputLabelimage = sitkUtils.PullFromSlicer(inputLabelID.GetName())
 
         # inputLabelID = getNode(self.inputLabelSelector)
         # inputLabel = sitkUtils.PullFromSlicer(inputLabelID.GetName())
@@ -207,7 +218,7 @@ class BoneSegmentationWidget:
 
         #Use the two classes that are defined at the bottom of this file
         segmentationClass = BoneSeg()
-        multiHelper = MultiprocessorHelper.Multiprocessor(segmentationClass, seedPoints, image)
+        multiHelper = Multiprocessor(segmentationClass, seedPoints, image)
         segmentation = multiHelper.Execute()
          # compositeViewMap = {0:'background',
          #                1:'foreground',
@@ -937,13 +948,3 @@ class BoneSeg(object):
 
 
 #############################################################################################
-
-
-
-
-
-
-
-
-
-
