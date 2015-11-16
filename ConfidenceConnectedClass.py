@@ -2,12 +2,8 @@ import SimpleITK as sitk
 import numpy as np
 
 class BoneSeg(object):
-	"""Class of BoneSegmentation. REQUIRED: BoneSeg(MRI_Image,inputLabelImage,SeedPoint)"""
-	def __init__(self, image, inputLabel, seedPoint):
-		self.image = image
-		self.inputLabel = inputLabel
-		self.seedPoint = seedPoint
-
+	"""Class of BoneSegmentation. REQUIRED: BoneSeg(MRI_Image,SeedPoint)"""
+	def __init__(self):
 		self.ScalingFactor = []
 		self.AnisotropicIts = []
 		self.AnisotropicTimeStep = []
@@ -38,25 +34,22 @@ class BoneSeg(object):
 	def SetDefaultValues(self):
 		#Set the default values of all the parameters here
 		self.SetScalingFactor([2,2,1]) #X,Y,Z
-		self.SetAnisotropicIts(5)
+		self.SetAnisotropicIts(15)
 		self.SetAnisotropicTimeStep(0.01)
 		self.SetAnisotropicConductance(2)
 		self.SetConfidenceConnectedIts(0)
 		self.SetConfidenceConnectedMultiplier(0.5)
 		self.SetConfidenceConnectedRadius(2)
-		self.SetMaxVolume(400000) #Pixel counts (TODO change to mm^3)	
+		self.SetMaxVolume(300000) #Pixel counts (TODO change to mm^3)	
 		self.SetBinaryMorphologicalRadius(1)	
 		self.SetLaplacianExpansionDirection(True) #Laplacian Level Set
+		self.SetLaplacianError(0.002)
 		self.SetConnectedComponentFullyConnected(True)	
 		self.SetConnectedComponentDistance(0.01) 
 		self.SeedListFilename = "PointList.txt"
 
-
 	def SetImage(self, image):
 		self.image = image
-	
-	def SetInputLabel(self, inputLabel):
-		self.inputLabel = inputLabel
 
 	def SefSeedPoint(self, SeedPoint):
 		self.SeedPoint = SeedPoint
@@ -94,6 +87,9 @@ class BoneSeg(object):
 	def SetLaplacianExpansionDirection(self, expansionDirection):		
 		self.laplacianFilter.SetReverseExpansionDirection(expansionDirection)
 
+	def SetLaplacianError(self, RMSError):
+		self.laplacianFilter.SetMaximumRMSError(RMSError)
+
 	def SetConnectedComponentFullyConnected(self, fullyConnected):
 		self.connectedComponentFilter.SetFullyConnected(fullyConnected)	
 
@@ -101,15 +97,18 @@ class BoneSeg(object):
 		#Distance = Intensity difference NOT location distance
 		self.connectedComponentFilter.SetDistanceThreshold(distanceThreshold) 
 
-	###Main algorithm execution here###
-	def Execute(self):
+#############################################################################################
+###Main algorithm execution here###
+#############################################################################################
+	def Execute(self, image, seedPoint):
+
+		self.image = image
+		self.seedPoint = seedPoint
 
 		#Convert from the arrays back into ITK images (due to multiprocessing)
 		self.image = sitk.Cast(sitk.GetImageFromArray(self.image), sitk.sitkFloat32)
-		self.inputLabel = sitk.Cast(sitk.GetImageFromArray(self.inputLabel), sitk.sitkFloat32)
 
-		#Convert images to float 32 first	
-		self.inputLabel = sitk.Cast(self.inputLabel, sitk.sitkFloat32)
+		#Convert images to float 32 first
 		self.image = sitk.Cast(self.image, sitk.sitkFloat32)
 
 		print('\033[94m' + "Current Seed Point: "),
@@ -123,21 +122,21 @@ class BoneSeg(object):
 		self.scaleDownImage()
 
 		print('\033[92m' + "Applying the Anisotropic Filter...")
-		# self.apply_AnisotropicFilter()
+		self.apply_AnisotropicFilter()
 
-		# print("Testing the threshold level set segmentation...")
-		# self.ThresholdLevelSet() #Not working currently
+		print("Testing the threshold level set segmentation...")
+		self.ThresholdLevelSet() 
 
-		print('\033[93m' + "Segmenting via confidence connected...")
-		self.ConfidenceConnectedSegmentation()
+		# print('\033[93m' + "Segmenting via confidence connected...")
+		# self.ConfidenceConnectedSegmentation()
 
 		print('\033[93m' + "Filling Segmentation Holes...")
 		self.HoleFilling()
 
-		print('\033[95m' + "Running Laplacian Level Set...")
-		self.LaplacianLevelSet()
+		# print('\033[95m' + "Running Laplacian Level Set...")
+		# self.LaplacianLevelSet()
 
-		print('\033[95m' + "Running Connected Component...")
+		print('\033[95m' + "Finding connected regions...")
 		self.ConnectedComponent()
 
 		print('\033[96m' + "Checking volume for potential leakage... "), #Comma keeps printing on the same line
@@ -152,13 +151,13 @@ class BoneSeg(object):
 		#Return an array instead of a sitk.Image due to contraints on the multiprocessing library
 		nda = sitk.GetArrayFromImage(self.segImg)
 		nda = np.asarray(nda)
-		return  nda #For the multiprocessing testing need to pass an array and not sitk.image type
-		
+		return  nda 
 
-	###Main algorithm end###
+#############################################################################################
+#############################################################################################
+
 
 	def RoundSeedPoint(self):
-
 		tempseedPoint = np.array(self.seedPoint).astype(int) #Just to be safe make it int again
 		tempseedPoint = tempseedPoint[0]
 		#Convert from physical to image domain
@@ -187,7 +186,6 @@ class BoneSeg(object):
 		self.segImg = self.expandFilter.Execute(self.segImg)
 		return self
 
-
 	#Function definitions are below
 	def apply_AnisotropicFilter(self):
 		self.image = self.anisotropicFilter.Execute(self.image)
@@ -204,13 +202,8 @@ class BoneSeg(object):
 			print("Saving to .txt failed...")
 		return
 
-	def ConfidenceConnectedSegmentation(self):
-		#numberOfIterations = 25, multiplier = 2
-		self.segImg = sitk.ConfidenceConnected(self.image, self.seedPoint, numberOfIterations=self.ConfidenceConnectedIts,
-		 multiplier=self.ConfidenceConnectedMultiplier, initialNeighborhoodRadius=self.ConfidenceConnectedRadius, replaceValue=1)
-		return self
-
 	def HoleFilling(self):
+		self.segImg  = sitk.Cast(self.segImg, sitk.sitkUInt16)
 		#Apply the filters to the binary image
 		self.segImg = self.dilateFilter.Execute(self.segImg, 0, 1, False)
 		self.segImg = self.fillFilter.Execute(self.segImg, True, 1)
@@ -236,12 +229,13 @@ class BoneSeg(object):
 
 
 		self.segImg = self.laplacianFilter.Execute(self.segImg, self.image)
+		print(self.laplacianFilter)
 
 		nda = sitk.GetArrayFromImage(self.segImg)
 		nda = np.asarray(nda)
 
 		#Fix the intensities of the output of the laplcian; 0 = 1 and ~! 1 is 0 then 1 == x+1
-		nda[nda <= 0.1] = 0
+		nda[nda <= 0.3] = 0
 		nda[nda != 0] = 1
 
 		self.segImg = sitk.GetImageFromArray(nda)
@@ -261,9 +255,9 @@ class BoneSeg(object):
 
 		self.segImg = self.erodeFilter.Execute(self.segImg, 0, 1, False)
 
-		connectedXImg = self.connectedComponentFilter.Execute(self.segImg)
+		self.segImg = self.connectedComponentFilter.Execute(self.segImg)
 
-		nda = sitk.GetArrayFromImage(connectedXImg)
+		nda = sitk.GetArrayFromImage(self.segImg)
 		nda = np.asarray(nda)
 
 		#In numpy an array is indexed in the opposite order (z,y,x)
@@ -308,86 +302,7 @@ class BoneSeg(object):
 
 		return self
 
-
-	def segmentationWall(self):
-		#This takes a user defined label map and uses the voxels with an intensity of
-		#1 to modify the original image to prevent the segmentation from crossing the boundary
-		
-		imageArray = np.asarray(sitk.GetArrayFromImage(self.image))
-		labelArray = np.asarray(sitk.GetArrayFromImage(self.inputLabel))
-
-		#Just a very large number to prevent segmentation from crossing the boundary
-		imageArray[labelArray == 1] = 2000 
-
-		#Take this array and make a SimpleITK image with it again
-		self.image = sitk.GetImageFromArray(imageArray)
-
-		#This may not be necessary
-		self.image = sitk.Cast(self.image, inputLabel.GetPixelID())
-		self.image.CopyInformation(self.inputLabel)
-
-		return self
-
-
-
-		
-
-#################################################################################
-####Below is experimental (not working currently)################################
-#################################################################################
-
-
 	def ThresholdLevelSet(self):
-
-		#####################################
-
-		# ###Create the seed image###
-		# nda = sitk.GetArrayFromImage(self.image)
-		# nda = np.asarray(nda)
-		# nda = nda*0
-
-		# seedPoint = self.seedPoint[0]
-		# print(seedPoint)
-		# # nda[seedPoint[2]][seedPoint[1]][seedPoint[0]] = 1
-		# #In numpy an array is indexed in the opposite order (z,y,x)
-		# nda[47][100][50] = 1
-
-		# self.seedImage = sitk.Cast(sitk.GetImageFromArray(nda), sitk.sitkUInt16)
-		# self.seedImage.CopyInformation(self.image)
-
-		# for x in range(5):
-		# 	self.seedImage = self.dilateFilter.Execute(self.seedImage, 0, 1, False)
-		# 	print(x)
-
-		# nda = sitk.GetArrayFromImage(self.seedImage)
-		# nda = np.asarray(nda, dtype=np.float32)
-		# nda[nda > 0] = 0.5
-		# print(nda[nda != 0])
-		# # return
-
-		# self.seedImage = sitk.Cast(sitk.GetImageFromArray(nda), sitk.sitkFloat32)
-		# self.seedImage.CopyInformation(self.image)
-
-		# sitk.Show(self.seedImage)
-
-
-		# self.image = sitk.Cast(self.image, sitk.sitkFloat32)
-
-		# print(type(tuple(self.seedPoint[0])) == type((18,71,26)))
-		# print(type((60,90,43)))
-
-		# # sitk.Show(self.image)
-		# # idx = (60,90,43)
-		# idx = (self.seedPoint[0][0],self.seedPoint[0][1],self.seedPoint[0][2])
-		# idx = tuple(idx)
-		# print(idx)
-		# # idx = (18,71,26)
-		# # pt = self.image.TransformIndexToPhysicalPoint(self.seedPoint[0])
-		# seg = sitk.Image(self.image.GetSize(), sitk.sitkUInt8)
-		# seg.CopyInformation(self.image)
-		# seg[tuple(list(self.seedPoint[0][0],self.seedPoint[0][1],self.seedPoint[0][2]))] = 1
-		# seg = sitk.BinaryDilate(seg, 3)
-
 
 		###Create the seed image###
 		nda = sitk.GetArrayFromImage(self.image)
@@ -412,10 +327,10 @@ class BoneSeg(object):
 		thresholdLevelSet = sitk.ThresholdSegmentationLevelSetImageFilter()
 		
 		thresholdLevelSet.SetLowerThreshold(0)
-		thresholdLevelSet.SetUpperThreshold(150)
-		thresholdLevelSet.SetNumberOfIterations(1000)
+		thresholdLevelSet.SetUpperThreshold(40)
+		thresholdLevelSet.SetNumberOfIterations(2000)
 		thresholdLevelSet.SetReverseExpansionDirection(True)
-		thresholdLevelSet.SetMaximumRMSError(0.001)
+		thresholdLevelSet.SetMaximumRMSError(0.005)
 		# thresholdLevelSet.SetPropagationScaling(1)
 		# thresholdLevelSet.SetCurvatureScaling(1)
 
@@ -423,52 +338,15 @@ class BoneSeg(object):
 		print(thresholdLevelSet)
 
 
-
 		nda = sitk.GetArrayFromImage(threshOutput)
 		nda = np.asarray(nda)
 
-		#Fix the intensities of the output of the laplcian; 0 = 1 and ~! 1 is 0 then 1 == x+1
-		nda[nda > 0] = 0.5
+		#Fix the intensities of the output of the level set; 0 = 1 and ~! 1 is 0 then 1 == x+1
+		nda[nda > 0] = 1
 		nda[nda < 0] = 0
 
 		self.segImg = sitk.GetImageFromArray(nda)
 		self.segImg = sitk.Cast(self.segImg, self.image.GetPixelID())
 		self.segImg.CopyInformation(self.image)
 
-
-		sitk.Show(self.segImg)
-
-		print("Testing with the Laplacian level set now...")
-
-		self.laplacianFilter.SetMaximumRMSError(0.001)
-		self.segImg = self.laplacianFilter.Execute(self.segImg, self.image)
-
-		print(self.laplacianFilter)
-
-		nda = sitk.GetArrayFromImage(self.segImg)
-		nda = np.asarray(nda)
-
-		#Fix the intensities of the output of the laplcian; 0 = 1 and ~! 1 is 0 then 1 == x+1
-		nda[nda <= 0.1] = 0
-		nda[nda != 0] = 1
-
-		self.segImg = sitk.GetImageFromArray(nda)
-		self.segImg = sitk.Cast(self.segImg, self.image.GetPixelID())
-		self.segImg.CopyInformation(self.image)
-		
-		self.segImg  = sitk.Cast(self.segImg, sitk.sitkUInt16)
-		self.image = sitk.Cast(self.image, sitk.sitkUInt16)
-
-		overlaidSegImage = sitk.LabelOverlay(self.image, self.segImg)
-		# sitk.Show(overlaidSegImage)
-
 		return self
-
-
-
-
-		print("Finished with thresholdLevelSet test!")
-		#####################################
-
-
-
