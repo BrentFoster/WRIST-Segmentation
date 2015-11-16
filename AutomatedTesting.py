@@ -64,39 +64,39 @@ if __name__ == '__main__':
 	#####
 
 	print('\033[90m' + "Testing single thread routine...")
-	try:
-		for x in range(2):
-			segmentationClass = BrentSeg.BoneSeg()
-			output = segmentationClass.Execute(MRI_Image,[SeedPoints[x]])
-		print('\033[90m' + "Single Thread test PASSED")
-	except:
-		print('\033[90m' + "Single Thread test FAILED")
+	# try:
+	for x in range(2):
+		segmentationClass = BrentSeg.BoneSeg()
+		output = segmentationClass.Execute(MRI_Array,[SeedPoints[x]])
+	print('\033[90m' + "Single Thread test PASSED")
+	# except:
+		# print('\033[90m' + "Single Thread test FAILED")
 
 
 	print('\033[90m' + "Testing multiprocessing routine...")
-	try:
+	# try:
 
-		procs = []
-		#Store the output image arrays into a 'Queue'
-		q = multiprocessing.Queue() 
-		for x in range(2):
+	procs = []
+	#Store the output image arrays into a 'Queue'
+	q = multiprocessing.Queue() 
+	for x in range(2):
 
-			p = multiprocessing.Process(target=f, args=(x,SeedPoints,MRI_Array,q,))
-			p.start()
-			procs.append(p) #List of current processes
+		p = multiprocessing.Process(target=f, args=(x,SeedPoints,MRI_Array,q,))
+		p.start()
+		procs.append(p) #List of current processes
 
-		print("Printing q:")
-		for i in range(2):
-			#Outputs an array (due to multiprocessing 'pickle' constraints)
-			segmenationArray = segmenationArray + q.get() 
+	print("Printing q:")
+	for i in range(2):
+		#Outputs an array (due to multiprocessing 'pickle' constraints)
+		segmenationArray = q.get() 
 
-		# Wait for all worker processes to finish by using .join()
-		for p in procs:
-			p.join()
+	# Wait for all worker processes to finish by using .join()
+	for p in procs:
+		p.join()
 
-		#Convert segmentationArray back into an image
-		segmenationLabel = sitk.Cast(sitk.GetImageFromArray(segmenationArray), MRI_Image.GetPixelID())
-		segmenationLabel.CopyInformation(MRI_Image)
-		print('\033[90m' + "Multiprocessing routine PASSED")
-	except:
-		print('\033[90m' + "Multiprocessing routine FAILED")
+	#Convert segmentationArray back into an image
+	segmenationLabel = sitk.Cast(sitk.GetImageFromArray(segmenationArray), MRI_Image.GetPixelID())
+	segmenationLabel.CopyInformation(MRI_Image)
+	print('\033[90m' + "Multiprocessing routine PASSED")
+	# except:
+	# 	print('\033[90m' + "Multiprocessing routine FAILED")

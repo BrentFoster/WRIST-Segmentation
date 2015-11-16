@@ -67,8 +67,10 @@ if __name__ == '__main__':
 		text_file.close()
 
 		#Save the segmentation
-		print("Saving segmentation...")
+		print("Saving segmentation to "),
 		imageWriter = sitk.ImageFileWriter()
 		tempFilename = imageFilenames[k]
-		imageWriter.Execute(outputSegmentation, tempFilename[1:len(tempFilename)-4]+'_segmentation.hdr', True)
+		tempFilename = '/Users/Brent/Desktop/Segmentations/' + tempFilename[len(tempFilename)-19:len(tempFilename)-4] + '_segmentation.hdr'
+		print(tempFilename)
+		imageWriter.Execute(outputSegmentation, tempFilename, True)
 		print("Segmentation saved")

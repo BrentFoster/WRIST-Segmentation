@@ -33,7 +33,7 @@ class BoneSeg(object):
 
 	def SetDefaultValues(self):
 		#Set the default values of all the parameters here
-		self.SetScalingFactor([2,2,2]) #X,Y,Z
+		self.SetScalingFactor([2,2,1]) #X,Y,Z
 		self.SetAnisotropicIts(15)
 		self.SetAnisotropicTimeStep(0.01)
 		self.SetAnisotropicConductance(2)
@@ -327,7 +327,7 @@ class BoneSeg(object):
 		thresholdLevelSet = sitk.ThresholdSegmentationLevelSetImageFilter()
 		
 		thresholdLevelSet.SetLowerThreshold(0)
-		thresholdLevelSet.SetUpperThreshold(50)
+		thresholdLevelSet.SetUpperThreshold(40)
 		thresholdLevelSet.SetNumberOfIterations(2000)
 		thresholdLevelSet.SetReverseExpansionDirection(True)
 		thresholdLevelSet.SetMaximumRMSError(0.005)
