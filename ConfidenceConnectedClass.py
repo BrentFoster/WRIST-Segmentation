@@ -327,8 +327,8 @@ class BoneSeg(object):
 		thresholdLevelSet = sitk.ThresholdSegmentationLevelSetImageFilter()
 		
 		thresholdLevelSet.SetLowerThreshold(0)
-		thresholdLevelSet.SetUpperThreshold(60)
-		thresholdLevelSet.SetNumberOfIterations(1000)
+		thresholdLevelSet.SetUpperThreshold(120)
+		thresholdLevelSet.SetNumberOfIterations(10000)
 		thresholdLevelSet.SetReverseExpansionDirection(True)
 		thresholdLevelSet.SetMaximumRMSError(0.005)
 		# thresholdLevelSet.SetPropagationScaling(1)

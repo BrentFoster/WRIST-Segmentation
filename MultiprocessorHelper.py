@@ -7,13 +7,13 @@ class Multiprocessor(object):
 	"""docstring for ClassName"""
 	def __init__(self, segmentationClass, seedList, MRI_Image):
 		# super(ClassName, self).__init__()
-		# self.arg = arg
 		self.segmentationClass = segmentationClass
 		self.seedList = seedList
 		self.MRI_Image = MRI_Image
 
 		#Convert to voxel coordinates
 		self.RoundSeedPoints() 
+		self.Execute()
 
 	def Execute(self):
 
@@ -45,7 +45,7 @@ class Multiprocessor(object):
 			jobOrder = self.SplitJobs(range(len(self.seedList)), num_CPUs)
 			print(jobOrder)
 			for x in range(len(jobOrder)):
-				self.segmentationArray = self.segmentationArray + self.RunMultiprocessing(jobOrder[x])
+				self.segmentationArray = self.segmentationArray + (x+1)*self.RunMultiprocessing(jobOrder[x])
 
 		#Convert segmentationArray back into an image
 		segmentationOutput = sitk.Cast(sitk.GetImageFromArray(self.segmentationArray), self.MRI_Image.GetPixelID())
