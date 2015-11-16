@@ -5,17 +5,18 @@ import timeit
 
 class Multiprocessor(object):
 	"""docstring for ClassName"""
-	def __init__(self, segmentationClass, seedList, MRI_Image):
+	def __init__(self):
 		# super(ClassName, self).__init__()
+		self = self
+
+
+	def Execute(self, segmentationClass, seedList, MRI_Image):
 		self.segmentationClass = segmentationClass
 		self.seedList = seedList
 		self.MRI_Image = MRI_Image
 
 		#Convert to voxel coordinates
 		self.RoundSeedPoints() 
-		self.Execute()
-
-	def Execute(self):
 
 		###Create an empty segmenationLabel array###
 		nda = sitk.GetArrayFromImage(self.MRI_Image)
@@ -57,8 +58,8 @@ class Multiprocessor(object):
 	#Helper functions for the multiprocessing
 	def RunMultiprocessing(self,jobOrder):
 		procs = []
-		maxSize = 4
-		q = multiprocessing.Queue(maxSize)
+		# maxSize = 4
+		q = multiprocessing.Queue()
 		for x in jobOrder:
 			p = multiprocessing.Process(target=self.f, args=(self.MRI_Array, self.seedList[x],q,))
 			p.start()
@@ -72,7 +73,7 @@ class Multiprocessor(object):
 		# Wait for all worker processes to finish by using .join()
 		for p in procs:
 			p.join()
-			p.terminate()
+			# p.terminate()
 
 		print('Finished with processes:'),
 		print(jobOrder)

@@ -21,9 +21,9 @@ def loadSeedPoints(filename):
 		image.append(currLine[4])
 	return {'x':x, 'y':y ,'z':z , 'label':label, 'image':image}
 
-def f(x,SeedPoints,MRI_Array,inputLabel_Array,q):
-	segmentationClass = BrentSeg.BoneSeg(MRI_Array,inputLabel_Array,[SeedPoints[x]])
-	output = segmentationClass.Execute()
+def f(x,SeedPoints,MRI_Array,q):
+	segmentationClass = BrentSeg.BoneSeg()
+	output = segmentationClass.Execute(MRI_Array,[SeedPoints[x]])
 	print('Finished with process:'),
 	print(x)
 	q.put(output)
@@ -65,9 +65,9 @@ if __name__ == '__main__':
 
 	print('\033[90m' + "Testing single thread routine...")
 	try:
-		for x in range(8):
-			segmentationClass = BrentSeg.BoneSeg(MRI_Image,inputLabel_Image,[SeedPoints[x]])
-			output = segmentationClass.Execute()
+		for x in range(2):
+			segmentationClass = BrentSeg.BoneSeg()
+			output = segmentationClass.Execute(MRI_Image,[SeedPoints[x]])
 		print('\033[90m' + "Single Thread test PASSED")
 	except:
 		print('\033[90m' + "Single Thread test FAILED")
@@ -81,7 +81,7 @@ if __name__ == '__main__':
 		q = multiprocessing.Queue() 
 		for x in range(2):
 
-			p = multiprocessing.Process(target=f, args=(x,SeedPoints,MRI_Array,inputLabel_Array,q,))
+			p = multiprocessing.Process(target=f, args=(x,SeedPoints,MRI_Array,q,))
 			p.start()
 			procs.append(p) #List of current processes
 

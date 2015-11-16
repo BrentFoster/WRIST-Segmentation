@@ -33,14 +33,14 @@ class BoneSeg(object):
 
 	def SetDefaultValues(self):
 		#Set the default values of all the parameters here
-		self.SetScalingFactor([2,2,1]) #X,Y,Z
-		self.SetAnisotropicIts(5)
+		self.SetScalingFactor([2,2,2]) #X,Y,Z
+		self.SetAnisotropicIts(15)
 		self.SetAnisotropicTimeStep(0.01)
 		self.SetAnisotropicConductance(2)
 		self.SetConfidenceConnectedIts(0)
 		self.SetConfidenceConnectedMultiplier(0.5)
 		self.SetConfidenceConnectedRadius(2)
-		self.SetMaxVolume(400000) #Pixel counts (TODO change to mm^3)	
+		self.SetMaxVolume(300000) #Pixel counts (TODO change to mm^3)	
 		self.SetBinaryMorphologicalRadius(1)	
 		self.SetLaplacianExpansionDirection(True) #Laplacian Level Set
 		self.SetLaplacianError(0.002)
@@ -122,18 +122,18 @@ class BoneSeg(object):
 		self.scaleDownImage()
 
 		print('\033[92m' + "Applying the Anisotropic Filter...")
-		# self.apply_AnisotropicFilter()
+		self.apply_AnisotropicFilter()
 
 		print("Testing the threshold level set segmentation...")
 		self.ThresholdLevelSet() 
 
-		print('\033[93m' + "Segmenting via confidence connected...")
+		# print('\033[93m' + "Segmenting via confidence connected...")
 		# self.ConfidenceConnectedSegmentation()
 
 		print('\033[93m' + "Filling Segmentation Holes...")
 		self.HoleFilling()
 
-		print('\033[95m' + "Running Laplacian Level Set...")
+		# print('\033[95m' + "Running Laplacian Level Set...")
 		# self.LaplacianLevelSet()
 
 		print('\033[95m' + "Finding connected regions...")
@@ -327,8 +327,8 @@ class BoneSeg(object):
 		thresholdLevelSet = sitk.ThresholdSegmentationLevelSetImageFilter()
 		
 		thresholdLevelSet.SetLowerThreshold(0)
-		thresholdLevelSet.SetUpperThreshold(120)
-		thresholdLevelSet.SetNumberOfIterations(10000)
+		thresholdLevelSet.SetUpperThreshold(50)
+		thresholdLevelSet.SetNumberOfIterations(2000)
 		thresholdLevelSet.SetReverseExpansionDirection(True)
 		thresholdLevelSet.SetMaximumRMSError(0.005)
 		# thresholdLevelSet.SetPropagationScaling(1)

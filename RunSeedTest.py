@@ -51,10 +51,10 @@ if __name__ == '__main__':
 		print(SeedPoints)
 
 		segmentationClass = BrentSeg.BoneSeg()
-		multiHelper = MultiprocessorHelper.Multiprocessor(segmentationClass, SeedPoints, MRI_Image)
+		multiHelper = MultiprocessorHelper.Multiprocessor()
 
 		start_time = timeit.default_timer()
-		outputSegmentation = multiHelper.Execute()
+		outputSegmentation = multiHelper.Execute(segmentationClass, SeedPoints, MRI_Image)
 		#Determine how long the algorithm took to run
 		elapsed = timeit.default_timer() - start_time
 		print("Elapsed Time (secs):"),
@@ -67,6 +67,8 @@ if __name__ == '__main__':
 		text_file.close()
 
 		#Save the segmentation
+		print("Saving segmentation...")
 		imageWriter = sitk.ImageFileWriter()
-		imageWriter.Execute(outputSegmentation, imageFilenames[k]+'_segmentation.hdr', True)
-
+		tempFilename = imageFilenames[k]
+		imageWriter.Execute(outputSegmentation, tempFilename[1:len(tempFilename)-4]+'_segmentation.hdr', True)
+		print("Segmentation saved")
