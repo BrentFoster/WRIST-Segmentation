@@ -27,14 +27,14 @@ class BoneSeg(object):
 		self.fillFilter = sitk.BinaryFillholeImageFilter()	
 		self.connectedComponentFilter = sitk.ScalarConnectedComponentImageFilter()
 		self.laplacianFilter = sitk.LaplacianSegmentationLevelSetImageFilter()
-
+		self.thresholdLevelSet = sitk.ThresholdSegmentationLevelSetImageFilter()
 		#Set the deafult values 
 		self.SetDefaultValues()
 
 	def SetDefaultValues(self):
 		#Set the default values of all the parameters here
-		self.SetScalingFactor([2,2,1]) #X,Y,Z
-		self.SetAnisotropicIts(15)
+		self.SetScalingFactor([2,2,2]) #X,Y,Z
+		self.SetAnisotropicIts(5)
 		self.SetAnisotropicTimeStep(0.01)
 		self.SetAnisotropicConductance(2)
 		self.SetConfidenceConnectedIts(0)
@@ -43,10 +43,26 @@ class BoneSeg(object):
 		self.SetMaxVolume(300000) #Pixel counts (TODO change to mm^3)	
 		self.SetBinaryMorphologicalRadius(1)	
 		self.SetLaplacianExpansionDirection(True) #Laplacian Level Set
-		self.SetLaplacianError(0.002)
+		self.SetLaplacianError(0.01)
 		self.SetConnectedComponentFullyConnected(True)	
 		self.SetConnectedComponentDistance(0.01) 
 		self.SeedListFilename = "PointList.txt"
+
+		self.SetLevelSetThreshold([0,70])
+		self.SetLevelSetIts(2000)
+		self.SetLevelSetReverseDirection(True)
+		self.SetLevelSetError(0.005)
+
+
+	def SetLevelSetThreshold(self, thresholdRange):
+		self.thresholdLevelSet.SetLowerThreshold(thresholdRange[0])	
+		self.thresholdLevelSet.SetUpperThreshold(thresholdRange[1])
+	def SetLevelSetIts(self,iterations):
+		self.thresholdLevelSet.SetNumberOfIterations(iterations)
+	def SetLevelSetReverseDirection(self, direction):
+		self.thresholdLevelSet.SetReverseExpansionDirection(direction)
+	def SetLevelSetError(self,MaxError):		
+		self.thresholdLevelSet.SetMaximumRMSError(MaxError)
 
 	def SetImage(self, image):
 		self.image = image
@@ -103,10 +119,12 @@ class BoneSeg(object):
 	def Execute(self, image, seedPoint):
 
 		self.image = image
+
 		self.seedPoint = seedPoint
 
 		#Convert from the arrays back into ITK images (due to multiprocessing)
 		self.image = sitk.Cast(sitk.GetImageFromArray(self.image), sitk.sitkFloat32)
+		self.image = self.FlipImage(self.image) #Flip the MRI
 
 		#Convert images to float 32 first
 		self.image = sitk.Cast(self.image, sitk.sitkFloat32)
@@ -121,29 +139,35 @@ class BoneSeg(object):
 		print('\033[90m' + "Scaling image down...")
 		self.scaleDownImage()
 
-		print('\033[92m' + "Applying the Anisotropic Filter...")
-		self.apply_AnisotropicFilter()
+		# print('\033[92m' + "Applying the Anisotropic Filter...")
+		# self.apply_AnisotropicFilter()
 
-		print("Testing the threshold level set segmentation...")
+		print("Threshold level set segmentation...")
 		self.ThresholdLevelSet() 
 
 		# print('\033[93m' + "Segmenting via confidence connected...")
 		# self.ConfidenceConnectedSegmentation()
 
-		print('\033[93m' + "Filling Segmentation Holes...")
-		self.HoleFilling()
-
 		# print('\033[95m' + "Running Laplacian Level Set...")
 		# self.LaplacianLevelSet()
 
 		print('\033[95m' + "Finding connected regions...")
-		self.ConnectedComponent()
+		# self.ConnectedComponent()
 
 		print('\033[96m' + "Checking volume for potential leakage... "), #Comma keeps printing on the same line
 		self.LeakageCheck()
 
+		print('\033[90m' + "Simple threshold operation...")
+		self.ThresholdImage()
+
+		print('\033[93m' + "Filling Segmentation Holes...")
+		self.HoleFilling()
+
 		print('\033[90m' + "Scaling image back...")
 		self.scaleUpImage()
+
+		print('\033[90m' + "Eroding image slightly...")
+		self.segImg = self.erodeFilter.Execute(self.segImg, 0, 1, False)
 
 		print('\033[96m' + "Finished with seed point "),
 		print(self.seedPoint)
@@ -156,6 +180,22 @@ class BoneSeg(object):
 #############################################################################################
 #############################################################################################
 
+	def FlipImage(self,image):
+		#Flip image(s) (if needed)
+		flipFilter = sitk.FlipImageFilter()
+		flipFilter.SetFlipAxes((False,True,False))
+		image = flipFilter.Execute(self.image)
+		return image
+
+	def ThresholdImage(self):
+		self.segImg.CopyInformation(self.image)
+		thresholdFilter = sitk.BinaryThresholdImageFilter()
+		thresholdFilter.SetLowerThreshold(1)
+		thresholdFilter.SetUpperThreshold(100)
+		tempImg = self.segImg * self.image
+		self.segImg = thresholdFilter.Execute(tempImg)
+		# sitk.Show(self.segImg)
+		return self
 
 	def RoundSeedPoint(self):
 		tempseedPoint = np.array(self.seedPoint).astype(int) #Just to be safe make it int again
@@ -205,6 +245,7 @@ class BoneSeg(object):
 	def HoleFilling(self):
 		self.segImg  = sitk.Cast(self.segImg, sitk.sitkUInt16)
 		#Apply the filters to the binary image
+		self.segImg = self.fillFilter.Execute(self.segImg, True, 1)
 		self.segImg = self.dilateFilter.Execute(self.segImg, 0, 1, False)
 		self.segImg = self.fillFilter.Execute(self.segImg, True, 1)
 		self.segImg = self.erodeFilter.Execute(self.segImg, 0, 1, False)	
@@ -324,18 +365,18 @@ class BoneSeg(object):
 
 		init_ls = sitk.SignedMaurerDistanceMap(seg, insideIsPositive=True, useImageSpacing=True)
 
-		thresholdLevelSet = sitk.ThresholdSegmentationLevelSetImageFilter()
+		# thresholdLevelSet = sitk.ThresholdSegmentationLevelSetImageFilter()
 		
-		thresholdLevelSet.SetLowerThreshold(0)
-		thresholdLevelSet.SetUpperThreshold(40)
-		thresholdLevelSet.SetNumberOfIterations(2000)
-		thresholdLevelSet.SetReverseExpansionDirection(True)
-		thresholdLevelSet.SetMaximumRMSError(0.005)
+		# thresholdLevelSet.SetLowerThreshold(0)
+		# thresholdLevelSet.SetUpperThreshold(30)
+		# thresholdLevelSet.SetNumberOfIterations(2000)
+		# thresholdLevelSet.SetReverseExpansionDirection(True)
+		# thresholdLevelSet.SetMaximumRMSError(0.005)
 		# thresholdLevelSet.SetPropagationScaling(1)
 		# thresholdLevelSet.SetCurvatureScaling(1)
 
-		threshOutput = thresholdLevelSet.Execute(init_ls, self.image)
-		print(thresholdLevelSet)
+		threshOutput = self.thresholdLevelSet.Execute(init_ls, self.image)
+		print(self.thresholdLevelSet)
 
 
 		nda = sitk.GetArrayFromImage(threshOutput)

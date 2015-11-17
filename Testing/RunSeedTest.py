@@ -1,3 +1,11 @@
+#Add the parent folder to search for the python class for import
+#$ python Testing/RunSeedTest.py 
+import sys
+import os.path
+sys.path.append(
+    os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
+
+
 import ConfidenceConnectedClass as BrentSeg
 import MultiprocessorHelper
 import SimpleITK as sitk
@@ -31,14 +39,15 @@ def loadSeedPoints(filename):
 		z.append(currLine[3])
 	return {'x':x, 'y':y ,'z':z}
 
-
-
 ##STARTS HERE##
 if __name__ == '__main__':
 
-	for k in range(0,len(imageFilenames)):
+	for k in [1]:#range(3,len(imageFilenames)):
+		print("Filename:"),
+		print(imageFilenames[k])
 		#Load the data
 		MRI_Image = sitk.ReadImage(imageFilenames[k])
+
 		seedsFilename = seedListFiles[k]
 		textSeeds = loadSeedPoints(seedsFilename)
 		SeedPoints = []
@@ -54,6 +63,23 @@ if __name__ == '__main__':
 		multiHelper = MultiprocessorHelper.Multiprocessor()
 
 		start_time = timeit.default_timer()
+		
+
+		print('\033[94m' + "Applying preprocessing...")
+		#Filter to reduce noise while preserving edges
+		#May be better to do the pre-processing only once to speed up computation
+		anisotropicFilter = sitk.CurvatureAnisotropicDiffusionImageFilter()
+		anisotropicFilter.SetNumberOfIterations(1)
+		anisotropicFilter.SetTimeStep(0.01)
+		anisotropicFilter.SetConductanceParameter(3)
+
+		# smoothed_MRI_Image = sitk.Cast(MRI_Image, sitk.sitkFloat32)
+
+
+		# smoothed_MRI_Image = anisotropicFilter.Execute(smoothed_MRI_Image)
+		# MRI_Image = sitk.Cast(smoothed_MRI_Image, MRI_Image.GetPixelID())
+		print('\033[94m' + "Preprocessing done")
+
 		outputSegmentation = multiHelper.Execute(segmentationClass, SeedPoints, MRI_Image)
 		#Determine how long the algorithm took to run
 		elapsed = timeit.default_timer() - start_time
@@ -61,7 +87,7 @@ if __name__ == '__main__':
 		print(elapsed)
 
 		#Save computation time in a log file
-		text_file = open("computation_times.txt", "r+")
+		text_file = open("Testing/computation_times.txt", "r+")
 		text_file.readlines()
 		text_file.write("%s\n" % elapsed)
 		text_file.close()
@@ -74,3 +100,4 @@ if __name__ == '__main__':
 		print(tempFilename)
 		imageWriter.Execute(outputSegmentation, tempFilename, True)
 		print("Segmentation saved")
+
