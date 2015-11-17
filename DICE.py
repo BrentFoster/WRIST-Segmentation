@@ -35,6 +35,7 @@ class DICE(object):
 		return dice
 
 	def AllLabels(self):
+		self.GroundTruth[self.GroundTruth != 4] = 0
 		self.GroundTruth[self.GroundTruth != 0] = 1
 		self.Segmentation[self.Segmentation != 0] = 1
 		self.label = 1

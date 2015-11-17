@@ -63,23 +63,7 @@ if __name__ == '__main__':
 		multiHelper = MultiprocessorHelper.Multiprocessor()
 
 		start_time = timeit.default_timer()
-		
-
-		print('\033[94m' + "Applying preprocessing...")
-		#Filter to reduce noise while preserving edges
-		#May be better to do the pre-processing only once to speed up computation
-		anisotropicFilter = sitk.CurvatureAnisotropicDiffusionImageFilter()
-		anisotropicFilter.SetNumberOfIterations(1)
-		anisotropicFilter.SetTimeStep(0.01)
-		anisotropicFilter.SetConductanceParameter(3)
-
-		# smoothed_MRI_Image = sitk.Cast(MRI_Image, sitk.sitkFloat32)
-
-
-		# smoothed_MRI_Image = anisotropicFilter.Execute(smoothed_MRI_Image)
-		# MRI_Image = sitk.Cast(smoothed_MRI_Image, MRI_Image.GetPixelID())
-		print('\033[94m' + "Preprocessing done")
-
+	
 		outputSegmentation = multiHelper.Execute(segmentationClass, SeedPoints, MRI_Image)
 		#Determine how long the algorithm took to run
 		elapsed = timeit.default_timer() - start_time
@@ -100,4 +84,23 @@ if __name__ == '__main__':
 		print(tempFilename)
 		imageWriter.Execute(outputSegmentation, tempFilename, True)
 		print("Segmentation saved")
+
+
+
+
+# print('\033[94m' + "Applying preprocessing...")
+		#Filter to reduce noise while preserving edges
+		#May be better to do the pre-processing only once to speed up computation
+		# anisotropicFilter = sitk.CurvatureAnisotropicDiffusionImageFilter()
+		# anisotropicFilter.SetNumberOfIterations(1)
+		# anisotropicFilter.SetTimeStep(0.01)
+		# anisotropicFilter.SetConductanceParameter(3)
+
+		# smoothed_MRI_Image = sitk.Cast(MRI_Image, sitk.sitkFloat32)
+
+
+		# smoothed_MRI_Image = anisotropicFilter.Execute(smoothed_MRI_Image)
+		# MRI_Image = sitk.Cast(smoothed_MRI_Image, MRI_Image.GetPixelID())
+		# print('\033[94m' + "Preprocessing done")
+
 
