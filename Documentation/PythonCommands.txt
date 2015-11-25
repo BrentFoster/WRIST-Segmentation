@@ -1,0 +1,71 @@
+########################################################################
+Create a python module distribution that is very easy for others to install!
+(Also makes it easier for me to use these classes as well)
+
+Simply run the following command to generate the files (can also easily create a windows executable as well)
+
+$ python setup.py bdist
+
+To install run the following command
+$ python setup.py install --user 
+
+To use the module at the top of python files write 
+
+import BrentPython
+
+then 
+
+BrentPython.Dice(image1, image2)
+
+or alternatively
+
+import Dice from BrentPython
+
+Dice(image1, image2)
+
+
+See this link for further details:
+https://docs.python.org/2/distutils/introduction.html#distutils-simple-example
+
+################
+
+
+See https://wiki.python.org/moin/TestPyPI
+Register/Upload with the Python PyPi Test Server:
+
+python setup.py register -r https://testpypi.python.org/pypi
+python setup.py upload -r https://testpypi.python.org/pypi
+or
+python setup.py sdist upload -r pypitest
+
+Install Packages via:
+pip install -i https://testpypi.python.org/pypi <package name>
+
+
+################
+
+Upload to PyPi Live:
+python setup.py register -r pypi
+python setup.py sdist upload -r pypi
+
+See http://peterdowns.com/posts/first-time-with-pypi.html
+
+########################################################################
+
+
+Create a Python Wheel (For easy installation)
+
+python setup.py bdist_wheel
+
+
+########################################################################
+
+#install your project in “editable” or “develop” mode while you’re working on it. #This allows your project to be both installed and editable in project form.
+#From the parent directory
+
+pip install -e .
+
+#http://python-packaging-user-guide.readthedocs.org/en/latest/distributing/
+########################################################################
+
+
