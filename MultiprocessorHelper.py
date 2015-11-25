@@ -9,7 +9,6 @@ class Multiprocessor(object):
 		# super(ClassName, self).__init__()
 		self = self
 
-
 	def Execute(self, segmentationClass, seedList, MRI_Image):
 		self.segmentationClass = segmentationClass
 		self.seedList = seedList

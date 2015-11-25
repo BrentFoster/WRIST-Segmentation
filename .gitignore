@@ -3,6 +3,3 @@
 # build/
 
 # Ignore any Analyze images (.hdr and .img) files
-
-#*.hdr
-#*.img
