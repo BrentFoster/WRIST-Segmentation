@@ -22,7 +22,7 @@ before_install:
 script: python AutomatedTesting.py
 
    
-script: python ClassTesting.py
+# script: python ClassTesting.py
 
 # Customize when the notification emails are sent.
 notifications:
