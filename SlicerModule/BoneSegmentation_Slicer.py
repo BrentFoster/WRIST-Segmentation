@@ -22,7 +22,7 @@ class BoneSegmentation_Slicer:
     def __init__(self, parent):
         import string
         parent.title = "Carpal Bone Segmentation"
-        parent.categories = ["Bone Segmentation"]
+        parent.categories = ["Brent Modules"]
         parent.contributors = ["Brent Foster (UC Davis)"]
         parent.helpText = string.Template("Use this module to segment the eight carpal bones of the wrist. Input is a seed location defined by the user within each bone of interest. The Confidence Connected ITK Filter is then applied. ").substitute({
             'a': parent.slicerWikiUrl, 'b': slicer.app.majorVersion, 'c': slicer.app.minorVersion})
@@ -126,6 +126,85 @@ class BoneSegmentation_SlicerWidget:
         #Set default value
         self.MaxRMSError = self.MaxRMSErrorInputSlider.value
 
+
+        #
+        # Shape Detection Level set maximum Iterations
+        #        
+        self.label = qt.QLabel()
+        self.label.setText("Shape Detection Level Set Maximum Iterations: ")
+        self.label.setToolTip(
+            "Select the maximum number of iterations for the shape detection level set convergence")
+        self.ShapeMaxItsInputSlider = ctk.ctkSliderWidget()
+        self.ShapeMaxItsInputSlider.minimum = 0
+        self.ShapeMaxItsInputSlider.maximum = 2500
+        self.ShapeMaxItsInputSlider.value = 1000
+        self.ShapeMaxItsInputSlider.connect('valueChanged(double)', self.onShapeMaxItsInputSliderChange)
+        frameLayout.addRow(self.label, self.ShapeMaxItsInputSlider)
+        #Set default value
+        self.ShapeMaxIts = self.ShapeMaxItsInputSlider.value
+
+
+        #
+        # Shape Detection Level set maximum RMS error slider
+        #        
+        self.label = qt.QLabel()
+        self.label.setText("Shape Detection Level Set Maximum RMS Error: ")
+        self.label.setToolTip(
+            "Select the maximum root mean square error to determine convergence of the shape detection level set filter")
+        self.ShapeMaxRMSErrorInputSlider = ctk.ctkSliderWidget()
+        self.ShapeMaxRMSErrorInputSlider.minimum = 0.001
+        self.ShapeMaxRMSErrorInputSlider.maximum = 0.15
+        self.ShapeMaxRMSErrorInputSlider.value = 0.008
+        self.ShapeMaxRMSErrorInputSlider.singleStep = 0.001
+        self.ShapeMaxRMSErrorInputSlider.tickInterval = 0.001
+        self.ShapeMaxRMSErrorInputSlider.decimals = 3
+        self.ShapeMaxRMSErrorInputSlider.connect('valueChanged(double)', self.onShapeMaxRMSErrorInputSliderChange)
+        frameLayout.addRow(self.label, self.ShapeMaxRMSErrorInputSlider)
+        #Set default value
+        self.ShapeMaxRMSError = self.MaxRMSErrorInputSlider.value
+
+
+
+
+        #
+        # Shape Detection Level set curvatuve scale
+        #        
+        self.label = qt.QLabel()
+        self.label.setText("Shape Detection Level Set Curvature Scale: ")
+        self.label.setToolTip(
+            "Select the shape curvature scale (higher number causes more smoothing)")
+        self.ShapeCurvatureScaleInputSlider = ctk.ctkSliderWidget()
+        self.ShapeCurvatureScaleInputSlider.minimum = 0
+        self.ShapeCurvatureScaleInputSlider.maximum = 5
+        self.ShapeCurvatureScaleInputSlider.value = 1
+        self.ShapeCurvatureScaleInputSlider.singleStep = 0.2
+        self.ShapeCurvatureScaleInputSlider.tickInterval = 0.2
+        self.ShapeCurvatureScaleInputSlider.decimals = 1
+        self.ShapeCurvatureScaleInputSlider.connect('valueChanged(double)', self.onShapeCurvatureScaleInputSliderChange)
+        frameLayout.addRow(self.label, self.ShapeCurvatureScaleInputSlider)
+        #Set default value
+        self.ShapeCurvatureScale = self.ShapeCurvatureScaleInputSlider.value
+
+
+        #
+        # Shape Detection Level set propagation scale
+        #        
+        self.label = qt.QLabel()
+        self.label.setText("Shape Detection Level Set Propagation Scale: ")
+        self.label.setToolTip(
+            "Select the shape curvature scale (higher number causes more smoothing)")
+        self.ShapePropagationScaleInputSlider = ctk.ctkSliderWidget()
+        self.ShapePropagationScaleInputSlider.minimum = 0
+        self.ShapePropagationScaleInputSlider.maximum = 5
+        self.ShapePropagationScaleInputSlider.value = 1
+        self.ShapePropagationScaleInputSlider.singleStep = 0.2
+        self.ShapePropagationScaleInputSlider.tickInterval = 0.2
+        self.ShapePropagationScaleInputSlider.decimals = 1
+        self.ShapePropagationScaleInputSlider.connect('valueChanged(double)', self.onShapePropagationScaleInputSliderChange)
+        frameLayout.addRow(self.label, self.ShapePropagationScaleInputSlider)
+        #Set default value
+        self.ShapePropagationScale = self.ShapePropagationScaleInputSlider.value
+
         #
         # Maximum number of CPUs slider
         # 
@@ -166,6 +245,18 @@ class BoneSegmentation_SlicerWidget:
         # self.outputSelector.setMRMLScene(slicer.mrmlScene)
         # frameLayout.addRow(self.outputVolumeSelectorLabel, self.outputSelector)
         
+    def onShapePropagationScaleInputSliderChange(self, newValue):
+        self.ShapePropagationScale = newValue
+
+    def onShapeCurvatureScaleInputSliderChange(self, newValue):
+        self.ShapeCurvatureScale = newValue
+
+    def onShapeMaxItsInputSliderChange(self, newValue):
+        self.ShapeMaxIts = newValue
+
+    def onShapeMaxRMSErrorInputSliderChange(self, newValue):
+        self.ShapeMaxRMSError = newValue
+
     def onMaxRMSErrorInputSliderChange(self, newValue):
         self.MaxRMSError = newValue
 
@@ -222,8 +313,8 @@ class BoneSegmentation_SlicerWidget:
         #Initilize the two classes that are defined at the bottom of this file
         segmentationClass = BoneSeg()
         multiHelper = Multiprocessor()
-        #Parameters = [LevelSet Thresholds, LevelSet Iterations, LevelSet Error]
-        parameters = [self.LevelSetThresholds, self.MaxIts, self.MaxRMSError] #From the sliders above
+        #Parameters = [LevelSet Thresholds, LevelSet Iterations, Level Set Error, Shape Level Set Curvature, Shape Level Set Max Error, Shape Level Set Max Its, Shape LS Propagation Scale]
+        parameters = [self.LevelSetThresholds, self.MaxIts, self.MaxRMSError,self.ShapeCurvatureScale, self.ShapeMaxRMSError, self.ShapeMaxIts, self.ShapePropagationScale] #From the sliders above
         NumCPUs = self.NumCPUs
         Segmentation = multiHelper.Execute(segmentationClass, seedPoints, image, parameters, NumCPUs, True)
         print(Segmentation)
@@ -291,11 +382,21 @@ class Multiprocessor(object):
         segmentationClass = BoneSeg()
 
         # Change some parameters(s) of the segmentation class for the optimization
+        #Parameters = [LevelSet Thresholds, LevelSet Iterations, Level Set Error, Shape Level Set Curvature, Shape Level Set Max Error, Shape Level Set Max Its]
         print(self.parameters)
         segmentationClass.SetLevelSetLowerThreshold(self.parameters[0][0])
         segmentationClass.SetLevelSetUpperThreshold(self.parameters[0][1])
         segmentationClass.SetLevelSetIts(self.parameters[1])
         segmentationClass.SetLevelSetError(self.parameters[2])
+
+
+        #Shape Detection Filter
+        segmentationClass.SetShapeCurvatureScale(self.parameters[3])
+        segmentationClass.SetShapeMaxRMSError(self.parameters[4])
+        segmentationClass.SetShapeMaxIterations(self.parameters[5])
+        segmentationClass.SetShapePropagationScale(self.parameters[6])
+
+
 
         segmentation = segmentationClass.Execute(self.MRI_Image,[SeedPoint])
 
@@ -345,6 +446,11 @@ class BoneSeg(object):
         self.connectedComponentFilter = sitk.ScalarConnectedComponentImageFilter()
         self.laplacianFilter = sitk.LaplacianSegmentationLevelSetImageFilter()
         self.thresholdLevelSet = sitk.ThresholdSegmentationLevelSetImageFilter()
+
+        #Initilize the SimpleITK Filters
+        self.GradientMagnitudeFilter = sitk.GradientMagnitudeImageFilter()
+        self.shapeDetectionFilter = sitk.ShapeDetectionLevelSetImageFilter()
+
         #Set the deafult values 
         self.SetDefaultValues()
 
@@ -359,7 +465,7 @@ class BoneSeg(object):
         # self.SetConfidenceConnectedMultiplier(0.5)
         # self.SetConfidenceConnectedRadius(2)
         # self.SetLaplacianExpansionDirection(True) #Laplacian Level Set
-        # self.SetLaplacianError(0.01)
+        # self.SetLaplacianError(0.001)
         # self.SetConnectedComponentFullyConnected(True)    
         # self.SetConnectedComponentDistance(0.01) 
         
@@ -374,7 +480,25 @@ class BoneSeg(object):
         self.SetLevelSetPropagation(1)
         self.SetLevelSetCurvature(1)
 
-        
+        #Shape Detection Filter
+        self.SetShapeMaxRMSError(0.01)
+        self.SetShapeMaxIterations(500)
+        self.SetShapePropagationScale(-1)
+        self.SetShapeCurvatureScale(1)
+
+
+    def SetShapeMaxIterations(self, MaxIts):
+        self.shapeDetectionFilter.SetNumberOfIterations(int(MaxIts))
+
+    def SetShapePropagationScale(self, propagationScale):
+        self.shapeDetectionFilter.SetPropagationScaling(propagationScale)
+
+    def SetShapeCurvatureScale(self, curvatureScale):
+        self.shapeDetectionFilter.SetCurvatureScaling(curvatureScale)
+
+    def SetShapeMaxRMSError(self, MaxRMSError):
+        self.shapeDetectionFilter.SetMaximumRMSError(MaxRMSError)
+
     def SetLevelSetCurvature(self, curvatureScale):
         self.thresholdLevelSet.SetCurvatureScaling(curvatureScale)
         
@@ -493,6 +617,9 @@ class BoneSeg(object):
 
         # print('\033[90m' + "Simple threshold operation...")
         # self.ThresholdImage()
+        if (self.shapeDetectionFilter.GetNumberOfIterations > 0):
+            self.ShapeDetection()
+
 
         if self.verbose == True:
             print('\033[93m' + "Filling Segmentation Holes...")
@@ -503,7 +630,7 @@ class BoneSeg(object):
         self.scaleUpImage()
 
         print('\033[90m' + "Eroding image slightly...")
-        self.segImg = self.erodeFilter.Execute(self.segImg, 0, 1, False)
+        # self.segImg = self.erodeFilter.Execute(self.segImg, 0, 1, False)
 
 
         if self.verbose == True:
@@ -585,6 +712,30 @@ class BoneSeg(object):
         self.segImg = self.fillFilter.Execute(self.segImg, True, 1)
         # self.segImg = self.erodeFilter.Execute(self.segImg, 0, 1, False)  
         return self
+
+    def ShapeDetection(self):
+        print('Shape Detection Level Set...')
+
+        self.segImg = sitk.Cast(self.segImg, sitk.sitkUInt16)
+
+        #Signed distance function using the initial levelset segmentation
+        init_ls = sitk.SignedMaurerDistanceMap(self.segImg, insideIsPositive=True, useImageSpacing=True)
+
+        gradientImage = self.GradientMagnitudeFilter.Execute(self.image)
+
+        shapeBinary = self.shapeDetectionFilter.Execute(init_ls, gradientImage)
+
+        npshapeBinary = np.asarray(sitk.GetArrayFromImage(shapeBinary), dtype='float64')
+
+        npshapeBinary[npshapeBinary > 0.2] = 1 #Make into a binary again
+        # npshapeBinary[npshapeBinary < 0] = 0 #Make into a binary again
+
+        npshapeBinary[npshapeBinary != 1] = 0
+
+        self.segImg = sitk.Cast(sitk.GetImageFromArray(npshapeBinary), self.image.GetPixelID())
+        self.segImg.CopyInformation(self.image)
+
+        print(self.shapeDetectionFilter)
 
     def LaplacianLevelSet(self):
         #Check the image type of self.segImg and image are the same (for Python 3.3 and 3.4)

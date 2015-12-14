@@ -19,7 +19,7 @@ class BoneSeg(object):
 		#Filters to down/up sample the image for faster computation
 		self.shrinkFilter = sitk.ShrinkImageFilter()
 		self.expandFilter = sitk.ExpandImageFilter()
-		#Filter to reduce noise while preserving edgdes
+		#Filter to reduce noise while preserving edges
 		self.anisotropicFilter = sitk.CurvatureAnisotropicDiffusionImageFilter()
 		#Post-processing filters for fillinging holes and to attempt to remove any leakage areas
 		self.dilateFilter = sitk.BinaryDilateImageFilter()
