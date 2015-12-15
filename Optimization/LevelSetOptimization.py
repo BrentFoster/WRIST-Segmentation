@@ -1,8 +1,9 @@
 #Load the Python Packages
 import SimpleITK as sitk
 import timeit
-# from scipy.optimize import differential_evolution
+from scipy.optimize import differential_evolution
 from scipy.optimize import minimize
+
 import numpy as np
 
 #Self created python files (package created using the setup.py file)
@@ -36,10 +37,10 @@ seedListFiles = [\
 
 # Windows path
 groundtruthFilenames = [\
-'E:\Google Drive\Research\Wrist MRI\Ground Truth\Volunteer2_GroundTruth.hdr']
+'E:\Google Drive\Research\MRI Wrist Images\CMC OA\VIBE Ground Truth\Volunteer2_GroundTruth.hdr']
 imageFilenames = [\
-'E:\Google Drive\Research\Wrist MRI\VIBE\Volunteer2_VIBE.hdr']
-
+'E:\Google Drive\Research\MRI Wrist Images\CMC OA\Volunteer 2\Vibe\Volunteer2_VIBE_we.hdr']
+seedListFiles = ['SeedList/Volunteer2_SeedList.csv']
 
 def loadSeedPoints(filename):
 	readfile = open(filename, "rU")
@@ -55,7 +56,7 @@ def loadSeedPoints(filename):
 	textSeeds = {'x':x, 'y':y ,'z':z}
 
 	SeedPoints = []
-	for i in range(0,9): #Select which bone (or all of them) from the csv file
+	for i in range(1,9):#range(0,9): #Select which bone (or all of them) from the csv file
 		#Convert from string to float
 		tempFloat = [float(textSeeds['x'][i]), float(textSeeds['y'][i]), float(textSeeds['z'][i])]
 		SeedPoints.append(tempFloat)
@@ -68,6 +69,7 @@ def SaveSegmentation(image, filename):
 	tempFilename = imageFilenames[k]
 	tempFilename = tempFilename[0:len(tempFilename)-4] + '_segmentation.hdr'
 	imageWriter.Execute(image, tempFilename, True)
+	print(tempFilename)
 	print("Segmentation saved")
 
 def saveLog(filename, logData):
@@ -91,7 +93,7 @@ def runSegmentation(parameter):
 	# sitk.Show(Segmentation)
 
 
-	SaveSegmentation(Segmentation, 'E:\Google Drive\Research\Wrist MRI\VIBE\Volunteer2_VIBE_temp.hdr')
+	#SaveSegmentation(Segmentation, 'E:\Google Drive\Research\Wrist MRI\VIBE\Volunteer2_VIBE_temp.hdr')
 	
 	#Calculate Dice coefficient 
 	DiceCalulator.SetImages(GroundTruth, Segmentation)
@@ -141,6 +143,18 @@ if __name__ == '__main__':
 		#Load Data
 		MRI_Image = sitk.ReadImage(imageFilenames[k])
 		GroundTruth = sitk.ReadImage(groundtruthFilenames[k])
+
+		#TEMP##########################
+		nda = sitk.GetArrayFromImage(GroundTruth)
+		nda = np.asarray(nda)
+
+		nda[nda < 2] = 0 #Remove the thumb for now
+		nda[nda != 0] = 1
+
+		GroundTruth = sitk.Cast(sitk.GetImageFromArray(nda), MRI_Image.GetPixelID())
+		GroundTruth.CopyInformation(MRI_Image)
+		#TEMP##########################
+
 		SeedPoints = loadSeedPoints(seedListFiles[k])
 
 		#Create opbjects of the needed classes
@@ -154,17 +168,18 @@ if __name__ == '__main__':
 
 		
 		minimizer_kwargs = {"method": "Nelder-Mead"}
-		bounds = [(60,150), (500,2500), (0.001, 0.15)]
+		bounds = [(35,80), (400,1000), (0.001, 0.01), (1,4)]
 		print("Starting")
-		# result = differential_evolution(runSegmentation, bounds, disp= True)
+		result = differential_evolution(runSegmentation, bounds, disp=True, popsize=2)
+		#result = differential_evolution(runSegmentation, bounds, disp= True)
 
 		# runSegmentation([101, 640, 0.009])
 		
-		x0 = np.array([75, 1000, 0.02])
-		res = minimize(runSegmentation, x0, method='Nelder-Mead', \
-			options={'xtol': 1e-8, 'disp': True})
+		#x0 = np.array([60, 1000, 0.003, 3])
+		#res = minimize(runSegmentation, x0, method='Nelder-Mead', \
+		#	options={'xtol': 1e-8, 'disp': True})
 
-		print(res)
+		print(result)
 
 		print("Finished!")
 

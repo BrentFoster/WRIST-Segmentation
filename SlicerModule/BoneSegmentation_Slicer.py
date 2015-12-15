@@ -83,48 +83,48 @@ class BoneSegmentation_SlicerWidget:
             "Select the threshold range that the level set will slow down when near the max/min")
         self.thresholdInputSlider = ctk.ctkRangeWidget()
         self.thresholdInputSlider.minimum = 0
-        self.thresholdInputSlider.maximum = 250
+        self.thresholdInputSlider.maximum = 150
         self.thresholdInputSlider.minimumValue = 0
-        self.thresholdInputSlider.maximumValue = 90
+        self.thresholdInputSlider.maximumValue = 60
         self.thresholdInputSlider.connect('valuesChanged(double,double)', self.onthresholdInputSliderRelease)
         frameLayout.addRow(self.label, self.thresholdInputSlider)
         #Set default value
         self.LevelSetThresholds = (self.thresholdInputSlider.minimumValue, self.thresholdInputSlider.maximumValue)
 
-        #
-        # Level set maximum iterations slider
-        #
-        self.label = qt.QLabel()
-        self.label.setText("Level Set Maximum Iterations: ")
-        self.label.setToolTip(
-            "Select the maximum number of iterations for the level set convergence")
-        self.MaxItsInputSlider = ctk.ctkSliderWidget()
-        self.MaxItsInputSlider.minimum = 1
-        self.MaxItsInputSlider.maximum = 2500
-        self.MaxItsInputSlider.value = 2000
-        self.MaxItsInputSlider.connect('valueChanged(double)', self.onMaxItsInputSliderChange)
-        frameLayout.addRow(self.label, self.MaxItsInputSlider)
-        #Set default value
-        self.MaxIts = self.MaxItsInputSlider.value
+        # #
+        # # Level set maximum iterations slider
+        # #
+        # self.label = qt.QLabel()
+        # self.label.setText("Level Set Maximum Iterations: ")
+        # self.label.setToolTip(
+        #     "Select the maximum number of iterations for the level set convergence")
+        # self.MaxItsInputSlider = ctk.ctkSliderWidget()
+        # self.MaxItsInputSlider.minimum = 1
+        # self.MaxItsInputSlider.maximum = 2500
+        # self.MaxItsInputSlider.value = 2000
+        # self.MaxItsInputSlider.connect('valueChanged(double)', self.onMaxItsInputSliderChange)
+        # frameLayout.addRow(self.label, self.MaxItsInputSlider)
+        # #Set default value
+        # self.MaxIts = self.MaxItsInputSlider.value
  
-        #
-        # Level set maximum RMS error slider
-        #        
-        self.label = qt.QLabel()
-        self.label.setText("Level Set Maximum RMS Error: ")
-        self.label.setToolTip(
-            "Select the maximum root mean square error to determine convergence of the segmentation")
-        self.MaxRMSErrorInputSlider = ctk.ctkSliderWidget()
-        self.MaxRMSErrorInputSlider.minimum = 0.001
-        self.MaxRMSErrorInputSlider.maximum = 0.15
-        self.MaxRMSErrorInputSlider.value = 0.008
-        self.MaxRMSErrorInputSlider.singleStep = 0.001
-        self.MaxRMSErrorInputSlider.tickInterval = 0.001
-        self.MaxRMSErrorInputSlider.decimals = 3
-        self.MaxRMSErrorInputSlider.connect('valueChanged(double)', self.onMaxRMSErrorInputSliderChange)
-        frameLayout.addRow(self.label, self.MaxRMSErrorInputSlider)
-        #Set default value
-        self.MaxRMSError = self.MaxRMSErrorInputSlider.value
+        # #
+        # # Level set maximum RMS error slider
+        # #        
+        # self.label = qt.QLabel()
+        # self.label.setText("Level Set Maximum RMS Error: ")
+        # self.label.setToolTip(
+        #     "Select the maximum root mean square error to determine convergence of the segmentation")
+        # self.MaxRMSErrorInputSlider = ctk.ctkSliderWidget()
+        # self.MaxRMSErrorInputSlider.minimum = 0.001
+        # self.MaxRMSErrorInputSlider.maximum = 0.15
+        # self.MaxRMSErrorInputSlider.value = 0.008
+        # self.MaxRMSErrorInputSlider.singleStep = 0.001
+        # self.MaxRMSErrorInputSlider.tickInterval = 0.001
+        # self.MaxRMSErrorInputSlider.decimals = 3
+        # self.MaxRMSErrorInputSlider.connect('valueChanged(double)', self.onMaxRMSErrorInputSliderChange)
+        # frameLayout.addRow(self.label, self.MaxRMSErrorInputSlider)
+        # #Set default value
+        # self.MaxRMSError = self.MaxRMSErrorInputSlider.value
 
 
         #
@@ -154,14 +154,14 @@ class BoneSegmentation_SlicerWidget:
         self.ShapeMaxRMSErrorInputSlider = ctk.ctkSliderWidget()
         self.ShapeMaxRMSErrorInputSlider.minimum = 0.001
         self.ShapeMaxRMSErrorInputSlider.maximum = 0.15
-        self.ShapeMaxRMSErrorInputSlider.value = 0.008
+        self.ShapeMaxRMSErrorInputSlider.value = 0.003
         self.ShapeMaxRMSErrorInputSlider.singleStep = 0.001
         self.ShapeMaxRMSErrorInputSlider.tickInterval = 0.001
         self.ShapeMaxRMSErrorInputSlider.decimals = 3
         self.ShapeMaxRMSErrorInputSlider.connect('valueChanged(double)', self.onShapeMaxRMSErrorInputSliderChange)
         frameLayout.addRow(self.label, self.ShapeMaxRMSErrorInputSlider)
         #Set default value
-        self.ShapeMaxRMSError = self.MaxRMSErrorInputSlider.value
+        self.ShapeMaxRMSError = self.ShapeMaxRMSErrorInputSlider.value
 
 
 
@@ -175,10 +175,10 @@ class BoneSegmentation_SlicerWidget:
             "Select the shape curvature scale (higher number causes more smoothing)")
         self.ShapeCurvatureScaleInputSlider = ctk.ctkSliderWidget()
         self.ShapeCurvatureScaleInputSlider.minimum = 0
-        self.ShapeCurvatureScaleInputSlider.maximum = 5
+        self.ShapeCurvatureScaleInputSlider.maximum = 3
         self.ShapeCurvatureScaleInputSlider.value = 1
-        self.ShapeCurvatureScaleInputSlider.singleStep = 0.2
-        self.ShapeCurvatureScaleInputSlider.tickInterval = 0.2
+        self.ShapeCurvatureScaleInputSlider.singleStep = 0.01
+        self.ShapeCurvatureScaleInputSlider.tickInterval = 0.01
         self.ShapeCurvatureScaleInputSlider.decimals = 1
         self.ShapeCurvatureScaleInputSlider.connect('valueChanged(double)', self.onShapeCurvatureScaleInputSliderChange)
         frameLayout.addRow(self.label, self.ShapeCurvatureScaleInputSlider)
@@ -196,7 +196,7 @@ class BoneSegmentation_SlicerWidget:
         self.ShapePropagationScaleInputSlider = ctk.ctkSliderWidget()
         self.ShapePropagationScaleInputSlider.minimum = 0
         self.ShapePropagationScaleInputSlider.maximum = 5
-        self.ShapePropagationScaleInputSlider.value = 1
+        self.ShapePropagationScaleInputSlider.value = 4
         self.ShapePropagationScaleInputSlider.singleStep = 0.2
         self.ShapePropagationScaleInputSlider.tickInterval = 0.2
         self.ShapePropagationScaleInputSlider.decimals = 1
@@ -221,6 +221,29 @@ class BoneSegmentation_SlicerWidget:
         frameLayout.addRow(self.label, self.NumCPUInputSlider)
         #Set default value
         self.NumCPUs = self.NumCPUInputSlider.value
+
+
+        #
+        # Image Downsample Scale
+        # 
+        self.label = qt.QLabel()
+        self.label.setText("Image Downsampling: ")
+        self.label.setToolTip(
+            "Select the amount of downsampling (larger downsampling will compute faster, but the accuracy may be slightly reduced)")
+        self.NumScalingSlider = ctk.ctkSliderWidget()
+        self.NumScalingSlider.minimum = 1
+        self.NumScalingSlider.maximum = 5
+        self.NumScalingSlider.value = 2
+        self.NumScalingSlider.connect('valueChanged(double)', self.onNumScalingSliderChange)
+        frameLayout.addRow(self.label, self.NumScalingSlider)
+        #Set default value
+        self.NumScaling = self.NumScalingSlider.value
+
+
+
+
+
+
         
         #
         # Compute button
@@ -245,6 +268,9 @@ class BoneSegmentation_SlicerWidget:
         # self.outputSelector.setMRMLScene(slicer.mrmlScene)
         # frameLayout.addRow(self.outputVolumeSelectorLabel, self.outputSelector)
         
+    def onNumScalingSliderChange(self, newValue):
+        self.NumScaling = newValue
+
     def onShapePropagationScaleInputSliderChange(self, newValue):
         self.ShapePropagationScale = newValue
 
@@ -314,13 +340,16 @@ class BoneSegmentation_SlicerWidget:
         segmentationClass = BoneSeg()
         multiHelper = Multiprocessor()
         #Parameters = [LevelSet Thresholds, LevelSet Iterations, Level Set Error, Shape Level Set Curvature, Shape Level Set Max Error, Shape Level Set Max Its, Shape LS Propagation Scale]
-        parameters = [self.LevelSetThresholds, self.MaxIts, self.MaxRMSError,self.ShapeCurvatureScale, self.ShapeMaxRMSError, self.ShapeMaxIts, self.ShapePropagationScale] #From the sliders above
+        # parameters = [self.LevelSetThresholds, self.MaxIts, self.MaxRMSError,self.ShapeCurvatureScale, self.ShapeMaxRMSError, self.ShapeMaxIts, self.ShapePropagationScale] #From the sliders above
+        parameters = [self.LevelSetThresholds, self.ShapeCurvatureScale, self.ShapeMaxRMSError, self.ShapeMaxIts, self.ShapePropagationScale, self.NumScaling] #From the sliders above
+       
         NumCPUs = self.NumCPUs
         Segmentation = multiHelper.Execute(segmentationClass, seedPoints, image, parameters, NumCPUs, True)
         print(Segmentation)
 
         # Output options in Slicer = {0:'background', 1:'foreground', 2:'label'}
-        sitkUtils.PushLabel(Segmentation,'Segmentation',overwrite=True)      
+        sitkUtils.PushLabel(Segmentation,'Segmentation', overwrite=True)     
+        sitkUtils.PushToSlicer(Segmentation, 'SegmentationImage', 1, overwrite=True) 
 
 if __name__ == "__main__":
     # TODO: need a way to access and parse command line arguments
@@ -335,6 +364,26 @@ if __name__ == "__main__":
 ###MULTIPROCESSOR HELPER CLASS###
 #############################################################################################
 
+def f(MRI_Array, SeedPoint,q, parameter):
+    """ Function to be used with the Multiprocessor class (needs to be its own function 
+        and not part of the same class to avoid the 'Pickle' type errors. """
+
+    segmentationClass = BoneSeg() #Below this in the Slicer module code
+
+    segmentationClass.SetLevelSetLowerThreshold(self.parameters[0][0])
+    segmentationClass.SetLevelSetUpperThreshold(self.parameters[0][1])
+
+    #Shape Detection Filter
+    segmentationClass.SetShapeCurvatureScale(self.parameters[1])
+    segmentationClass.SetShapeMaxRMSError(self.parameters[2])
+    segmentationClass.SetShapeMaxIterations(self.parameters[3])
+    segmentationClass.SetShapePropagationScale(self.parameters[4])
+    segmentationClass.SetScalingFactor(self.parameters[5])
+
+    output = segmentationClass.Execute(MRI_Array,[SeedPoint], False)
+    q.put(output)
+    q.close()
+
 class Multiprocessor(object):
     """Helper class for sliptting a segmentation class (such as from SimpleITK) into
     several logical cores in parallel. Requires: SegmentationClass, Seed List, SimpleITK Image"""
@@ -342,71 +391,98 @@ class Multiprocessor(object):
         self = self
 
     def Execute(self, segmentationClass, seedList, MRI_Image, parameters, numCPUS, verbose = False):
+
         self.segmentationClass = segmentationClass
         self.seedList = seedList
         self.MRI_Image = MRI_Image
-        self.parameters = parameters
-        self.numCPUS = numCPUS
-        self.verbose = verbose #Print output text to terminal or not
+        self.parameter = parameter
+        self.verbose = verbose #Show output to terminal or not
 
         #Convert to voxel coordinates
         self.RoundSeedPoints() 
 
-        #Create an empty segmentationLabel image
+        ###Create an empty segmenationLabel array###
         nda = sitk.GetArrayFromImage(self.MRI_Image)
         nda = np.asarray(nda)
-        nda = nda*0
-        segmentationLabel = sitk.Cast(sitk.GetImageFromArray(nda), self.MRI_Image.GetPixelID())
-        segmentationLabel.CopyInformation(self.MRI_Image)
-      
+        nda = nda*0     
+        self.segmentationArray = nda
+        ############################################
+        ##Convert the SimpleITK images to arrays##
+        self.MRI_Array = sitk.GetArrayFromImage(self.MRI_Image)
+        #####
 
-        for x in range(len(seedList)):
-            tempOutput = self.RunSegmentation(seedList[x])
-            tempOutput = sitk.Cast(tempOutput, self.MRI_Image.GetPixelID())
-            tempOutput.CopyInformation(self.MRI_Image)
+        #Check the number of cpu's in the computer and if the seed list is greater than 
+        #the number of cpu's then run the parallel computing twice
+        #TODO: Use a 'pool' of works for this may be more efficient
+        num_CPUs = numCPUS
+        if self.verbose == True:
+            print('\033[94m' + "Number of CPUs = "),
+            print(num_CPUs)
 
-            segmentationLabel = segmentationLabel + tempOutput
+        if (len(self.seedList) <= num_CPUs):
+            jobOrder = range(0, len(self.seedList))
+            if self.verbose == True:
+                print(jobOrder)
+            self.segmentationArray = self.RunMultiprocessing(jobOrder)
 
-
+        elif (len(self.seedList) > num_CPUs):
+            if self.verbose == True:
+                print('\033[93m' + "Splitting jobs since number of CPUs < number of seed points")
+            #Run the multiprocessing several times since there wasn't enough CPU's before
+            jobOrder = self.SplitJobs(range(len(self.seedList)), num_CPUs)
+            if self.verbose == True:
+                print(jobOrder)
+            for x in range(len(jobOrder)):
+                self.segmentationArray = self.segmentationArray + (x+1)*self.RunMultiprocessing(jobOrder[x])
 
         #Convert segmentationArray back into an image
-        # segmentationLabel = sitk.Cast(sitk.GetImageFromArray(self.segmentationArray), self.MRI_Image.GetPixelID())
-        # segmentationLabel.CopyInformation(self.MRI_Image)
-        # segmentationLabel = self.segmentationArray
+        segmentationOutput = sitk.Cast(sitk.GetImageFromArray(self.segmentationArray), self.MRI_Image.GetPixelID())
+        segmentationOutput.CopyInformation(self.MRI_Image)
 
-        return segmentationLabel
+        return segmentationOutput
 
-    def RunSegmentation(self, SeedPoint):
-        """ Function to be used with the Multiprocessor class (needs to be its own function 
-            and not part of the same class to avoid the 'Pickle' type errors. """
-        segmentationClass = BoneSeg()
+    ###Split the Seed List using the multiprocessing library and then execute the pipeline###
+    #Helper functions for the multiprocessing
+    def RunMultiprocessing(self,jobOrder):
+        procs = []
+        q = multiprocessing.Queue()
+        for x in jobOrder:
+            p = multiprocessing.Process(target=f, args=(self.MRI_Array, self.seedList[x],q, self.parameter,))
+            p.start()
+            procs.append(p) #List of current processes
 
-        # Change some parameters(s) of the segmentation class for the optimization
-        #Parameters = [LevelSet Thresholds, LevelSet Iterations, Level Set Error, Shape Level Set Curvature, Shape Level Set Max Error, Shape Level Set Max Its]
-        print(self.parameters)
-        segmentationClass.SetLevelSetLowerThreshold(self.parameters[0][0])
-        segmentationClass.SetLevelSetUpperThreshold(self.parameters[0][1])
-        segmentationClass.SetLevelSetIts(self.parameters[1])
-        segmentationClass.SetLevelSetError(self.parameters[2])
+        tempArray = self.segmentationArray
+        if self.verbose == True:
+            print('\033[96m' + "Printing multiprocessing queue:")
+        for i in range(len(jobOrder)):
+            #Outputs an array (due to multiprocessing 'pickle' constraints)
+            tempArray = tempArray + q.get() 
+        # Wait for all worker processes to finish by using .join()
+        for p in procs:
+            p.join()
+            p.terminate() #Unix
 
+        if self.verbose == True:
+            print('\033[96m' + 'Finished with processes:'),
+            print(jobOrder)
+        return tempArray
 
-        #Shape Detection Filter
-        segmentationClass.SetShapeCurvatureScale(self.parameters[3])
-        segmentationClass.SetShapeMaxRMSError(self.parameters[4])
-        segmentationClass.SetShapeMaxIterations(self.parameters[5])
-        segmentationClass.SetShapePropagationScale(self.parameters[6])
+    def SplitJobs(self, jobs, size):
+         output = []
+         while len(jobs) > size:
+             pice = jobs[:size]
+             output.append(pice)
+             jobs   = jobs[size:]
+         output.append(jobs)
+         return output
 
-
-
-        segmentation = segmentationClass.Execute(self.MRI_Image,[SeedPoint])
-
-        return segmentation
-
-    def RoundSeedPoints(self):           
+    #Need to convert to voxel coordinates since we pass only the array due to a 'Pickle' error
+    #with the multiprocessing library and the ITK image type which means the header information
+    #is lost
+    def RoundSeedPoints(self):  
         seeds = []
-        for i in range(0,len(self.seedList)): #Select which bone (or all of them) from the csv file
+        for i in range(0,len(self.seedList)):
             #Convert from string to float
-            # tempFloat = [float(self.seedList[i][0])/(-0.24), float(self.seedList[i][1])/(-0.24), float(self.seedList[i][2])/(0.29)]
             tempFloat = [float(self.seedList[i][0]), float(self.seedList[i][1]), float(self.seedList[i][2])]
             
             #Convert from physical units to voxel coordinates
@@ -451,12 +527,14 @@ class BoneSeg(object):
         self.GradientMagnitudeFilter = sitk.GradientMagnitudeImageFilter()
         self.shapeDetectionFilter = sitk.ShapeDetectionLevelSetImageFilter()
 
+        self.sigFilter = sitk.SigmoidImageFilter()
+
         #Set the deafult values 
         self.SetDefaultValues()
 
     def SetDefaultValues(self):
         #Set the default values of all the parameters here
-        self.SetScalingFactor([2,2,1]) #X,Y,Z
+        self.SetScalingFactor(2) #X,Y,Z
 
         # self.SetAnisotropicIts(5)
         # self.SetAnisotropicTimeStep(0.01)
@@ -486,12 +564,18 @@ class BoneSeg(object):
         self.SetShapePropagationScale(-1)
         self.SetShapeCurvatureScale(1)
 
+        #Sigmoid Filter
+        self.sigFilter.SetAlpha(0)
+        self.sigFilter.SetBeta(80)
+        self.sigFilter.SetOutputMinimum(0)
+        self.sigFilter.SetOutputMaximum(1)
+
 
     def SetShapeMaxIterations(self, MaxIts):
         self.shapeDetectionFilter.SetNumberOfIterations(int(MaxIts))
 
     def SetShapePropagationScale(self, propagationScale):
-        self.shapeDetectionFilter.SetPropagationScaling(propagationScale)
+        self.shapeDetectionFilter.SetPropagationScaling(-1*propagationScale)
 
     def SetShapeCurvatureScale(self, curvatureScale):
         self.shapeDetectionFilter.SetCurvatureScaling(curvatureScale)
@@ -506,9 +590,11 @@ class BoneSeg(object):
         self.thresholdLevelSet.SetPropagationScaling(propagationScale)
         
     def SetLevelSetLowerThreshold(self, lowerThreshold):
+        self.sigFilter.SetAlpha(int(lowerThreshold))
         self.thresholdLevelSet.SetLowerThreshold(int(lowerThreshold))   
         
     def SetLevelSetUpperThreshold(self, upperThreshold):
+        self.sigFilter.SetBeta(int(upperThreshold))
         self.thresholdLevelSet.SetUpperThreshold(int(upperThreshold))   
         
     def SetLevelSetIts(self,iterations):
@@ -527,6 +613,7 @@ class BoneSeg(object):
         self.SeedPoint = SeedPoint
 
     def SetScalingFactor(self, ScalingFactor):
+        ScalingFactor = [int(ScalingFactor),int(ScalingFactor),int(ScalingFactor)]
         self.ScalingFactor = ScalingFactor
         self.shrinkFilter.SetShrinkFactors(ScalingFactor)
         self.expandFilter.SetExpandFactors(ScalingFactor)
@@ -598,9 +685,12 @@ class BoneSeg(object):
         # print('\033[92m' + "Applying the Anisotropic Filter...")
         # self.apply_AnisotropicFilter()
 
-        if self.verbose == True:
-            print("Threshold level set segmentation...")
-        self.ThresholdLevelSet() 
+        # if self.verbose == True:
+            # print("Threshold level set segmentation...")
+        # self.ThresholdLevelSet() 
+
+        self.SigmoidLevelSet()
+
 
         # print('\033[93m' + "Segmenting via confidence connected...")
         # self.ConfidenceConnectedSegmentation()
@@ -608,7 +698,8 @@ class BoneSeg(object):
         # print('\033[95m' + "Running Laplacian Level Set...")
         # self.LaplacianLevelSet()
 
-        # print('\033[95m' + "Finding connected regions...")
+        # if self.verbose == True:
+        #     print('\033[95m' + "Finding connected regions...")
         # self.ConnectedComponent()
 
         # if self.verbose == True:
@@ -617,9 +708,14 @@ class BoneSeg(object):
 
         # print('\033[90m' + "Simple threshold operation...")
         # self.ThresholdImage()
-        if (self.shapeDetectionFilter.GetNumberOfIterations > 0):
-            self.ShapeDetection()
+        # if (self.shapeDetectionFilter.GetNumberOfIterations > 0):
+            # self.ShapeDetection()
 
+
+        if self.verbose == True:
+            print('\033[90m' + "Dilating image slightly...")
+        self.segImg  = sitk.Cast(self.segImg, sitk.sitkUInt16)
+        self.segImg = self.dilateFilter.Execute(self.segImg, 0, 1, False)
 
         if self.verbose == True:
             print('\033[93m' + "Filling Segmentation Holes...")
@@ -629,8 +725,10 @@ class BoneSeg(object):
             print('\033[90m' + "Scaling image back...")
         self.scaleUpImage()
 
-        print('\033[90m' + "Eroding image slightly...")
+        # print('\033[90m' + "Eroding image slightly...")
         # self.segImg = self.erodeFilter.Execute(self.segImg, 0, 1, False)
+
+
 
 
         if self.verbose == True:
@@ -708,8 +806,8 @@ class BoneSeg(object):
         self.segImg  = sitk.Cast(self.segImg, sitk.sitkUInt16)
         #Apply the filters to the binary image
         self.segImg = self.fillFilter.Execute(self.segImg, True, 1)
-        self.segImg = self.dilateFilter.Execute(self.segImg, 0, 1, False)
-        self.segImg = self.fillFilter.Execute(self.segImg, True, 1)
+        # self.segImg = self.dilateFilter.Execute(self.segImg, 0, 1, False)
+        # self.segImg = self.fillFilter.Execute(self.segImg, True, 1)
         # self.segImg = self.erodeFilter.Execute(self.segImg, 0, 1, False)  
         return self
 
@@ -736,6 +834,93 @@ class BoneSeg(object):
         self.segImg.CopyInformation(self.image)
 
         print(self.shapeDetectionFilter)
+    
+    def SigmoidLevelSet(self):
+        ''' Pre-processing '''
+        medianFilter = sitk.BinaryMedianImageFilter()
+        medianFilter.SetRadius([2,2,2])
+
+        processedImage = self.sigFilter.Execute(self.image)
+        print(self.sigFilter)
+        processedImage  = sitk.Cast(processedImage, sitk.sitkUInt16)
+
+        processedImage = medianFilter.Execute(processedImage)
+
+
+        edgePotentialFilter = sitk.EdgePotentialImageFilter()
+        gradientFilter = sitk.GradientImageFilter()
+
+        gradImage = gradientFilter.Execute(processedImage)
+
+        processedImage = edgePotentialFilter.Execute(gradImage)
+
+
+
+        #Want 0 for the background and 1 for the objects
+        nda = sitk.GetArrayFromImage(processedImage)
+        nda = np.asarray(nda)
+
+        nda[nda != 1] = 0
+
+        processedImage = sitk.Cast(sitk.GetImageFromArray(nda), self.image.GetPixelID())
+        processedImage.CopyInformation(self.image)
+
+        ''' Create Seed Image '''
+        ###Create the seed image###
+        nda = sitk.GetArrayFromImage(self.image)
+        nda = np.asarray(nda)
+        nda = nda*0
+
+        seedPoint = self.seedPoint[0]
+
+        #In numpy an array is indexed in the opposite order (z,y,x)
+        nda[seedPoint[2]][seedPoint[1]][seedPoint[0]] = 1
+
+        self.segImg = sitk.Cast(sitk.GetImageFromArray(nda), sitk.sitkUInt16)
+        self.segImg.CopyInformation(self.image)
+
+        self.segImg = sitk.BinaryDilate(self.segImg, 3)
+
+
+        ''' Segmentation '''
+
+        #Initilize the SimpleITK Filter
+        # shapeDetectionFilter = sitk.ShapeDetectionLevelSetImageFilter()
+        # shapeDetectionFilter.SetMaximumRMSError(0.002)
+        # shapeDetectionFilter.SetNumberOfIterations(500)
+        # shapeDetectionFilter.SetPropagationScaling(-4)
+        # shapeDetectionFilter.SetCurvatureScaling(1)
+
+
+        #Signed distance function using the initial seed point (segImg)
+        init_ls = sitk.SignedMaurerDistanceMap(self.segImg, insideIsPositive=True, useImageSpacing=True)
+        init_ls  = sitk.Cast(init_ls, sitk.sitkFloat32)
+
+        processedImage  = sitk.Cast(processedImage, sitk.sitkFloat32)
+
+        self.segImage = self.shapeDetectionFilter.Execute(init_ls, processedImage)
+
+        print(self.shapeDetectionFilter)
+
+        #Want 0 for the background and 1 for the objects
+        nda = sitk.GetArrayFromImage(self.segImage)
+        nda = np.asarray(nda)
+        print('Minimum of nda:')
+        print(nda.min())
+        print('Maximum of nda:')
+        print(nda.max())
+
+        # nda = nda * 100
+
+        nda[nda < 0] = 0
+        nda[nda != 0] = 1
+        
+        self.segImg = sitk.Cast(sitk.GetImageFromArray(nda), self.image.GetPixelID())
+        # self.segImg = sitk.Cast(self.segImg, self.image.GetPixelID())
+        self.segImg.CopyInformation(self.image)
+
+        return self
+
 
     def LaplacianLevelSet(self):
         #Check the image type of self.segImg and image are the same (for Python 3.3 and 3.4)

@@ -9,12 +9,17 @@ def f(MRI_Array, SeedPoint,q, parameter):
 	import BoneSegmentation as BrentSeg #This seems to be needed for Windows
 	segmentationClass = BrentSeg.BoneSeg()
 
-	#Change some parameter(s) of the segmentation class for the optimization
+	# #Change some parameter(s) of the segmentation class for the optimization
 	if (len(parameter) > 1): 
-		#Set the threshold and then compute/save the Dice coefficient
+		segmentationClass.SetLevelSetLowerThreshold(0)
 		segmentationClass.SetLevelSetUpperThreshold(parameter[0])
-		segmentationClass.SetLevelSetIts(parameter[1])
-		segmentationClass.SetLevelSetError(parameter[2])
+
+		#Shape Detection Filter
+		segmentationClass.SetShapeCurvatureScale(1)
+		segmentationClass.SetShapeMaxRMSError(parameter[2])
+		segmentationClass.SetShapeMaxIterations(parameter[1])
+		segmentationClass.SetShapePropagationScale(parameter[3])
+		segmentationClass.SetScalingFactor(2)
 
 	output = segmentationClass.Execute(MRI_Array,[SeedPoint], False)
 	q.put(output)
@@ -24,7 +29,6 @@ class Multiprocessor(object):
 	"""Helper class for sliptting a segmentation class (such as from SimpleITK) into
 	several logical cores in parallel. Requires: SegmentationClass, Seed List, SimpleITK Image"""
 	def __init__(self):
-		# super(ClassName, self).__init__()
 		self = self
 
 	def Execute(self, segmentationClass, seedList, MRI_Image, parameter=0, verbose = False):
@@ -36,8 +40,6 @@ class Multiprocessor(object):
 
 		#Convert to voxel coordinates
 		self.RoundSeedPoints() 
-		
-		# print(self.seedList)
 
 		###Create an empty segmenationLabel array###
 		nda = sitk.GetArrayFromImage(self.MRI_Image)
@@ -53,7 +55,7 @@ class Multiprocessor(object):
 		#the number of cpu's then run the parallel computing twice
 		#TODO: Use a 'pool' of works for this may be more efficient
 		num_CPUs = multiprocessing.cpu_count() #Might be better to subtract 1 since OS needs one
-		# num_CPUs = 1
+		num_CPUs = 3
 		if self.verbose == True:
 			print('\033[94m' + "Number of CPUs = "),
 			print(num_CPUs)
@@ -118,20 +120,10 @@ class Multiprocessor(object):
 	#Need to convert to voxel coordinates since we pass only the array due to a 'Pickle' error
 	#with the multiprocessing library and the ITK image type which means the header information
 	#is lost
-	def RoundSeedPoints(self):
-		#TEMP
-		# print("Saving segmentation to "),
-		# imageWriter = sitk.ImageFileWriter()
-		# tempFilename = 'E:\Google Drive\Research\Wrist MRI\VIBE\Volunteer2_VIBE_temp_MRI.hdr'
-		# imageWriter.Execute(self.MRI_Image, tempFilename, True)
-		# print("Segmentation saved")
-		#TEMP
-		
-		
+	def RoundSeedPoints(self):	
 		seeds = []
-		for i in range(0,len(self.seedList)): #Select which bone (or all of them) from the csv file
+		for i in range(0,len(self.seedList)):
 			#Convert from string to float
-			# tempFloat = [float(self.seedList[i][0])/(-0.24), float(self.seedList[i][1])/(-0.24), float(self.seedList[i][2])/(0.29)]
 			tempFloat = [float(self.seedList[i][0]), float(self.seedList[i][1]), float(self.seedList[i][2])]
 			
 			#Convert from physical units to voxel coordinates
@@ -140,6 +132,3 @@ class Multiprocessor(object):
 
 		self.seedList = seeds
 		return self
-
-#############################################################################################
-	

@@ -81,6 +81,7 @@ class BoneSeg(object):
         self.sigFilter.SetOutputMaximum(1)
 
 
+
     def SetShapeMaxIterations(self, MaxIts):
         self.shapeDetectionFilter.SetNumberOfIterations(int(MaxIts))
 
@@ -173,12 +174,11 @@ class BoneSeg(object):
 
         self.verbose = verbose #Optional argument to output text to terminal
 
-        #self.image = image
+
         self.image = sitk.Cast(sitk.GetImageFromArray(image), sitk.sitkFloat32)
+        #self.image = self.FlipImage(self.image) #Flip the MRI
 
         self.seedPoint = seedPoint
-
-        #self.image = self.FlipImage(self.image) #Flip the MRI
 
         #Convert images to float 32 first
         self.image = sitk.Cast(self.image, sitk.sitkFloat32)
@@ -226,12 +226,12 @@ class BoneSeg(object):
 
         if self.verbose == True:
             print('\033[90m' + "Dilating image slightly...")
-        self.segImg  = sitk.Cast(self.segImg, sitk.sitkUInt16)
-        self.segImg = self.dilateFilter.Execute(self.segImg, 0, 1, False)
+        #self.segImg  = sitk.Cast(self.segImg, sitk.sitkUInt16)
+        #self.segImg = self.dilateFilter.Execute(self.segImg, 0, 1, False)
 
         if self.verbose == True:
             print('\033[93m' + "Filling Segmentation Holes...")
-        self.HoleFilling()
+        #self.HoleFilling()
 
         if self.verbose == True:
             print('\033[90m' + "Scaling image back...")
@@ -242,15 +242,21 @@ class BoneSeg(object):
 
 
 
-        nda = sitk.GetArrayFromImage(self.segImg)
-        nda = np.asarray(nda, dtype=np.int32)
-        return nda
 
         if self.verbose == True:
             print('\033[96m' + "Finished with seed point "),
             print(self.seedPoint)
         
-        return  self.segImg 
+        returningSimpleITKImage = False
+        if returningSimpleITKImage == True:
+            return  self.segImg  
+        else:  
+            #Need to seed an array back
+            #np.asarray(sitk.GetArrayFromImage(shapeBinary), dtype='float64')
+            nda = sitk.GetArrayFromImage(self.segImg)
+            nda = np.asarray(nda, dtype=np.int32)
+            return nda
+
 
 #############################################################################################
 #############################################################################################
@@ -326,41 +332,42 @@ class BoneSeg(object):
         # self.segImg = self.erodeFilter.Execute(self.segImg, 0, 1, False)  
         return self
 
-    def ShapeDetection(self):
-        print('Shape Detection Level Set...')
+    # def ShapeDetection(self):
+    #     print('Shape Detection Level Set...')
 
-        self.segImg = sitk.Cast(self.segImg, sitk.sitkUInt16)
+    #     self.segImg = sitk.Cast(self.segImg, sitk.sitkUInt16)
 
-        #Signed distance function using the initial levelset segmentation
-        init_ls = sitk.SignedMaurerDistanceMap(self.segImg, insideIsPositive=True, useImageSpacing=True)
+    #     #Signed distance function using the initial levelset segmentation
+    #     init_ls = sitk.SignedMaurerDistanceMap(self.segImg, insideIsPositive=True, useImageSpacing=True)
 
-        gradientImage = self.GradientMagnitudeFilter.Execute(self.image)
+    #     gradientImage = self.GradientMagnitudeFilter.Execute(self.image)
 
-        shapeBinary = self.shapeDetectionFilter.Execute(init_ls, gradientImage)
+    #     shapeBinary = self.shapeDetectionFilter.Execute(init_ls, gradientImage)
 
-        npshapeBinary = np.asarray(sitk.GetArrayFromImage(shapeBinary), dtype='float64')
+    #     npshapeBinary = np.asarray(sitk.GetArrayFromImage(shapeBinary), dtype='float64')
 
-        npshapeBinary[npshapeBinary > 0.2] = 1 #Make into a binary again
-        # npshapeBinary[npshapeBinary < 0] = 0 #Make into a binary again
+    #     npshapeBinary[npshapeBinary > 0.2] = 1 #Make into a binary again
+    #     # npshapeBinary[npshapeBinary < 0] = 0 #Make into a binary again
 
-        npshapeBinary[npshapeBinary != 1] = 0
+    #     npshapeBinary[npshapeBinary != 1] = 0
 
-        self.segImg = sitk.Cast(sitk.GetImageFromArray(npshapeBinary), self.image.GetPixelID())
-        self.segImg.CopyInformation(self.image)
+    #     self.segImg = sitk.Cast(sitk.GetImageFromArray(npshapeBinary), self.image.GetPixelID())
+    #     self.segImg.CopyInformation(self.image)
 
-        print(self.shapeDetectionFilter)
+    #     #print(self.shapeDetectionFilter)
     
     def SigmoidLevelSet(self):
         ''' Pre-processing '''
         medianFilter = sitk.BinaryMedianImageFilter()
-        medianFilter.SetRadius([2,2,2])
+        medianFilter.SetRadius([1,1,1])
 
         processedImage = self.sigFilter.Execute(self.image)
         if self.verbose == True:
             print(self.sigFilter)
+
         processedImage  = sitk.Cast(processedImage, sitk.sitkUInt16)
 
-        processedImage = medianFilter.Execute(processedImage)
+        #processedImage = medianFilter.Execute(processedImage)
 
 
         edgePotentialFilter = sitk.EdgePotentialImageFilter()
@@ -369,8 +376,6 @@ class BoneSeg(object):
         gradImage = gradientFilter.Execute(processedImage)
 
         processedImage = edgePotentialFilter.Execute(gradImage)
-
-
 
         #Want 0 for the background and 1 for the objects
         nda = sitk.GetArrayFromImage(processedImage)
@@ -397,7 +402,6 @@ class BoneSeg(object):
 
         self.segImg = sitk.BinaryDilate(self.segImg, 3)
 
-
         ''' Segmentation '''
 
         #Initilize the SimpleITK Filter
@@ -415,19 +419,14 @@ class BoneSeg(object):
         processedImage  = sitk.Cast(processedImage, sitk.sitkFloat32)
 
         self.segImage = self.shapeDetectionFilter.Execute(init_ls, processedImage)
-        
+
         if self.verbose == True:
             print(self.shapeDetectionFilter)
 
         #Want 0 for the background and 1 for the objects
         nda = sitk.GetArrayFromImage(self.segImage)
         nda = np.asarray(nda)
-        if self.verbose == True:
-            print('Minimum of nda:')
-            print(nda.min())
-            print('Maximum of nda:')
-            print(nda.max())
-
+        
         # nda = nda * 100
 
         nda[nda < 0] = 0
@@ -574,9 +573,4 @@ class BoneSeg(object):
 
         return self
 #############################################################################################
-
-
-
-
-
 
