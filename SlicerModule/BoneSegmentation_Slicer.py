@@ -364,125 +364,73 @@ if __name__ == "__main__":
 ###MULTIPROCESSOR HELPER CLASS###
 #############################################################################################
 
-def f(MRI_Array, SeedPoint,q, parameter):
-    """ Function to be used with the Multiprocessor class (needs to be its own function 
-        and not part of the same class to avoid the 'Pickle' type errors. """
-
-    segmentationClass = BoneSeg() #Below this in the Slicer module code
-
-    segmentationClass.SetLevelSetLowerThreshold(self.parameters[0][0])
-    segmentationClass.SetLevelSetUpperThreshold(self.parameters[0][1])
-
-    #Shape Detection Filter
-    segmentationClass.SetShapeCurvatureScale(self.parameters[1])
-    segmentationClass.SetShapeMaxRMSError(self.parameters[2])
-    segmentationClass.SetShapeMaxIterations(self.parameters[3])
-    segmentationClass.SetShapePropagationScale(self.parameters[4])
-    segmentationClass.SetScalingFactor(self.parameters[5])
-
-    output = segmentationClass.Execute(MRI_Array,[SeedPoint], False)
-    q.put(output)
-    q.close()
-
 class Multiprocessor(object):
-    """Helper class for sliptting a segmentation class (such as from SimpleITK) into
+    """Helper class for seperating a segmentation class (such as from SimpleITK) into
     several logical cores in parallel. Requires: SegmentationClass, Seed List, SimpleITK Image"""
     def __init__(self):
         self = self
 
     def Execute(self, segmentationClass, seedList, MRI_Image, parameters, numCPUS, verbose = False):
-
         self.segmentationClass = segmentationClass
         self.seedList = seedList
         self.MRI_Image = MRI_Image
-        self.parameter = parameter
-        self.verbose = verbose #Show output to terminal or not
+        self.parameters = parameters
+        self.numCPUS = numCPUS
+        self.verbose = verbose #Print output text to terminal or not
 
         #Convert to voxel coordinates
         self.RoundSeedPoints() 
 
-        ###Create an empty segmenationLabel array###
+        #Create an empty segmentationLabel image
         nda = sitk.GetArrayFromImage(self.MRI_Image)
         nda = np.asarray(nda)
-        nda = nda*0     
-        self.segmentationArray = nda
-        ############################################
-        ##Convert the SimpleITK images to arrays##
-        self.MRI_Array = sitk.GetArrayFromImage(self.MRI_Image)
-        #####
+        nda = nda*0
+        segmentationLabel = sitk.Cast(sitk.GetImageFromArray(nda), self.MRI_Image.GetPixelID())
+        segmentationLabel.CopyInformation(self.MRI_Image)
+      
 
-        #Check the number of cpu's in the computer and if the seed list is greater than 
-        #the number of cpu's then run the parallel computing twice
-        #TODO: Use a 'pool' of works for this may be more efficient
-        num_CPUs = numCPUS
-        if self.verbose == True:
-            print('\033[94m' + "Number of CPUs = "),
-            print(num_CPUs)
+        for x in range(len(seedList)):
+            tempOutput = self.RunSegmentation(seedList[x])
+            tempOutput = sitk.Cast(tempOutput, self.MRI_Image.GetPixelID())
+            tempOutput.CopyInformation(self.MRI_Image)
 
-        if (len(self.seedList) <= num_CPUs):
-            jobOrder = range(0, len(self.seedList))
-            if self.verbose == True:
-                print(jobOrder)
-            self.segmentationArray = self.RunMultiprocessing(jobOrder)
-
-        elif (len(self.seedList) > num_CPUs):
-            if self.verbose == True:
-                print('\033[93m' + "Splitting jobs since number of CPUs < number of seed points")
-            #Run the multiprocessing several times since there wasn't enough CPU's before
-            jobOrder = self.SplitJobs(range(len(self.seedList)), num_CPUs)
-            if self.verbose == True:
-                print(jobOrder)
-            for x in range(len(jobOrder)):
-                self.segmentationArray = self.segmentationArray + (x+1)*self.RunMultiprocessing(jobOrder[x])
+            segmentationLabel = segmentationLabel + tempOutput
 
         #Convert segmentationArray back into an image
-        segmentationOutput = sitk.Cast(sitk.GetImageFromArray(self.segmentationArray), self.MRI_Image.GetPixelID())
-        segmentationOutput.CopyInformation(self.MRI_Image)
+        # segmentationLabel = sitk.Cast(sitk.GetImageFromArray(self.segmentationArray), self.MRI_Image.GetPixelID())
+        # segmentationLabel.CopyInformation(self.MRI_Image)
+        # segmentationLabel = self.segmentationArray
 
-        return segmentationOutput
+        return segmentationLabel
 
-    ###Split the Seed List using the multiprocessing library and then execute the pipeline###
-    #Helper functions for the multiprocessing
-    def RunMultiprocessing(self,jobOrder):
-        procs = []
-        q = multiprocessing.Queue()
-        for x in jobOrder:
-            p = multiprocessing.Process(target=f, args=(self.MRI_Array, self.seedList[x],q, self.parameter,))
-            p.start()
-            procs.append(p) #List of current processes
+    def RunSegmentation(self, SeedPoint):
+        """ Function to be used with the Multiprocessor class (needs to be its own function 
+            and not part of the same class to avoid the 'Pickle' type errors. """
+        segmentationClass = BoneSeg()
 
-        tempArray = self.segmentationArray
-        if self.verbose == True:
-            print('\033[96m' + "Printing multiprocessing queue:")
-        for i in range(len(jobOrder)):
-            #Outputs an array (due to multiprocessing 'pickle' constraints)
-            tempArray = tempArray + q.get() 
-        # Wait for all worker processes to finish by using .join()
-        for p in procs:
-            p.join()
-            p.terminate() #Unix
+        # Change some parameters(s) of the segmentation class for the optimization
+        #Parameters = [LevelSet Thresholds, LevelSet Iterations, Level Set Error, Shape Level Set Curvature, Shape Level Set Max Error, Shape Level Set Max Its]
+        print(self.parameters)
+        segmentationClass.SetLevelSetLowerThreshold(self.parameters[0][0])
+        segmentationClass.SetLevelSetUpperThreshold(self.parameters[0][1])
 
-        if self.verbose == True:
-            print('\033[96m' + 'Finished with processes:'),
-            print(jobOrder)
-        return tempArray
+        #Shape Detection Filter
+        segmentationClass.SetShapeCurvatureScale(self.parameters[1])
+        segmentationClass.SetShapeMaxRMSError(self.parameters[2])
+        segmentationClass.SetShapeMaxIterations(self.parameters[3])
+        segmentationClass.SetShapePropagationScale(self.parameters[4])
+        segmentationClass.SetScalingFactor(self.parameters[5])
 
-    def SplitJobs(self, jobs, size):
-         output = []
-         while len(jobs) > size:
-             pice = jobs[:size]
-             output.append(pice)
-             jobs   = jobs[size:]
-         output.append(jobs)
-         return output
 
-    #Need to convert to voxel coordinates since we pass only the array due to a 'Pickle' error
-    #with the multiprocessing library and the ITK image type which means the header information
-    #is lost
-    def RoundSeedPoints(self):  
+        segmentation = segmentationClass.Execute(self.MRI_Image,[SeedPoint])
+
+        return segmentation
+
+    def RoundSeedPoints(self):           
         seeds = []
-        for i in range(0,len(self.seedList)):
+        for i in range(0,len(self.seedList)): #Select which bone (or all of them) from the csv file
             #Convert from string to float
+            # tempFloat = [float(self.seedList[i][0])/(-0.24), float(self.seedList[i][1])/(-0.24), float(self.seedList[i][2])/(0.29)]
             tempFloat = [float(self.seedList[i][0]), float(self.seedList[i][1]), float(self.seedList[i][2])]
             
             #Convert from physical units to voxel coordinates
@@ -526,7 +474,7 @@ class BoneSeg(object):
         #Initilize the SimpleITK Filters
         self.GradientMagnitudeFilter = sitk.GradientMagnitudeImageFilter()
         self.shapeDetectionFilter = sitk.ShapeDetectionLevelSetImageFilter()
-
+        self.thresholdFilter = sitk.BinaryThresholdImageFilter()
         self.sigFilter = sitk.SigmoidImageFilter()
 
         #Set the deafult values 
@@ -535,28 +483,17 @@ class BoneSeg(object):
     def SetDefaultValues(self):
         #Set the default values of all the parameters here
         self.SetScalingFactor(2) #X,Y,Z
-
-        # self.SetAnisotropicIts(5)
-        # self.SetAnisotropicTimeStep(0.01)
-        # self.SetAnisotropicConductance(2)
-        # self.SetConfidenceConnectedIts(0)
-        # self.SetConfidenceConnectedMultiplier(0.5)
-        # self.SetConfidenceConnectedRadius(2)
-        # self.SetLaplacianExpansionDirection(True) #Laplacian Level Set
-        # self.SetLaplacianError(0.001)
-        # self.SetConnectedComponentFullyConnected(True)    
-        # self.SetConnectedComponentDistance(0.01) 
-        
+       
         self.SeedListFilename = "PointList.txt"
         self.SetMaxVolume(300000) #Pixel counts (TODO change to mm^3)   
-        self.SetBinaryMorphologicalRadius(2)
-        self.SetLevelSetLowerThreshold(0)
-        self.SetLevelSetUpperThreshold(75)
-        self.SetLevelSetIts(2500)
-        self.SetLevelSetReverseDirection(True)
-        self.SetLevelSetError(0.03)
-        self.SetLevelSetPropagation(1)
-        self.SetLevelSetCurvature(1)
+        self.SetBinaryMorphologicalRadius(1)
+        # self.SetLevelSetLowerThreshold(0)
+        # self.SetLevelSetUpperThreshold(75)
+        # self.SetLevelSetIts(2500)
+        # self.SetLevelSetReverseDirection(True)
+        # self.SetLevelSetError(0.03)
+        # self.SetLevelSetPropagation(1)
+        # self.SetLevelSetCurvature(1)
 
         #Shape Detection Filter
         self.SetShapeMaxRMSError(0.01)
@@ -569,7 +506,6 @@ class BoneSeg(object):
         self.sigFilter.SetBeta(80)
         self.sigFilter.SetOutputMinimum(0)
         self.sigFilter.SetOutputMaximum(1)
-
 
     def SetShapeMaxIterations(self, MaxIts):
         self.shapeDetectionFilter.SetNumberOfIterations(int(MaxIts))
@@ -591,17 +527,13 @@ class BoneSeg(object):
         
     def SetLevelSetLowerThreshold(self, lowerThreshold):
         self.sigFilter.SetAlpha(int(lowerThreshold))
+        self.thresholdFilter.SetLowerThreshold(int(lowerThreshold)+1) #Add one so the threshold is greater than Zero
         self.thresholdLevelSet.SetLowerThreshold(int(lowerThreshold))   
         
     def SetLevelSetUpperThreshold(self, upperThreshold):
         self.sigFilter.SetBeta(int(upperThreshold))
+        self.thresholdFilter.SetUpperThreshold(int(upperThreshold))
         self.thresholdLevelSet.SetUpperThreshold(int(upperThreshold))   
-        
-    def SetLevelSetIts(self,iterations):
-        self.thresholdLevelSet.SetNumberOfIterations(int(iterations))
-        
-    def SetLevelSetReverseDirection(self, direction):
-        self.thresholdLevelSet.SetReverseExpansionDirection(direction)
         
     def SetLevelSetError(self,MaxError):        
         self.thresholdLevelSet.SetMaximumRMSError(MaxError)
@@ -682,54 +614,30 @@ class BoneSeg(object):
             print('\033[90m' + "Scaling image down...")
         self.scaleDownImage()
 
-        # print('\033[92m' + "Applying the Anisotropic Filter...")
-        # self.apply_AnisotropicFilter()
-
-        # if self.verbose == True:
-            # print("Threshold level set segmentation...")
-        # self.ThresholdLevelSet() 
-
+        if self.verbose == True:
+            print('\033[90m' + "Sigmoid shape detection level set...")
         self.SigmoidLevelSet()
 
-
-        # print('\033[93m' + "Segmenting via confidence connected...")
-        # self.ConfidenceConnectedSegmentation()
-
-        # print('\033[95m' + "Running Laplacian Level Set...")
-        # self.LaplacianLevelSet()
-
-        # if self.verbose == True:
-        #     print('\033[95m' + "Finding connected regions...")
-        # self.ConnectedComponent()
-
-        # if self.verbose == True:
-            # print('\033[96m' + "Checking volume for potential leakage... "), #Comma keeps printing on the same line
-        # self.LeakageCheck()
-
-        # print('\033[90m' + "Simple threshold operation...")
-        # self.ThresholdImage()
-        # if (self.shapeDetectionFilter.GetNumberOfIterations > 0):
-            # self.ShapeDetection()
-
+        if self.verbose == True:
+            print('\033[90m' + "Scaling image back...")
+        self.scaleUpImage()
 
         if self.verbose == True:
-            print('\033[90m' + "Dilating image slightly...")
-        self.segImg  = sitk.Cast(self.segImg, sitk.sitkUInt16)
-        self.segImg = self.dilateFilter.Execute(self.segImg, 0, 1, False)
+            print('\033[90m' + "Simple threshold operation...")
+        self.ThresholdImage()
 
         if self.verbose == True:
             print('\033[93m' + "Filling Segmentation Holes...")
         self.HoleFilling()
 
         if self.verbose == True:
-            print('\033[90m' + "Scaling image back...")
-        self.scaleUpImage()
+            print('\033[90m' + "Dilating image slightly...")
+        self.segImg  = sitk.Cast(self.segImg, sitk.sitkUInt16)
+        self.segImg = self.dilateFilter.Execute(self.segImg, 0, 1, False)
 
-        # print('\033[90m' + "Eroding image slightly...")
+        # if self.verbose == True:
+        #     print('\033[90m' + "Eroding image slightly...")
         # self.segImg = self.erodeFilter.Execute(self.segImg, 0, 1, False)
-
-
-
 
         if self.verbose == True:
             print('\033[96m' + "Finished with seed point "),
@@ -749,12 +657,8 @@ class BoneSeg(object):
 
     def ThresholdImage(self):
         self.segImg.CopyInformation(self.image)
-        thresholdFilter = sitk.BinaryThresholdImageFilter()
-        thresholdFilter.SetLowerThreshold(1)
-        thresholdFilter.SetUpperThreshold(100)
         tempImg = self.segImg * self.image
-        self.segImg = thresholdFilter.Execute(tempImg)
-        # sitk.Show(self.segImg)
+        self.segImg = self.thresholdFilter.Execute(tempImg)
         return self
 
     def RoundSeedPoint(self):

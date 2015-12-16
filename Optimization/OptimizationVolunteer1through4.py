@@ -160,7 +160,7 @@ if __name__ == '__main__':
 
 		''' Run optimization '''
 		minimizer_kwargs = {"method": "Nelder-Mead"}
-		bounds = [(35,80), (400,1000), (0.001, 0.01), (1,4)]
+		bounds = [(40,70), (400,1000), (0.001, 0.005), (1,4)]
 		print("Starting")
 		result = differential_evolution(runSegmentation, bounds, disp=True, popsize=2)
 

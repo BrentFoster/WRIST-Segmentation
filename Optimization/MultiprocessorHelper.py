@@ -55,7 +55,7 @@ class Multiprocessor(object):
 		#the number of cpu's then run the parallel computing twice
 		#TODO: Use a 'pool' of works for this may be more efficient
 		num_CPUs = multiprocessing.cpu_count() #Might be better to subtract 1 since OS needs one
-		num_CPUs = 3
+		num_CPUs = 4
 		if self.verbose == True:
 			print('\033[94m' + "Number of CPUs = "),
 			print(num_CPUs)
