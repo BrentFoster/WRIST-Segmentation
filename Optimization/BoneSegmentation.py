@@ -25,6 +25,8 @@ class BoneSeg(object):
         self.expandFilter = sitk.ExpandImageFilter()
         #Filter to reduce noise while preserving edgdes
         self.anisotropicFilter = sitk.CurvatureAnisotropicDiffusionImageFilter()
+        #Bias field correction
+        self.BiasFilter = sitk.N4BiasFieldCorrectionImageFilter()
         #Post-processing filters for fillinging holes and to attempt to remove any leakage areas
         self.dilateFilter = sitk.BinaryDilateImageFilter()
         self.erodeFilter = sitk.BinaryErodeImageFilter()
@@ -180,8 +182,8 @@ class BoneSeg(object):
 
         #self.image = self.FlipImage(self.image) #Flip the MRI
 
-        #Convert images to float 32 first
-        self.image = sitk.Cast(self.image, sitk.sitkFloat32)
+        #Correct for the MRI bias field 
+        self.image = self.BiasFilter.Execute(self.image)
 
         if self.verbose == True:
             print('\033[94m' + "Current Seed Point: "),
