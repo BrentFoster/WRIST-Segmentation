@@ -37,7 +37,7 @@ def Preprocessing(image):
 	nda = np.asarray(nda)
 
 	#Fix the intensities of the output of the laplcian; 0 = 1 and ~! 1 is 0 then 1 == x+1
-	nda[nda == 1] = -1
+	nda[nda  == 1] = -1
 	nda[nda == 0] = 1
 	nda[nda != 1] = 0
 
@@ -60,6 +60,7 @@ def Segmentation(processedImage, seedPoint):
 	shapeDetectionFilter.SetPropagationScaling(-4)
 	# shapeDetectionFilter.SetCurvatureScaling(2)
 
+
 	iniSeg = CreateSeedImage(processedImage, seedPoint)
 
 	#Signed distance function using the initial levelset segmentation
@@ -77,7 +78,6 @@ def Segmentation(processedImage, seedPoint):
 
 	segImage = shapeDetectionFilter.Execute(init_ls, processedImage)
 	print(shapeDetectionFilter)
-
 
 	#Want 0 for the background and 1 for the objects
 	nda = sitk.GetArrayFromImage(segImage)
@@ -123,14 +123,27 @@ def SaveSegmentation(image, filename, verbose = False):
 def Execute():
 	#Load Image
 	ScalingFactor = 1
+	image = shrinkFilter.Execute(image)
+	return image
+
+def VisualizeResult(image,segImage):
+	segImage  = sitk.Cast(segImage, sitk.sitkUInt16)
+	image = sitk.Cast(image, sitk.sitkUInt16)
+
+	overlaidSegImage = sitk.LabelOverlay(image, segImage)
+	sitk.Show(overlaidSegImage)
+
+def Execute():
+	#Load Image
+	ScalingFactor = 3
+
 	image  = sitk.ReadImage('/Users/Brent/Desktop/Volunteer1_VIBE.hdr')
 	image  = scaleDownImage(image, [ScalingFactor,ScalingFactor,ScalingFactor])
 	processedImage  = Preprocessing(image)
 	segImage = Segmentation(processedImage,[210/ScalingFactor, 120/ScalingFactor, 100/ScalingFactor])
 
-	overlaidSegImage = OverlayImages(image, segImage)
-	SaveSegmentation(overlaidSegImage, 'SigmoidTest.nii')
-	SaveSegmentation(segImage, 'segImage.nii')
+	VisualizeResult(image,segImage)
+
 
 Execute()
 
