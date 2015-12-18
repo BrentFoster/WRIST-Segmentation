@@ -55,10 +55,11 @@ def Segmentation(processedImage, seedPoint):
 
 	#Initilize the SimpleITK Filter
 	shapeDetectionFilter = sitk.ShapeDetectionLevelSetImageFilter()
-	shapeDetectionFilter.SetMaximumRMSError(0.005)
+	shapeDetectionFilter.SetMaximumRMSError(0.002)
 	# shapeDetectionFilter.SetNumberOfIterations(500)
-	shapeDetectionFilter.SetPropagationScaling(-2)
-	# shapeDetectionFilter.SetCurvatureScaling(1)
+	shapeDetectionFilter.SetPropagationScaling(-4)
+	# shapeDetectionFilter.SetCurvatureScaling(2)
+
 
 	iniSeg = CreateSeedImage(processedImage, seedPoint)
 
@@ -78,11 +79,50 @@ def Segmentation(processedImage, seedPoint):
 	segImage = shapeDetectionFilter.Execute(init_ls, processedImage)
 	print(shapeDetectionFilter)
 
+	#Want 0 for the background and 1 for the objects
+	nda = sitk.GetArrayFromImage(segImage)
+	nda = np.asarray(nda)
+
+	#Fix the intensities of the output of the laplcian; 0 = 1 and ~! 1 is 0 then 1 == x+1
+	nda[nda < 0.95] = 0
+	nda[nda != 0] = 10
+
+	segImage = sitk.Cast(sitk.GetImageFromArray(nda), processedImage.GetPixelID())
+	segImage.CopyInformation(processedImage)
+
 	return segImage
 
 def scaleDownImage(image, ScalingFactor):
 	shrinkFilter = sitk.ShrinkImageFilter()
 	shrinkFilter.SetShrinkFactors(ScalingFactor)
+	processedImage = shrinkFilter.Execute(image)
+	return processedImage
+
+def VisualizeResult(image,segImage):
+	sitk.Show(overlaidSegImage)
+
+def OverlayImages(image, segImage):
+	segImage  = sitk.Cast(segImage, sitk.sitkUInt16)
+	segImage.CopyInformation(image)
+	image = sitk.Cast(image, sitk.sitkUInt16)
+	image.CopyInformation(segImage)
+
+	overlaidSegImage = sitk.LabelOverlay(image, segImage)
+	return overlaidSegImage
+
+def SaveSegmentation(image, filename, verbose = False):
+	""" Take a SimpleITK type image and save to a filename (in analyze format) """
+	if verbose == True:
+		print("Saving segmentation to "),
+		print(filename)
+	imageWriter = sitk.ImageFileWriter()
+	imageWriter.Execute(image, filename, True)
+	if verbose == True:
+		print("Segmentation saved")
+
+def Execute():
+	#Load Image
+	ScalingFactor = 1
 	image = shrinkFilter.Execute(image)
 	return image
 
@@ -96,12 +136,14 @@ def VisualizeResult(image,segImage):
 def Execute():
 	#Load Image
 	ScalingFactor = 3
+
 	image  = sitk.ReadImage('/Users/Brent/Desktop/Volunteer1_VIBE.hdr')
 	image  = scaleDownImage(image, [ScalingFactor,ScalingFactor,ScalingFactor])
 	processedImage  = Preprocessing(image)
 	segImage = Segmentation(processedImage,[210/ScalingFactor, 120/ScalingFactor, 100/ScalingFactor])
 
 	VisualizeResult(image,segImage)
+
 
 Execute()
 

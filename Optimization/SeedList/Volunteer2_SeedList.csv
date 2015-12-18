@@ -1,5 +1,5 @@
-# Markups fiducial file version = 4.5
-# CoordinateSystem = 0
+# Markups fiducial file version = 4.5,,,,,,,,,,,,,
+# CoordinateSystem = 0,,,,,,,,,,,,,
 # columns = id,x,y,z,ow,ox,oy,oz,vis,sel,lock,label,desc,associatedNodeID
 vtkMRMLMarkupsFiducialNode_9,-98.4904,-47.9149,27,0,0,0,1,0,1,0,Volunteer2_SeedList-1,,vtkMRMLScalarVolumeNode2
 vtkMRMLMarkupsFiducialNode_10,-88.4126,-37.2773,27,0,0,0,1,0,1,0,Volunteer2_SeedList-2,,vtkMRMLScalarVolumeNode2
@@ -10,4 +10,4 @@ vtkMRMLMarkupsFiducialNode_14,-50.5277,-24.7734,39,0,0,0,1,0,1,0,Volunteer2_Seed
 vtkMRMLMarkupsFiducialNode_15,-69.9367,-31.1187,47,0,0,0,1,0,1,0,Volunteer2_SeedList-7,,vtkMRMLScalarVolumeNode2
 vtkMRMLMarkupsFiducialNode_16,-54.4468,-34.8512,47,0,0,0,1,0,1,0,Volunteer2_SeedList-8,,vtkMRMLScalarVolumeNode2
 vtkMRMLMarkupsFiducialNode_17,-81.1342,-36.3442,42,0,0,0,1,0,1,0,Volunteer2_SeedList-9,,vtkMRMLScalarVolumeNode2
-vtkMRMLMarkupsFiducialNode_18,-109.860,-102.860,24,0,0,0,1,0,1,0,Volunteer2_SeedList-9,,vtkMRMLScalarVolumeNode2
+vtkMRMLMarkupsFiducialNode_18,-109.86,-102.86,24,0,0,0,1,0,1,0,Volunteer2_SeedList-9,,vtkMRMLScalarVolumeNode2
