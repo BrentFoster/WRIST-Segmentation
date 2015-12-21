@@ -1,8 +1,8 @@
 BoneSegmentation
 =============
 
-Current Build Status for Master Branch
--------
+### Current Build Status for Master Branch
+
 
 ![Current Build Status](https://img.shields.io/shippable/562c7f391895ca447420e213.svg?style=plastic)
 
@@ -34,7 +34,7 @@ Usage
 -------
 
 
-To use as a Sliclet Application:
+## To use as a Sliclet Application:
 
 ```
 $/path/to/Slicer.exe --no-main-window --python-script /path/to/BoneSegmentation.py 
@@ -52,7 +52,7 @@ $/path/to/Slicer.exe --no-main-window --python-script /path/to/BoneSegmentation.
 <img width="300" alt="Slicelet GUI" src="Documentation/ExampleSegmentation.png">
 </p>
 
-To use as a Slicer Module:
+## To use as a Slicer Module:
 
 * Open Slicer
 * Edit -> Application Settings -> Modules
