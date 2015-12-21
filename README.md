@@ -48,9 +48,9 @@ $/path/to/Slicer.exe --no-main-window --python-script /path/to/BoneSegmentation.
 * Save the segmentation by the **Save Data** button and selecting the corresponding image
 
 
-
-
-![Slicelet GUI](Documentation/ExampleSegmentation.png?raw=true "Slicelet GUI")
+<p align="center">
+<img width="600" alt="Slicelet GUI" src="Documentation/ExampleSegmentation.png">
+</p>
 
 To use as a Slicer Module:
 
@@ -64,7 +64,12 @@ To use as a Slicer Module:
 * The segmentation will take ~45 seconds and will appear as a label type image overlaid onto the original image
 
 
-![Slicer GUI](Documentation/SlicerGUI.png?raw=true "Slicer GUI")
+
+
+<p align="center">
+<img width="600" alt="3D Slicer GUI" src="Documentation/SlicerGUI.png">
+</p>
+
 
 
 
