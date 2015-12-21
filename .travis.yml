@@ -5,8 +5,8 @@ sudo:
 #Shippable Supports Python ver: 2.6, 2.7, 3.2, 3.3, 3.4 and pypy
 python:
    - "2.7"
-   - "3.3"
-   - "3.4"
+   #- "3.3"
+   #- "3.4"
    
 before_install:
    ####################################################
@@ -16,9 +16,13 @@ before_install:
    - easy_install SimpleITK-0.9.1-py2.7-linux-x86_64.egg
    ####################################################
    #Install any other dependencies
-   pip install -r requirements.txt
+
+   - pip install -r requirements.txt
    
-script: python ClassTesting.py
+script: python Testing/AutomatedTesting.py
+
+   
+# script: python Testing/ClassTesting.py
 
 # Customize when the notification emails are sent.
 notifications:
