@@ -19,10 +19,8 @@ Segmentation Overview
 -------
 
 
-<img width="200" alt="examplerendering" src="Documentation/SlicerModuleSegmentationOverview.png">
+<img width="600" alt="examplerendering" src="Documentation/SlicerModuleSegmentationOverview.png">
 
-
-![Segmentation Example](Documentation/SlicerModuleSegmentationOverview.png?raw=true "Segmentation Example")
 
 
 ![Rendering Example](Documentation/ExampleRendering.png?raw=true "Segmentation Rendered")
