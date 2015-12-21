@@ -80,32 +80,30 @@ Use the Requirements.txt to install only the needed libraries. This will also ch
 pip install -r /path/to/requirements.txt
 ```
 
-Build Commands
--------
+## Build Commands
 
-Create Python Requirements.txt
------
+
+### Create Python Requirements.txt
+
 
 ```
 $pipreqs /path/to/project
 ```
 
 
-Build Documentation using Sphinx
------
+### Build Documentation using Sphinx
 
 ``` 
 cd /Documentation
 make html
 ```
 
-Build Documentation using Doxygen
------
+### Build Documentation using Doxygen
+
 
 Use the Doxygen GUI (will use commands later if needed). Sphinx may be preferred
 
-Version Number
------
+### Version Number
 
 Will be following the [Semantic Versioning convention](http://semver.org/) where a given version number is  MAJOR.MINOR.PATCH, increment when:
 
@@ -123,8 +121,7 @@ git push origin v0.1.0
 
 
 
-Github Flow
------
+### Github Flow
 
 Branches will (hopefully) roughly follow this github work flow with three branches 
 
@@ -133,4 +130,7 @@ Branches will (hopefully) roughly follow this github work flow with three branch
 0. **Develop** branch for adding and fixing features (not ready for sharing and may not work yet)
 
 
-![Example Github Flow](http://2.bp.blogspot.com/-yoWbDW3NmcU/U2Ph7o77BXI/AAAAAAAAAUQ/zlETRqFMHsk/s1600/git_workflow_gitflow.jpg)
+
+<p align="center">
+<img width="600" alt="Rendering Example" src="http://2.bp.blogspot.com/-yoWbDW3NmcU/U2Ph7o77BXI/AAAAAAAAAUQ/zlETRqFMHsk/s1600/git_workflow_gitflow.jpg">
+</p>
