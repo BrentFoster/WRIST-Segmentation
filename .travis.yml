@@ -5,8 +5,8 @@ sudo:
 #Shippable Supports Python ver: 2.6, 2.7, 3.2, 3.3, 3.4 and pypy
 python:
    - "2.7"
-   - "3.3"
-   - "3.4"
+   #- "3.3"
+   #- "3.4"
    
 before_install:
    ####################################################
@@ -15,8 +15,14 @@ before_install:
    - wget www.sourceforge.net/projects/simpleitk/files/SimpleITK/0.9.1/Python/SimpleITK-0.9.1-py2.7-linux-x86_64.egg
    - easy_install SimpleITK-0.9.1-py2.7-linux-x86_64.egg
    ####################################################
+   #Install any other dependencies
 
-script: python sitkConfidenceConnectedSeg.py
+   - pip install -r requirements.txt
+   
+script: python Testing/AutomatedTesting.py
+
+   
+# script: python Testing/ClassTesting.py
 
 # Customize when the notification emails are sent.
 notifications:
