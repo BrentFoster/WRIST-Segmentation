@@ -6,6 +6,9 @@ Current Build Status for Master Branch
 
 ![Current Build Status](https://img.shields.io/shippable/562c7f391895ca447420e213.svg?style=plastic)
 
+
+<img width="600" alt="Rendering Example" src="Documentation/ExampleRendering.png">
+
 Purpose 
 -------
 
@@ -20,9 +23,6 @@ Segmentation Overview
 
 
 <img width="600" alt="Segmentation Overview" src="Documentation/SlicerModuleSegmentationOverview.png">
-
-
-<img width="600" alt="Rendering Example" src="Documentation/ExampleRendering.png">
 
 
 <img width="600" alt="Partial Volume Example" src="Documentation/PartialVolumeExample.png">
