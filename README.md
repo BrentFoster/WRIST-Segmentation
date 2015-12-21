@@ -19,19 +19,13 @@ Segmentation Overview
 -------
 
 
-<img width="600" alt="examplerendering" src="Documentation/SlicerModuleSegmentationOverview.png">
+<img width="600" alt="Segmentation Overview" src="Documentation/SlicerModuleSegmentationOverview.png">
 
 
-
-![Rendering Example](Documentation/ExampleRendering.png?raw=true "Segmentation Rendered")
-
+<img width="600" alt="Rendering Example" src="Documentation/ExampleRendering.png">
 
 
-![Partial Volume Example](Documentation/PartialVolumeExample.png?raw=true "Segmentation Rendered")
-
-
-
-
+<img width="600" alt="Partial Volume Example" src="Documentation/PartialVolumeExample.png">
 
 
 Usage
