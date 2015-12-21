@@ -6,8 +6,9 @@ Current Build Status for Master Branch
 
 ![Current Build Status](https://img.shields.io/shippable/562c7f391895ca447420e213.svg?style=plastic)
 
-
+<p align="center">
 <img width="600" alt="Rendering Example" src="Documentation/ExampleRendering.png">
+</p>
 
 Purpose 
 -------
@@ -21,12 +22,13 @@ BoneSegmentation currently uses the [Confidence Connected Image Filter](http://w
 Segmentation Overview
 -------
 
-
+<p align="center">
 <img width="600" alt="Segmentation Overview" src="Documentation/SlicerModuleSegmentationOverview.png">
+</p>
 
-
+<p align="center">
 <img width="600" alt="Partial Volume Example" src="Documentation/PartialVolumeExample.png">
-
+</p>
 
 Usage
 -------
