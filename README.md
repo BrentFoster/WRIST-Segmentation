@@ -14,10 +14,28 @@ Segment the carpal bones from MR images given a set of user defined locations (s
 BoneSegmentation currently uses the [Confidence Connected Image Filter](http://www.itk.org/SimpleITKDoxygen/html/classitk_1_1simple_1_1ConfidenceConnectedImageFilter.html) along with some post-processing on the binary image to fill holes/smooth edges. Pre-processing to enhance edges and decrease the chances of leaking into the background will be added.
 
 
-Segmentation Example
+
+Segmentation Overview
 -------
 
+![Segmentation Example](Documentation/SlicerModuleSegmentationOverview.png?raw=true "Segmentation Example")
+
+
+
+
+
+
 ![Segmentation Example](Documentation/ExampleSegmentation.png?raw=true "Segmentation Example")
+
+![Rendering Example](Documentation/ExampleRendering.png?raw=true "Segmentation Rendered")
+
+
+
+![Partial Volume Example](Documentation/PartialVolumeExample.png?raw=true "Segmentation Rendered")
+
+
+
+
 
 
 Usage
@@ -47,6 +65,10 @@ To use as a Slicer Module:
 * Use the fiduical marker module to create the seed points
 * Select the volume in the **Input Volume** and click on **Compute**
 * The segmentation will take ~45 seconds and will appear as a label type image overlaid onto the original image
+
+
+![Partial Volume Example](Documentation/SlicerGUI.png?raw=true "Segmentation Rendered")
+
 
 
 Install Python Requirements
