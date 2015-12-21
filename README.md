@@ -1,11 +1,6 @@
 BoneSegmentation ![Current Build Status](https://img.shields.io/shippable/562c7f391895ca447420e213.svg?style=plastic)
 =============
 
-### Current Build Status for Master Branch
-
-
-![Current Build Status](https://img.shields.io/shippable/562c7f391895ca447420e213.svg?style=plastic)
-
 <p align="center">
 <img width="600" alt="Rendering Example" src="Documentation/ExampleRendering.png">
 </p>
