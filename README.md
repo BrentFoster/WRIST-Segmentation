@@ -18,14 +18,12 @@ BoneSegmentation currently uses the [Confidence Connected Image Filter](http://w
 Segmentation Overview
 -------
 
+
+<img width="200" alt="examplerendering" src="Documentation/SlicerModuleSegmentationOverview.png">
+
+
 ![Segmentation Example](Documentation/SlicerModuleSegmentationOverview.png?raw=true "Segmentation Example")
 
-
-
-
-
-
-![Segmentation Example](Documentation/ExampleSegmentation.png?raw=true "Segmentation Example")
 
 ![Rendering Example](Documentation/ExampleRendering.png?raw=true "Segmentation Rendered")
 
@@ -55,6 +53,11 @@ $/path/to/Slicer.exe --no-main-window --python-script /path/to/BoneSegmentation.
 * The segmentation will take ~45 seconds and will appear as a label type image overlaid onto the original image
 * Save the segmentation by the **Save Data** button and selecting the corresponding image
 
+
+
+
+![Slicelet GUI](Documentation/ExampleSegmentation.png?raw=true "Slicelet GUI")
+
 To use as a Slicer Module:
 
 * Open Slicer
@@ -67,7 +70,7 @@ To use as a Slicer Module:
 * The segmentation will take ~45 seconds and will appear as a label type image overlaid onto the original image
 
 
-![Partial Volume Example](Documentation/SlicerGUI.png?raw=true "Segmentation Rendered")
+![Slicer GUI](Documentation/SlicerGUI.png?raw=true "Slicer GUI")
 
 
 
