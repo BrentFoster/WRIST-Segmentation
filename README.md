@@ -132,5 +132,5 @@ Branches will (hopefully) roughly follow this github work flow with three branch
 
 
 <p align="center">
-<img width="600" alt="Rendering Example" src="http://2.bp.blogspot.com/-yoWbDW3NmcU/U2Ph7o77BXI/AAAAAAAAAUQ/zlETRqFMHsk/s1600/git_workflow_gitflow.jpg">
+<img width="400" alt="Rendering Example" src="http://2.bp.blogspot.com/-yoWbDW3NmcU/U2Ph7o77BXI/AAAAAAAAAUQ/zlETRqFMHsk/s1600/git_workflow_gitflow.jpg">
 </p>
