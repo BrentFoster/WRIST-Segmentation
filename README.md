@@ -49,7 +49,7 @@ $/path/to/Slicer.exe --no-main-window --python-script /path/to/BoneSegmentation.
 
 
 <p align="center">
-<img width="600" alt="Slicelet GUI" src="Documentation/ExampleSegmentation.png">
+<img width="300" alt="Slicelet GUI" src="Documentation/ExampleSegmentation.png">
 </p>
 
 To use as a Slicer Module:
@@ -67,7 +67,7 @@ To use as a Slicer Module:
 
 
 <p align="center">
-<img width="600" alt="3D Slicer GUI" src="Documentation/SlicerGUI.png">
+<img width="300" alt="3D Slicer GUI" src="Documentation/SlicerGUI.png">
 </p>
 
 
