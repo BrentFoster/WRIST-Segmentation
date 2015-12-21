@@ -1,5 +1,5 @@
 # TESTING SCRIPT FOR THE AUTOMATED BUILDING WITH LINUX VIRTUAL MACHINE
-import ConfidenceConnectedClass as BrentSeg
+import BrentPython as BrentSeg
 import SimpleITK as sitk
 import multiprocessing
 import numpy as np
