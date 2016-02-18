@@ -1,10 +1,10 @@
-#Load the Python Packages
-import SimpleITK as sitk
-import numpy as np
-
 #############################################################################################
 ###SEGMENTATION CLASS###
 #############################################################################################
+
+import SimpleITK as sitk
+import numpy as np
+
 class BoneSeg(object):
     """Class of BoneSegmentation. REQUIRED: BoneSeg(MRI_Image,SeedPoint)"""
     def __init__(self):
@@ -25,8 +25,6 @@ class BoneSeg(object):
         self.expandFilter = sitk.ExpandImageFilter()
         #Filter to reduce noise while preserving edgdes
         self.anisotropicFilter = sitk.CurvatureAnisotropicDiffusionImageFilter()
-        #Bias field correction
-        self.BiasFilter = sitk.N4BiasFieldCorrectionImageFilter()
         #Post-processing filters for fillinging holes and to attempt to remove any leakage areas
         self.dilateFilter = sitk.BinaryDilateImageFilter()
         self.erodeFilter = sitk.BinaryErodeImageFilter()
@@ -38,7 +36,7 @@ class BoneSeg(object):
         #Initilize the SimpleITK Filters
         self.GradientMagnitudeFilter = sitk.GradientMagnitudeImageFilter()
         self.shapeDetectionFilter = sitk.ShapeDetectionLevelSetImageFilter()
-
+        self.thresholdFilter = sitk.BinaryThresholdImageFilter()
         self.sigFilter = sitk.SigmoidImageFilter()
 
         #Set the deafult values 
@@ -46,42 +44,30 @@ class BoneSeg(object):
 
     def SetDefaultValues(self):
         #Set the default values of all the parameters here
-        self.SetScalingFactor(2) #X,Y,Z
-
-        # self.SetAnisotropicIts(5)
-        # self.SetAnisotropicTimeStep(0.01)
-        # self.SetAnisotropicConductance(2)
-        # self.SetConfidenceConnectedIts(0)
-        # self.SetConfidenceConnectedMultiplier(0.5)
-        # self.SetConfidenceConnectedRadius(2)
-        # self.SetLaplacianExpansionDirection(True) #Laplacian Level Set
-        # self.SetLaplacianError(0.001)
-        # self.SetConnectedComponentFullyConnected(True)    
-        # self.SetConnectedComponentDistance(0.01) 
-        
+        self.SetScalingFactor(1) #X,Y,Z
+       
         self.SeedListFilename = "PointList.txt"
         self.SetMaxVolume(300000) #Pixel counts (TODO change to mm^3)   
-        self.SetBinaryMorphologicalRadius(2)
-        self.SetLevelSetLowerThreshold(0)
-        self.SetLevelSetUpperThreshold(75)
-        self.SetLevelSetIts(2500)
-        self.SetLevelSetReverseDirection(True)
-        self.SetLevelSetError(0.03)
-        self.SetLevelSetPropagation(1)
-        self.SetLevelSetCurvature(1)
+        self.SetBinaryMorphologicalRadius(1)
+        # self.SetLevelSetLowerThreshold(0)
+        # self.SetLevelSetUpperThreshold(75)
+        # self.SetLevelSetIts(2500)
+        # self.SetLevelSetReverseDirection(True)
+        # self.SetLevelSetError(0.03)
+        # self.SetLevelSetPropagation(1)
+        # self.SetLevelSetCurvature(1)
 
         #Shape Detection Filter
-        self.SetShapeMaxRMSError(0.01)
-        self.SetShapeMaxIterations(500)
-        self.SetShapePropagationScale(-1)
-        self.SetShapeCurvatureScale(1)
+        self.SetShapeMaxRMSError(0.001)
+        self.SetShapeMaxIterations(1000)
+        self.SetShapePropagationScale(4)
+        self.SetShapeCurvatureScale(1.1)
 
         #Sigmoid Filter
         self.sigFilter.SetAlpha(0)
-        self.sigFilter.SetBeta(80)
+        self.sigFilter.SetBeta(90)
         self.sigFilter.SetOutputMinimum(0)
         self.sigFilter.SetOutputMaximum(1)
-
 
     def SetShapeMaxIterations(self, MaxIts):
         self.shapeDetectionFilter.SetNumberOfIterations(int(MaxIts))
@@ -103,17 +89,13 @@ class BoneSeg(object):
         
     def SetLevelSetLowerThreshold(self, lowerThreshold):
         self.sigFilter.SetAlpha(int(lowerThreshold))
+        self.thresholdFilter.SetLowerThreshold(int(lowerThreshold)+1) #Add one so the threshold is greater than Zero
         self.thresholdLevelSet.SetLowerThreshold(int(lowerThreshold))   
         
     def SetLevelSetUpperThreshold(self, upperThreshold):
         self.sigFilter.SetBeta(int(upperThreshold))
+        self.thresholdFilter.SetUpperThreshold(int(upperThreshold))
         self.thresholdLevelSet.SetUpperThreshold(int(upperThreshold))   
-        
-    def SetLevelSetIts(self,iterations):
-        self.thresholdLevelSet.SetNumberOfIterations(int(iterations))
-        
-    def SetLevelSetReverseDirection(self, direction):
-        self.thresholdLevelSet.SetReverseExpansionDirection(direction)
         
     def SetLevelSetError(self,MaxError):        
         self.thresholdLevelSet.SetMaximumRMSError(MaxError)
@@ -168,22 +150,18 @@ class BoneSeg(object):
         #Distance = Intensity difference NOT location distance
         self.connectedComponentFilter.SetDistanceThreshold(distanceThreshold) 
 
-#############################################################################################
-###Main algorithm execution here###
-#############################################################################################
-    def Execute(self, image, seedPoint, verbose=False):
+
+    def Execute(self, image, seedPoint, verbose = False):
 
         self.verbose = verbose #Optional argument to output text to terminal
 
-        #self.image = image
-        self.image = sitk.Cast(sitk.GetImageFromArray(image), sitk.sitkFloat32)
-
+        self.image = image
         self.seedPoint = seedPoint
 
-        #self.image = self.FlipImage(self.image) #Flip the MRI
+        # self.image = self.FlipImage(self.image) #Flip the MRI
 
-        #Correct for the MRI bias field 
-        # self.image = self.BiasFilter.Execute(self.image)
+        #Convert images to float 32 first
+        self.image = sitk.Cast(self.image, sitk.sitkFloat32)
 
         if self.verbose == True:
             print('\033[94m' + "Current Seed Point: "),
@@ -196,57 +174,35 @@ class BoneSeg(object):
             print('\033[90m' + "Scaling image down...")
         self.scaleDownImage()
 
-        # print('\033[92m' + "Applying the Anisotropic Filter...")
-        # self.apply_AnisotropicFilter()
-
-        # if self.verbose == True:
-            # print("Threshold level set segmentation...")
-        # self.ThresholdLevelSet() 
-
+        if self.verbose == True:
+            print('\033[90m' + "Sigmoid shape detection level set...")
         self.SigmoidLevelSet()
 
-
-        # print('\033[93m' + "Segmenting via confidence connected...")
-        # self.ConfidenceConnectedSegmentation()
-
-        # print('\033[95m' + "Running Laplacian Level Set...")
-        # self.LaplacianLevelSet()
-
-        # if self.verbose == True:
-        #     print('\033[95m' + "Finding connected regions...")
-        # self.ConnectedComponent()
-
-        # if self.verbose == True:
-            # print('\033[96m' + "Checking volume for potential leakage... "), #Comma keeps printing on the same line
-        # self.LeakageCheck()
-
-        # print('\033[90m' + "Simple threshold operation...")
-        # self.ThresholdImage()
-        # if (self.shapeDetectionFilter.GetNumberOfIterations > 0):
-            # self.ShapeDetection()
-
+        return  self.segImg  
+        
+        if self.verbose == True:
+            print('\033[90m' + "Scaling image back...")
+        self.scaleUpImage()
 
         if self.verbose == True:
-            print('\033[90m' + "Dilating image slightly...")
-        self.segImg  = sitk.Cast(self.segImg, sitk.sitkUInt16)
-        self.segImg = self.dilateFilter.Execute(self.segImg, 0, 1, False)
+            print('\033[90m' + "Simple threshold operation...")
+        try:
+            self.ThresholdImage()
+        except:
+            print('Error in self.ThresholdImage() step')
 
         if self.verbose == True:
             print('\033[93m' + "Filling Segmentation Holes...")
         self.HoleFilling()
 
         if self.verbose == True:
-            print('\033[90m' + "Scaling image back...")
-        self.scaleUpImage()
+            print('\033[90m' + "Dilating image slightly...")
+        self.segImg  = sitk.Cast(self.segImg, sitk.sitkUInt16)
+        self.segImg = self.dilateFilter.Execute(self.segImg, 0, 1, False)
 
-        # print('\033[90m' + "Eroding image slightly...")
+        # if self.verbose == True:
+        #     print('\033[90m' + "Eroding image slightly...")
         # self.segImg = self.erodeFilter.Execute(self.segImg, 0, 1, False)
-
-
-
-        nda = sitk.GetArrayFromImage(self.segImg)
-        nda = np.asarray(nda, dtype=np.int32)
-        return nda
 
         if self.verbose == True:
             print('\033[96m' + "Finished with seed point "),
@@ -265,13 +221,12 @@ class BoneSeg(object):
         return image
 
     def ThresholdImage(self):
-        self.segImg.CopyInformation(self.image)
-        thresholdFilter = sitk.BinaryThresholdImageFilter()
-        thresholdFilter.SetLowerThreshold(1)
-        thresholdFilter.SetUpperThreshold(100)
+        try:
+            self.segImg.CopyInformation(self.image)
+        except:
+            print('Error in copying information from self.image')
         tempImg = self.segImg * self.image
-        self.segImg = thresholdFilter.Execute(tempImg)
-        # sitk.Show(self.segImg)
+        self.segImg = self.thresholdFilter.Execute(tempImg)
         return self
 
     def RoundSeedPoint(self):
@@ -358,8 +313,7 @@ class BoneSeg(object):
         medianFilter.SetRadius([2,2,2])
 
         processedImage = self.sigFilter.Execute(self.image)
-        if self.verbose == True:
-            print(self.sigFilter)
+        # print(self.sigFilter)
         processedImage  = sitk.Cast(processedImage, sitk.sitkUInt16)
 
         processedImage = medianFilter.Execute(processedImage)
@@ -417,18 +371,16 @@ class BoneSeg(object):
         processedImage  = sitk.Cast(processedImage, sitk.sitkFloat32)
 
         self.segImage = self.shapeDetectionFilter.Execute(init_ls, processedImage)
-        
-        if self.verbose == True:
-            print(self.shapeDetectionFilter)
 
-        #Want 0 for the background and 1 for the objects
+        # print(self.shapeDetectionFilter)
+
+        # Want 0 for the background and 1 for the objects
         nda = sitk.GetArrayFromImage(self.segImage)
         nda = np.asarray(nda)
-        if self.verbose == True:
-            print('Minimum of nda:')
-            print(nda.min())
-            print('Maximum of nda:')
-            print(nda.max())
+        # print('Minimum of nda:')
+        # print(nda.min())
+        # print('Maximum of nda:')
+        # print(nda.max())
 
         # nda = nda * 100
 
@@ -575,10 +527,3 @@ class BoneSeg(object):
         self.segImg.CopyInformation(self.image)
 
         return self
-#############################################################################################
-
-
-
-
-
-

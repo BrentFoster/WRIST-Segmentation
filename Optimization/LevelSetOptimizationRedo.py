@@ -15,34 +15,42 @@ import numpy
 
 from scipy.optimize import differential_evolution
 
-# imageFilenames = ['/Users/Brent/Google Drive/Research/Wrist MRI/VIBE/Volunteer1_VIBE.hdr', \
-# '/Users/Brent/Google Drive/Research/Wrist MRI/VIBE/Volunteer2_VIBE.hdr', \
-# '/Users/Brent/Google Drive/Research/Wrist MRI/VIBE/Volunteer3_VIBE.hdr', \
-# '/Users/Brent/Google Drive/Research/Wrist MRI/VIBE/Volunteer4_VIBE.hdr', \
-# '/Users/Brent/Google Drive/Research/Wrist MRI/VIBE/Volunteer5_VIBE.hdr']
+# Brent's MacBook paths
+imageFilenames = [\
+'/Users/Brent/Google Drive/Research/MRI Wrist Images/CMC OA/Volunteer 1/VIBE/Volunteer1_VIBE_we.hdr', \
+'/Users/Brent/Google Drive/Research/MRI Wrist Images/CMC OA/Volunteer 2/VIBE/Volunteer2_VIBE_we.hdr', \
+'/Users/Brent/Google Drive/Research/MRI Wrist Images/CMC OA/Volunteer 3/VIBE/Volunteer3_VIBE_we.hdr', \
+'/Users/Brent/Google Drive/Research/MRI Wrist Images/CMC OA/Volunteer 4/VIBE/Volunteer4_VIBE_we.hdr']
 
-# seedListFiles = ['SeedList/Volunteer1_SeedList.csv', \
-# 'SeedList/Volunteer2_SeedList.csv', \
-# 'SeedList/Volunteer3_SeedList.csv', \
-# 'SeedList/Volunteer4_SeedList.csv', \
-# 'SeedList/Volunteer5_SeedList.csv']
+seedListFiles = ['SeedList/Volunteer1_SeedList.csv', \
+'SeedList/Volunteer2_SeedList.csv', \
+'SeedList/Volunteer3_SeedList.csv', \
+'SeedList/Volunteer4_SeedList.csv']
+
+
+groundtruthFilenames = [\
+'/Users/Brent/Google Drive/Research/MRI Wrist Images/CMC OA/VIBE Ground Truth/Volunteer1_GroundTruth.hdr',\
+'/Users/Brent/Google Drive/Research/MRI Wrist Images/CMC OA/VIBE Ground Truth/Volunteer2_GroundTruth.hdr',\
+'/Users/Brent/Google Drive/Research/MRI Wrist Images/CMC OA/VIBE Ground Truth/Volunteer3_GroundTruth.hdr',\
+'/Users/Brent/Google Drive/Research/MRI Wrist Images/CMC OA/VIBE Ground Truth/Volunteer4_GroundTruth.hdr']
+
 
 #Windows path
-imageFilenames = [\
-'E:\Google Drive\Research\Wrist MRI Database\VIBE\Volunteer1_VIBE.hdr',
-'E:\Google Drive\Research\Wrist MRI Database\VIBE\Volunteer2_VIBE.hdr',
-'E:\Google Drive\Research\Wrist MRI Database\VIBE\Volunteer3_VIBE.hdr',
-'E:\Google Drive\Research\Wrist MRI Database\VIBE\Volunteer4_VIBE.hdr']
-groundtruthFilenames = [\
-'E:\Google Drive\Research\Wrist MRI Database\Ground Truth\Volunteer1_GroundTruth.hdr',
-'E:\Google Drive\Research\Wrist MRI Database\Ground Truth\Volunteer2_GroundTruth.hdr',
-'E:\Google Drive\Research\Wrist MRI Database\Ground Truth\Volunteer3_GroundTruth.hdr',
-'E:\Google Drive\Research\Wrist MRI Database\Ground Truth\Volunteer4_GroundTruth.hdr']
-seedListFiles = [\
-'SeedList/Volunteer1_SeedList.csv',\
-'SeedList/Volunteer2_SeedList.csv',\
-'SeedList/Volunteer3_SeedList.csv',\
-'SeedList/Volunteer4_SeedList.csv']
+# imageFilenames = [\
+# 'E:\Google Drive\Research\Wrist MRI Database\VIBE\Volunteer1_VIBE.hdr',
+# 'E:\Google Drive\Research\Wrist MRI Database\VIBE\Volunteer2_VIBE.hdr',
+# 'E:\Google Drive\Research\Wrist MRI Database\VIBE\Volunteer3_VIBE.hdr',
+# 'E:\Google Drive\Research\Wrist MRI Database\VIBE\Volunteer4_VIBE.hdr']
+# groundtruthFilenames = [\
+# 'E:\Google Drive\Research\Wrist MRI Database\Ground Truth\Volunteer1_GroundTruth.hdr',
+# 'E:\Google Drive\Research\Wrist MRI Database\Ground Truth\Volunteer2_GroundTruth.hdr',
+# 'E:\Google Drive\Research\Wrist MRI Database\Ground Truth\Volunteer3_GroundTruth.hdr',
+# 'E:\Google Drive\Research\Wrist MRI Database\Ground Truth\Volunteer4_GroundTruth.hdr']
+# seedListFiles = [\
+# 'SeedList/Volunteer1_SeedList.csv',\
+# 'SeedList/Volunteer2_SeedList.csv',\
+# 'SeedList/Volunteer3_SeedList.csv',\
+# 'SeedList/Volunteer4_SeedList.csv']
 
 
 def loadSeedPoints(filename):
@@ -98,7 +106,7 @@ def runSegmentation(parameter):
 			tempFloat = [float(textSeeds['x'][i]), float(textSeeds['y'][i]), float(textSeeds['z'][i])]
 			SeedPoints.append(tempFloat)
 		
-		Segmentation = multiHelper.Execute(segmentationClass, SeedPoints, MRI_Image,parameter, False)
+		Segmentation = multiHelper.Execute(segmentationClass, SeedPoints, MRI_Image,parameter, True)
 
 	# sitk.Show(Segmentation)
 		# SaveSegmentation(Segmentation, 'E:\Google Drive\Research\Wrist MRI Database\VIBE\segmentation_temp.hdr')
@@ -184,7 +192,7 @@ if __name__ == '__main__':
 		
 		# runSegmentation([69, 2000, 0.0013])
 		
-		bounds = [(60,150), (1500,2500), (0.001, 0.01)]
+		bounds = [(60,150), (0.001, 0.01), (1500,2500), (0.001, 0.01)]
 		result = differential_evolution(runSegmentation, bounds, disp=True, popsize=2)
 		print(result)
 
