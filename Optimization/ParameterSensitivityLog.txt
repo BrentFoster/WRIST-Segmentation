@@ -1,0 +1,10 @@
+0.0,2.0,[array([280, 643, 120])],51.866448164,/Users/Brent/Google Drive/Research/MRI Wrist Images/CMC OA/Volunteer 1/VIBE/Volunteer1_VIBE_we.hdr,5
+0.0,2.33333333333,[array([280, 643, 120])],103.421660185,/Users/Brent/Google Drive/Research/MRI Wrist Images/CMC OA/Volunteer 1/VIBE/Volunteer1_VIBE_we.hdr,5
+0.0,2.66666666667,[array([280, 643, 120])],153.229526997,/Users/Brent/Google Drive/Research/MRI Wrist Images/CMC OA/Volunteer 1/VIBE/Volunteer1_VIBE_we.hdr,5
+0.0,3.0,[array([280, 643, 120])],202.050101995,/Users/Brent/Google Drive/Research/MRI Wrist Images/CMC OA/Volunteer 1/VIBE/Volunteer1_VIBE_we.hdr,5
+0.0,3.33333333333,[array([280, 643, 120])],250.601553202,/Users/Brent/Google Drive/Research/MRI Wrist Images/CMC OA/Volunteer 1/VIBE/Volunteer1_VIBE_we.hdr,5
+0.901,3.66666666667,[array([280, 643, 120])],323.972572088,/Users/Brent/Google Drive/Research/MRI Wrist Images/CMC OA/Volunteer 1/VIBE/Volunteer1_VIBE_we.hdr,5
+0.8889,4.0,[array([280, 643, 120])],404.41824317,/Users/Brent/Google Drive/Research/MRI Wrist Images/CMC OA/Volunteer 1/VIBE/Volunteer1_VIBE_we.hdr,5
+0.8751,4.33333333333,[array([280, 643, 120])],482.486217022,/Users/Brent/Google Drive/Research/MRI Wrist Images/CMC OA/Volunteer 1/VIBE/Volunteer1_VIBE_we.hdr,5
+0.8638,4.66666666667,[array([280, 643, 120])],562.302659988,/Users/Brent/Google Drive/Research/MRI Wrist Images/CMC OA/Volunteer 1/VIBE/Volunteer1_VIBE_we.hdr,5
+0.8534,5.0,[array([280, 643, 120])],644.184350967,/Users/Brent/Google Drive/Research/MRI Wrist Images/CMC OA/Volunteer 1/VIBE/Volunteer1_VIBE_we.hdr,5
