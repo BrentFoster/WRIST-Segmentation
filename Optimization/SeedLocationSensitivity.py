@@ -28,17 +28,17 @@ GT_Filenames = [\
 
 
 # Brent's Lab PC image paths
-MRI_Filenames = [\
-'E:/Google Drive/Research/MRI Wrist Images/CMC OA/Volunteer 1/VIBE/Volunteer1_VIBE_we.hdr', \
-'E:/Google Drive/Research/MRI Wrist Images/CMC OA/Volunteer 2/VIBE/Volunteer2_VIBE_we.hdr', \
-'E:/Google Drive/Research/MRI Wrist Images/CMC OA/Volunteer 3/VIBE/Volunteer3_VIBE_we.hdr', \
-'E:/Google Drive/Research/MRI Wrist Images/CMC OA/Volunteer 4/VIBE/Volunteer4_VIBE_we.hdr']
+# MRI_Filenames = [\
+# 'E:/Google Drive/Research/MRI Wrist Images/CMC OA/Volunteer 1/VIBE/Volunteer1_VIBE_we.hdr', \
+# 'E:/Google Drive/Research/MRI Wrist Images/CMC OA/Volunteer 2/VIBE/Volunteer2_VIBE_we.hdr', \
+# 'E:/Google Drive/Research/MRI Wrist Images/CMC OA/Volunteer 3/VIBE/Volunteer3_VIBE_we.hdr', \
+# 'E:/Google Drive/Research/MRI Wrist Images/CMC OA/Volunteer 4/VIBE/Volunteer4_VIBE_we.hdr']
 
-GT_Filenames = [\
-'E:/Google Drive/Research/MRI Wrist Images/CMC OA/VIBE Ground Truth/Volunteer1_GroundTruth.hdr',\
-'E:/Google Drive/Research/MRI Wrist Images/CMC OA/VIBE Ground Truth/Volunteer2_GroundTruth.hdr',\
-'E:/Google Drive/Research/MRI Wrist Images/CMC OA/VIBE Ground Truth/Volunteer3_GroundTruth.hdr',\
-'E:/Google Drive/Research/MRI Wrist Images/CMC OA/VIBE Ground Truth/Volunteer4_GroundTruth.hdr']
+# GT_Filenames = [\
+# 'E:/Google Drive/Research/MRI Wrist Images/CMC OA/VIBE Ground Truth/Volunteer1_GroundTruth.hdr',\
+# 'E:/Google Drive/Research/MRI Wrist Images/CMC OA/VIBE Ground Truth/Volunteer2_GroundTruth.hdr',\
+# 'E:/Google Drive/Research/MRI Wrist Images/CMC OA/VIBE Ground Truth/Volunteer3_GroundTruth.hdr',\
+# 'E:/Google Drive/Research/MRI Wrist Images/CMC OA/VIBE Ground Truth/Volunteer4_GroundTruth.hdr']
 
 
 
@@ -65,22 +65,30 @@ def saveLog(filename, logData):
 	except:
 		print("Failed writing log data to .txt file")
  
-def main(MRI_Filename, GT_Filename, label, num_seeds=5, kernelRadius=2):
+def main(MRI_Filename, GT_Filename, label, num_seeds=5, kernelRadius=1):
 
 	DiceList = []
 
-	# Load MRI and ground truth image
-	MRI   = sitk.ReadImage(MRI_Filename)
+	# Load MRI and cast to 16 bit
+	MRI = sitk.ReadImage(MRI_Filename)
+	MRI = sitk.Cast(MRI, sitk.sitkUInt16)
+
+	# Load the ground truth image
 	GroundTruth = sitk.ReadImage(GT_Filename)
 
 	erodeFilter = sitk.BinaryErodeImageFilter()
 	erodeFilter.SetKernelRadius(kernelRadius)
 	GroundTruth = erodeFilter.Execute(GroundTruth, 0, label, False) 
 
-	MRI = sitk.Cast(MRI, sitk.sitkUInt16)
+	# Find all the locations within the ground truth bone with an intensity of 1 (current label)
+	ndaGT = sitk.GetArrayFromImage(GroundTruth)
+	ndx = np.where(ndaGT == label) 
+
+	# Reload the ground truth image (so there is no erosion)
+	GroundTruth = sitk.ReadImage(GT_Filename)
+	ndaGT = sitk.GetArrayFromImage(GroundTruth)
 
 	# Remove the non-label intensities from the ground truth and make them zero
-	ndaGT = sitk.GetArrayFromImage(GroundTruth)
 	ndaGT = np.asarray(ndaGT)
 	ndaGT[ndaGT != label] = 0
 	ndaGT[ndaGT != 0] = 1
@@ -89,8 +97,6 @@ def main(MRI_Filename, GT_Filename, label, num_seeds=5, kernelRadius=2):
 	GroundTruth = sitk.Cast(sitk.GetImageFromArray(ndaGT), GroundTruth.GetPixelID())
 	GroundTruth.CopyInformation(MRI)
 
-	# Find all the locations within the ground truth bone with an intensity of 1 (current label)
-	ndx = np.where(ndaGT == 1) 
 
 	''' Use the ground truth image to create random seed locations within bone '''
 	seedPoints = []
@@ -111,9 +117,12 @@ def main(MRI_Filename, GT_Filename, label, num_seeds=5, kernelRadius=2):
 	for i in range(0, len(seedPoints)): 
 		
 		start_time = timeit.default_timer()
-		
+
+		# sitk.Show(GroundTruth, 'GroundTruth')
+		# sitk.Show(MRI, 'MRI')
+
 		# Run segmentation with a randomly selected seed
-		segmentedImg = segmentationClass.Execute(MRI, [seedPoints[i]], False)
+		segmentedImg = segmentationClass.Execute(MRI, [seedPoints[i]], True)
 
 		# Compute dice overlap between segmentation and ground truth
 		DiceCalulator.SetImages(GroundTruth, segmentedImg)
@@ -159,7 +168,7 @@ if __name__ == '__main__':
 
 			# num_seeds = 10 corresponds to ~3 hours
 			# kernelRadius = 5 seems to be a good amount
-			main(MRI_Filename, GT_Filename, label, num_seeds=10, kernelRadius=5)			
+			main(MRI_Filename, GT_Filename, label, num_seeds=1, kernelRadius=1)			
 		
 	# Determine how long the algorithm took to run
 	elapsed = timeit.default_timer() - start_time
