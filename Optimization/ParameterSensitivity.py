@@ -20,17 +20,17 @@ GT_Filenames = [\
 
 
 # Brent's Lab PC image paths
-# MRI_Filenames = [\
-# 'E:/Google Drive/Research/MRI Wrist Images/CMC OA/Volunteer 1/VIBE/Volunteer1_VIBE_we.hdr', \
-# 'E:/Google Drive/Research/MRI Wrist Images/CMC OA/Volunteer 2/VIBE/Volunteer2_VIBE_we.hdr', \
-# 'E:/Google Drive/Research/MRI Wrist Images/CMC OA/Volunteer 3/VIBE/Volunteer3_VIBE_we.hdr', \
-# 'E:/Google Drive/Research/MRI Wrist Images/CMC OA/Volunteer 4/VIBE/Volunteer4_VIBE_we.hdr']
+MRI_Filenames = [\
+'E:/Google Drive/Research/MRI Wrist Images/CMC OA/Volunteer 1/VIBE/Volunteer1_VIBE_we.hdr', \
+'E:/Google Drive/Research/MRI Wrist Images/CMC OA/Volunteer 2/VIBE/Volunteer2_VIBE_we.hdr', \
+'E:/Google Drive/Research/MRI Wrist Images/CMC OA/Volunteer 3/VIBE/Volunteer3_VIBE_we.hdr', \
+'E:/Google Drive/Research/MRI Wrist Images/CMC OA/Volunteer 4/VIBE/Volunteer4_VIBE_we.hdr']
 
-# GT_Filenames = [\
-# 'E:/Google Drive/Research/MRI Wrist Images/CMC OA/VIBE Ground Truth/Volunteer1_GroundTruth.hdr',\
-# 'E:/Google Drive/Research/MRI Wrist Images/CMC OA/VIBE Ground Truth/Volunteer2_GroundTruth.hdr',\
-# 'E:/Google Drive/Research/MRI Wrist Images/CMC OA/VIBE Ground Truth/Volunteer3_GroundTruth.hdr',\
-# 'E:/Google Drive/Research/MRI Wrist Images/CMC OA/VIBE Ground Truth/Volunteer4_GroundTruth.hdr']
+GT_Filenames = [\
+'E:/Google Drive/Research/MRI Wrist Images/CMC OA/VIBE Ground Truth/Volunteer1_GroundTruth.hdr',\
+'E:/Google Drive/Research/MRI Wrist Images/CMC OA/VIBE Ground Truth/Volunteer2_GroundTruth.hdr',\
+'E:/Google Drive/Research/MRI Wrist Images/CMC OA/VIBE Ground Truth/Volunteer3_GroundTruth.hdr',\
+'E:/Google Drive/Research/MRI Wrist Images/CMC OA/VIBE Ground Truth/Volunteer4_GroundTruth.hdr']
 
 # segmentationClass.SetLevelSetLowerThreshold(0)
 # segmentationClass.SetLevelSetUpperThreshold(parameter[0])
@@ -150,8 +150,8 @@ def main(MRI_Filename, GT_Filename, label, parameter, num_seeds=1, kernelRadius=
 		# Use the current parameter to modify the segmentation class
 		# segmentationClass.SetLevelSetUpperThreshold(i)
 		# segmentationClass.SetShapeMaxIterations(i)
-		# segmentationClass.SetShapeMaxRMSError(i)
-		segmentationClass.SetShapePropagationScale(i)
+		segmentationClass.SetShapeMaxRMSError(i)
+		# segmentationClass.SetShapePropagationScale(i)
 	
 		# Run segmentation with a randomly selected seed
 		segmentedImg = segmentationClass.Execute(MRI, [seedPoint[0]], True)
@@ -161,10 +161,7 @@ def main(MRI_Filename, GT_Filename, label, parameter, num_seeds=1, kernelRadius=
 
 		ComputeDice(GroundTruth, segmentedImg, seedPoint, elapsed, MRI_Filename, label, i)
 
-
 	return 0
-	
-
 
 if __name__ == '__main__':
 	
@@ -178,7 +175,7 @@ if __name__ == '__main__':
 		from colorama import Style
 		init()
 
-		print(Style.BRIGHT + Fore.YELLOW + 'Starting seed location test code ')
+		print(Style.BRIGHT + Fore.YELLOW + 'Starting parameter sensitivity test code ')
 
 
 	i = 0
@@ -186,7 +183,7 @@ if __name__ == '__main__':
 	# parameter = np.linspace(40, 110, num=10) # Sigmoid threshold level
 	# parameter = np.linspace(50, 2500, num=14) # Levelset maximum iterations
 	# parameter = np.linspace(0, 0.015, num=15) # Levelset max RMS error
-	parameter = np.linspace(5.4, 6.5, num=3) # Levelset shape propagation scale
+	parameter = np.linspace(0, 0.008, num=10) # Levelset shape propagation scale
 
 
 
