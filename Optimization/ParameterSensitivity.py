@@ -53,6 +53,9 @@ def GetRandomSeeds(GT_Filename, num_seeds, kernelRadius, label):
 	erodeFilter.SetKernelRadius(kernelRadius)
 	GroundTruth = erodeFilter.Execute(GroundTruth, 0, label, False) 
 
+	sitk.Show(GroundTruth, 'GroundTruth')
+	a
+
 	# Find all the locations within the ground truth bone with an intensity of 1 (current label)
 	ndaGT = sitk.GetArrayFromImage(GroundTruth)
 	ndx = np.where(ndaGT == label) 
@@ -134,6 +137,8 @@ def main(MRI_Filename, GT_Filename, label, parameter, num_seeds=1, kernelRadius=
 	# Load the ground truth image
 	GroundTruth = sitk.ReadImage(GT_Filename)
 
+	# sitk.Show(GroundTruth)
+
 	# Remove the non-label intensities from the ground truth and make them zero
 	GroundTruth = RemoveLabels(label, GroundTruth, MRI)
 
@@ -151,7 +156,7 @@ def main(MRI_Filename, GT_Filename, label, parameter, num_seeds=1, kernelRadius=
 		# segmentationClass.SetLevelSetUpperThreshold(i)
 		# segmentationClass.SetShapeMaxIterations(i)
 		# segmentationClass.SetShapeMaxRMSError(i)
-		segmentationClass.SetShapePropagationScale(i)
+		# segmentationClass.SetShapePropagationScale(i)
 	
 		# Run segmentation with a randomly selected seed
 		segmentedImg = segmentationClass.Execute(MRI, [seedPoint[0]], True)
@@ -160,6 +165,8 @@ def main(MRI_Filename, GT_Filename, label, parameter, num_seeds=1, kernelRadius=
 		elapsed = timeit.default_timer() - start_time
 
 		ComputeDice(GroundTruth, segmentedImg, seedPoint, elapsed, MRI_Filename, label, i)
+
+		sitk.Show(segmentedImg, 'segmentedImg')
 
 
 	return 0
@@ -182,11 +189,11 @@ if __name__ == '__main__':
 
 
 	i = 0
-	label = 5
+	label = 1
 	# parameter = np.linspace(40, 110, num=10) # Sigmoid threshold level
 	# parameter = np.linspace(50, 2500, num=14) # Levelset maximum iterations
 	# parameter = np.linspace(0, 0.015, num=15) # Levelset max RMS error
-	parameter = np.linspace(5.4, 6.5, num=3) # Levelset shape propagation scale
+	parameter = np.linspace(5.4, 6.5, num=1) # Levelset shape propagation scale
 
 
 

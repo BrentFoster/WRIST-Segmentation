@@ -7,4 +7,4 @@
 *.img
 
 # Ignore any .nii files
-*.nii
+#*.nii
