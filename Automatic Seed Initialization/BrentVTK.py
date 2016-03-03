@@ -346,7 +346,7 @@ def saveMeasurement(measurement, Filename):
         print("Saving to .txt failed...")
     return
 
-def IterativeClosestPoint(source, target, ImgFileName_Two, labels):
+def IterativeClosestPoint(source, target, transformImgFilename, labels):
 
 	icp = vtk.vtkIterativeClosestPointTransform()
 	icp.SetSource(source.GetOutput())
@@ -356,7 +356,7 @@ def IterativeClosestPoint(source, target, ImgFileName_Two, labels):
 	# icp.GetLandmarkTransform().SetModeToRigidBody()
 	# icp.DebugOn()
 	icp.SetMaximumNumberOfIterations(500)  # 500
-	icp.SetMaximumNumberOfLandmarks(2000)   # 200
+	icp.SetMaximumNumberOfLandmarks(400)   # 200
 	# icp.SetMaximumMeanDistance(0.001) # Small number to use all iterations
 	icp.StartByMatchingCentroidsOn()
 	icp.SetMeanDistanceModeToAbsoluteValue()
@@ -367,7 +367,7 @@ def IterativeClosestPoint(source, target, ImgFileName_Two, labels):
 	print(icp)
 
 	# Apply the resulting transform to the data
-	imgReader = load_image(ImgFileName_Two)
+	imgReader = load_image(transformImgFilename)
 
 	icpTransformFilter = vtk.vtkTransformPolyDataFilter()
 	icpTransformFilter.SetInputConnection(source.GetOutputPort())
@@ -382,7 +382,7 @@ def IterativeClosestPoint(source, target, ImgFileName_Two, labels):
 	resamplingFilter.Update()
 
 	imgWriter = vtk.vtkNIFTIImageWriter()
-	imgWriter.SetFileName('vtk_Transformed_Img.nii')
+	imgWriter.SetFileName(transformImgFilename[0:len(transformImgFilename)-4] + '_transformed.nii')
 	imgWriter.SetInputConnection(resamplingFilter.GetOutputPort())
 	imgWriter.Update()
 
@@ -793,7 +793,7 @@ def Brent_VTK_Dice(surface_A_Input, surface_B_Input):
 
 	return dice, surface
 
-def main(ImgFileName_One, ImgFileName_Two, labels, show_rendering=False, calculateDice=False):
+def main(ImgFileName_One, ImgFileName_Two, transformImgFilename, labels, show_rendering=False, calculateDice=False):
 
 	print('extracting fixed image')
 	imgReaderFixed = Extract_Label(ImgFileName_One, labels)
@@ -812,7 +812,7 @@ def main(ImgFileName_One, ImgFileName_Two, labels, show_rendering=False, calcula
 	Neutral_bone = IterativeClosestPoint(
 		Neutral_bone, 
 		Position_One_bone, 
-		ImgFileName_Two,
+		transformImgFilename,
 		labels)
 
 	if calculateDice == True:
@@ -844,6 +844,8 @@ def main(ImgFileName_One, ImgFileName_Two, labels, show_rendering=False, calcula
 if __name__ == "__main__":
 	ImgFileName_One = 'segHand_volunteer_1.nii'
 	ImgFileName_Two = 'HandModel_volunteer_2.nii'
+	transformImgFilename = ImgFileName_Two
+
 	labels = (1,0)
 
-	npMatrix = main(ImgFileName_One, ImgFileName_Two, labels, show_rendering=True, calculateDice=False)
+	npMatrix = main(ImgFileName_One, ImgFileName_Two, transformImgFilename, labels, show_rendering=True, calculateDice=False)

@@ -1,43 +1,38 @@
-#For creating debug file and printing warning to the terminal
-#Allows the user to decide what level to print
-#Allowed levels are CRITICAL, ERROR, WARNING, INFO, DEBUG, NOTSET
+# For creating debug file and printing warning to the terminal
+# Allows the user to decide what level to print
+# Allowed levels are CRITICAL, ERROR, WARNING, INFO, DEBUG, NOTSET
 import logging 
 logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
 logging.debug('Starting automatic seed initialization...')
 
-
 import SimpleITK as sitk
 import numpy as np
 
-''' Load images '''
-MRI_Filename = '/Users/Brent/Google Drive/Research/MRI Wrist Images/CMC OA/Volunteer 3/VIBE/Volunteer3_VIBE_we.hdr'
-# MRI_Filename = '/Users/Brent/Google Drive/Research/MRI Wrist Images/CMC OA/Volunteer 2/VIBE/Volunteer2_VIBE_we.hdr'
-MRI = sitk.ReadImage(MRI_Filename)
-MRI = sitk.Cast(MRI, sitk.sitkUInt16) # Cast to 16 bit image 
+import BrentVTK
 
-''' Roughly segment the hand boundary (use automatic thresholding in SimpleITK)
-	Could either hard code the thresholds based on VIBE or use a ITK method '''
 
-# Initialize various ITK filters
-otsuFilter = sitk.OtsuMultipleThresholdsImageFilter()
-otsuFilter.SetNumberOfHistogramBins(256)
+def Segment_Hand(MRI, outputFilename):
+	''' Roughly segment the hand boundary (use automatic thresholding in SimpleITK)
+		Could either hard code the thresholds based on VIBE or use a ITK method '''
 
-kernelRadius = [2,2,2]
-medianFilter = sitk.BinaryMedianImageFilter()
-medianFilter.SetRadius(kernelRadius)
+	# Initialize various ITK filters
+	otsuFilter = sitk.OtsuMultipleThresholdsImageFilter()
+	otsuFilter.SetNumberOfHistogramBins(256)
 
-kernelRadius = [5,5,5]
-dilateFilter = sitk.BinaryDilateImageFilter()
-dilateFilter.SetBackgroundValue(0)
-dilateFilter.SetForegroundValue(1)
-dilateFilter.SetKernelRadius(kernelRadius)
+	kernelRadius = [2,2,2]
+	medianFilter = sitk.BinaryMedianImageFilter()
+	medianFilter.SetRadius(kernelRadius)
 
-fillFilter = sitk.BinaryFillholeImageFilter()
-fillFilter.SetForegroundValue(1)
-fillFilter.FullyConnectedOn()
+	kernelRadius = [5,5,5]
+	dilateFilter = sitk.BinaryDilateImageFilter()
+	dilateFilter.SetBackgroundValue(0)
+	dilateFilter.SetForegroundValue(1)
+	dilateFilter.SetKernelRadius(kernelRadius)
 
-run_pipeline = False
-if run_pipeline == True:
+	fillFilter = sitk.BinaryFillholeImageFilter()
+	fillFilter.SetForegroundValue(1)
+	fillFilter.FullyConnectedOn()
+
 	# Run pipeline
 	logging.debug('Running Otsu thresholding')
 	segHand = otsuFilter.Execute(MRI)
@@ -54,43 +49,117 @@ if run_pipeline == True:
 	logging.debug('Running binary fill filter')
 	segHand = fillFilter.Execute(segHand)
 
-	# sitk.Show(segHand)
-
-
-
 	# Save this image using ITK
 	imageWriter = sitk.ImageFileWriter()
-	imageWriter.Execute(segHand, 'segHand_volunteer_3.nii', True)
+	imageWriter.Execute(segHand, outputFilename, True)
 
-import BrentVTK
-movingFilename = 'segHand_volunteer_3_carpals.nii'
-fixedFilename  = 'HandModel_volunteer_2_carpals.nii'
-labels = (1,0)
+	return segHand
+
+def Load_Image(MRI_Filename):
+	''' Load images '''
+	# MRI_Filename = '/Users/Brent/Google Drive/Research/MRI Wrist Images/CMC OA/Volunteer 2/VIBE/Volunteer2_VIBE_we.hdr'
+	MRI = sitk.ReadImage(MRI_Filename)
+	MRI = sitk.Cast(MRI, sitk.sitkUInt16) # Cast to 16 bit image 
+
+	return MRI
+
+def Post_processing(Filename_one, Filename_two):
+	''' Overlap with model for goodness of fit evaluation '''
+	transformedImg = sitk.ReadImage(Filename_one)
+	transformedImg = sitk.Cast(transformedImg, sitk.sitkUInt16) 
+
+	hand_model_img = sitk.ReadImage(Filename_two)
+	hand_model_img = sitk.Cast(hand_model_img, sitk.sitkUInt16) 
+
+	ndaTransformImg = np.asarray(sitk.GetArrayFromImage(transformedImg))
+	nda_hand_model_img = np.asarray(sitk.GetArrayFromImage(hand_model_img))
 
 
-BrentVTK.main(movingFilename, fixedFilename, labels, show_rendering=True, calculateDice=False)
+	ndaTransformImg = ndaTransformImg + nda_hand_model_img
+
+	overlapImg = sitk.GetImageFromArray(ndaTransformImg)
+	overlapImg.CopyInformation(MRI)
+
+	sitk.Show(overlapImg)
+
+def Apply_Transform(movingImg, fixedImg, transformField):
+	''' Apply the transformation to the moving image segmentation image '''
+
+	warpingFilter = sitk.WarpImageFilter() 
+	warpingFilter.SetEdgePaddingValue(0) 
+	warpingFilter.SetInterpolator(sitk.sitkNearestNeighbor) # try sitkGaussian sitkLabelGaussian sitkNearestNeighbor
+	warpingFilter.SetOutputParameteresFromImage(movingImg) 
+	warpedMovingImg = warpingFilter.Execute(movingImg, transformField)
+
+	warpedMovingImg.CopyInformation(fixedImg)
+	warpedMovingImg = sitk.Cast(warpedMovingImg, fixedImg.GetPixelID())
+
+	return warpedMovingImg
+
+def Demons_Registration(movingImg, fixedImg):
+	''' Deformable registration after ICP registration of the hand surfaces '''
+
+	logging.info('Non-rigid registration using Demons')
+	
+	# demonsReg = sitk.FastSymmetricForcesDemonsRegistrationFilter()
+	demonsReg = sitk.DemonsRegistrationFilter()
+	demonsReg.SetNumberOfIterations(10) 
+	demonsReg.SetSmoothDisplacementField(True)
+	# demonsReg.SetSmoothUpdateField(True)
+	transformField = demonsReg.Execute(fixedImg, movingImg)
+	transformField.CopyInformation(fixedImg)
+
+	logging.info('GetElapsedIterations')
+	logging.info(demonsReg.GetElapsedIterations())
+	logging.info('GetRMSChange')
+	logging.info(demonsReg.GetRMSChange())
+
+	return transformField
 
 
-# Overlap with model for goodness of fit evaluation
-transformedImg = sitk.ReadImage('vtk_Transformed_Img.nii')
-transformedImg = sitk.Cast(transformedImg, sitk.sitkUInt16) 
+if __name__ == "__main__":
 
-hand_model_img = sitk.ReadImage('HandModel_volunteer_2_carpals.nii')
-hand_model_img = sitk.Cast(hand_model_img, sitk.sitkUInt16) 
+	# Should try different images. The ICP isn't good between these two
+	Moving_MRI_Filename = 	'/Users/Brent/Google Drive/Research/MRI Wrist Images/CMC OA/Volunteer 3/VIBE/Volunteer3_VIBE_we.hdr'
+	Fixed_MRI_Filename  = 	'/Users/Brent/Google Drive/Research/MRI Wrist Images/CMC OA/Volunteer 2/VIBE/Volunteer2_VIBE_we.hdr'
+	
+	outputHandFilename  = 'segHand.nii'
+
+	# movingFilename = 'segHand_volunteer_3_carpals.nii'
+	# fixedFilename  = 'HandModel_volunteer_2_carpals.nii'
+
+	# transformImgFilename = MRI_Filename
+
+	labels = (1,0)
 
 
+	# MRI = Load_Image(MRI_Filename)
+
+	# segHand = Segment_Hand(MRI, outputHandFilename)
+	
+	# BrentVTK.main(movingFilename, fixedFilename, transformImgFilename, labels, show_rendering=True, calculateDice=False)
+
+	# Fixed MRI image
+	
+	# Saved MRI after apply ICP on the skin surfaces
+	Moving_MRI_Filename = Moving_MRI_Filename[0:len(Moving_MRI_Filename)-4] + '_transformed.nii'
+
+	movingImg = Load_Image(Moving_MRI_Filename)
+	fixedImg  = Load_Image(Fixed_MRI_Filename)
+
+	sitk.Show(movingImg)
+	sitk.Show(fixedImg)
+	a
+
+	transformField = Demons_Registration(movingImg, fixedImg)
+
+	transformedImg	= Apply_Transform(movingImg, fixedImg, transformField)
+
+	sitk.Show(transformedImg)
+
+	# Post_processing('vtk_Transformed_Img.nii', 'HandModel_volunteer_2_carpals.nii')
 
 
-ndaTransformImg = np.asarray(sitk.GetArrayFromImage(transformedImg))
-nda_hand_model_img = np.asarray(sitk.GetArrayFromImage(hand_model_img))
-
-
-ndaTransformImg = ndaTransformImg + nda_hand_model_img
-
-overlapImg = sitk.GetImageFromArray(ndaTransformImg)
-overlapImg.CopyInformation(MRI)
-
-sitk.Show(overlapImg)
 
 
 

@@ -24,46 +24,46 @@ def load_image(Binary_Filename, ScalingFactor=[4,4,4]):
 	return img
 
 
-def main(sitkImg, label=1, ScalingFactor=[4,4,4]):
-	''' Use spectral clustering on a binary image to remove the leakage areas '''
+def Spectral_Clustering(sitkImg, label=1, ScalingFactor=[4,4,4]):
+ ''' Use spectral clustering on a binary image to remove the leakage areas '''
 
-	logging.info('Converting to numpy array')
-	
-	img = sitk.GetArrayFromImage(sitkImg)
+    logging.info('Converting to numpy array')
+    
+    npImg = sitk.GetArrayFromImage(sitkImg)
 
-	img[img != label] = 0
-	img[img != 0] = 1
+    npImg[npImg != label] = 0
+    npImg[npImg != 0] = 1
 
-	mask = img
-	mask[mask != 0] = 1
+    mask = npImg
+    mask[mask != 0] = 1
 
-	mask = mask.astype(bool)
-	img = img.astype(int)
+    mask = mask.astype(bool)
+    npImg = npImg.astype(int)
 
-	logging.info('Creating graph from image')
+    logging.info('Creating graph from image')
 
-	# Convert the image into a graph with the value of the gradient on the edges.
-	graph = image.img_to_graph(img, mask=mask)
+    # Convert the image into a graph with the value of the gradient on the edges.
+    graph = image.img_to_graph(npImg, mask=mask)
 
-	# Take a decreasing function of the gradient
-	graph.data = np.exp(-graph.data / graph.data.std())
+    # Take a decreasing function of the gradient
+    graph.data = np.exp(-graph.data / graph.data.std())
 
-	logging.info('Running spectral clustering')
-	labels = spectral_clustering(graph, n_clusters = 2, eigen_solver='arpack')
+    logging.info('Running spectral clustering')
+    labels = spectral_clustering(graph, n_clusters = 2, eigen_solver='arpack')
 
-	npLabel = -np.ones(mask.shape)
-	npLabel[mask] = labels
-
-
-	# Convert back to SimpleITK image type and upsample back to original size
-	expandFilter = sitk.ExpandImageFilter()
-	expandFilter.SetExpandFactors(ScalingFactor)
-
-	Labelimg = sitk.Cast(sitk.GetImageFromArray(npLabel), sitkImg.GetPixelID())
-	Labelimg = expandFilter.Execute(Labelimg)
+    npLabel = -np.ones(mask.shape)
+    npLabel[mask] = labels
 
 
-	return Labelimg
+    # Convert back to SimpleITK image type and upsample back to original size
+    expandFilter = sitk.ExpandImageFilter()
+    expandFilter.SetExpandFactors(ScalingFactor)
+
+    Labelimg = sitk.Cast(sitk.GetImageFromArray(npLabel), sitkImg.GetPixelID())
+    Labelimg = expandFilter.Execute(Labelimg)
+
+
+    return Labelimg
 
 
 if __name__ == "__main__":
@@ -81,7 +81,7 @@ if __name__ == "__main__":
 
 
 	img = load_image(Binary_Filename, ScalingFactor)
-	sc_img = main(img, label=1, ScalingFactor=ScalingFactor)
+	sc_img = Spectral_Clustering(img, label=1, ScalingFactor=ScalingFactor)
 
 	sitk.Show(sc_img)
 
