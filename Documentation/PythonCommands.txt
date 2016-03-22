@@ -1,3 +1,9 @@
+#Mac virtual environment
+virtualenv --system-site-packages -p python3 venv_py
+#virtualenv --no-site-packages -p python venv_py
+source /Users/Brent/vtk/venv_py/bin/activate
+
+
 ########################################################################
 Create a python module distribution that is very easy for others to install!
 (Also makes it easier for me to use these classes as well)
