@@ -24,7 +24,7 @@ class DiceCalulator(object):
 		self.label = label
 
 	def LoadImages(self,GroundTruthFile, SegmentationFile, label=1):
-		GroundTruth = sitk.ReadImage(GroundTruthFile)
+		GroundTruth  = sitk.ReadImage(GroundTruthFile)
 		Segmentation = sitk.ReadImage(SegmentationFile)
 		GroundTruth = self.FlipImage(GroundTruth)
 		self.label = label

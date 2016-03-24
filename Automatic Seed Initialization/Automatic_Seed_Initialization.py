@@ -7,9 +7,17 @@ logging.debug('Starting automatic seed initialization...')
 
 import SimpleITK as sitk
 import numpy as np
-
 import BrentVTK
 
+def SaveSegmentation(image, filename, verbose = False):
+	""" Take a SimpleITK type image and save to a filename (in analyze format) """
+	if verbose == True:
+		print("Saving segmentation to "),
+		print(filename)
+	imageWriter = sitk.ImageFileWriter()
+	imageWriter.Execute(image, filename, True)
+	if verbose == True:
+		print("Segmentation saved")
 
 def Segment_Hand(MRI, outputFilename):
 	''' Roughly segment the hand boundary (use automatic thresholding in SimpleITK)
@@ -17,41 +25,62 @@ def Segment_Hand(MRI, outputFilename):
 
 	# Initialize various ITK filters
 	otsuFilter = sitk.OtsuMultipleThresholdsImageFilter()
+	# otsuFilter = sitk.OtsuThresholdImageFilter()
 	otsuFilter.SetNumberOfHistogramBins(256)
-
+	# otsuFilter = sitk.BinaryThresholdImageFilter()
+	# otsuFilter.SetUpperThreshold(100)
+	
 	kernelRadius = [2,2,2]
-	medianFilter = sitk.BinaryMedianImageFilter()
+	binary_medianFilter = sitk.BinaryMedianImageFilter()
+	binary_medianFilter.SetRadius(kernelRadius)
+
+	medianFilter = sitk.MedianImageFilter()
 	medianFilter.SetRadius(kernelRadius)
 
-	kernelRadius = [5,5,5]
 	dilateFilter = sitk.BinaryDilateImageFilter()
 	dilateFilter.SetBackgroundValue(0)
 	dilateFilter.SetForegroundValue(1)
 	dilateFilter.SetKernelRadius(kernelRadius)
 
+	erodeFilter = sitk.BinaryErodeImageFilter()
+	erodeFilter.SetBackgroundValue(0)
+	erodeFilter.SetForegroundValue(1)
+	erodeFilter.SetKernelRadius(kernelRadius*2)
+
 	fillFilter = sitk.BinaryFillholeImageFilter()
-	fillFilter.SetForegroundValue(1)
-	fillFilter.FullyConnectedOn()
+	fillFilter.SetForegroundValue(0)
+	fillFilter.FullyConnectedOff()
 
 	# Run pipeline
+	logging.debug('Running median filter on MRI')
+	MRI = medianFilter.Execute(MRI)
+
+	MRI = sitk.Cast(MRI, sitk.sitkUInt8) # Cast to 8 bit image
+
 	logging.debug('Running Otsu thresholding')
 	segHand = otsuFilter.Execute(MRI)
-	logging.debug('Running median filter')
-	segHand = medianFilter.Execute(segHand)
-	logging.debug('Running median filter')
-	segHand = medianFilter.Execute(segHand)
-	logging.debug('Running median filter')
-	segHand = medianFilter.Execute(segHand)
+	print(otsuFilter)
+
 	logging.debug('Running dilation filter')
 	segHand = dilateFilter.Execute(segHand)
-	logging.debug('Running dilation filter')
-	segHand = dilateFilter.Execute(segHand)
+
 	logging.debug('Running binary fill filter')
 	segHand = fillFilter.Execute(segHand)
 
+	logging.debug('Running dilation filter')
+	segHand = dilateFilter.Execute(segHand)
+
+	logging.debug('Running binary fill filter')
+	segHand = fillFilter.Execute(segHand)
+
+	logging.debug('Running erode filter')
+	segHand = erodeFilter.Execute(segHand)
+
+	logging.debug('Running binary fill filter')
+	segHand = fillFilter.Execute(segHand)
+	
 	# Save this image using ITK
-	imageWriter = sitk.ImageFileWriter()
-	imageWriter.Execute(segHand, outputFilename, True)
+	SaveSegmentation(segHand, outputFilename, verbose = True)
 
 	return segHand
 
@@ -116,46 +145,41 @@ def Demons_Registration(movingImg, fixedImg):
 
 	return transformField
 
-
 if __name__ == "__main__":
 
 	# Should try different images. The ICP isn't good between these two
-	Moving_MRI_Filename = 	'/Users/Brent/Google Drive/Research/MRI Wrist Images/CMC OA/Volunteer 3/VIBE/Volunteer3_VIBE_we.hdr'
-	Fixed_MRI_Filename  = 	'/Users/Brent/Google Drive/Research/MRI Wrist Images/CMC OA/Volunteer 2/VIBE/Volunteer2_VIBE_we.hdr'
+	# Moving_MRI_Filename = '/Users/Brent/Google Drive/Research/MRI Wrist Images/CMC OA/Volunteer 3/VIBE/Volunteer3_VIBE_we.hdr'
+	# Fixed_MRI_Filename  = '/Users/Brent/Google Drive/Research/MRI Wrist Images/CMC OA/Volunteer 2/VIBE/Volunteer2_VIBE_we.hdr'
 	
+	# Brent's Lab PC image paths
+	Moving_MRI_Filename = 'E:/Google Drive/Research/MRI Wrist Images/CMC OA/Volunteer 1/VIBE/Volunteer1_VIBE_we.hdr'
+	Fixed_MRI_Filename  = 'E:/Google Drive/Research/MRI Wrist Images/CMC OA/Volunteer 3/VIBE/Volunteer3_VIBE_we.hdr'
+
 	outputHandFilename  = 'segHand.nii'
+	labels = (1,0)
 
 	# movingFilename = 'segHand_volunteer_3_carpals.nii'
 	# fixedFilename  = 'HandModel_volunteer_2_carpals.nii'
-
 	# transformImgFilename = MRI_Filename
-
-	labels = (1,0)
-
-
-	# MRI = Load_Image(MRI_Filename)
-
-	# segHand = Segment_Hand(MRI, outputHandFilename)
 	
-	# BrentVTK.main(movingFilename, fixedFilename, transformImgFilename, labels, show_rendering=True, calculateDice=False)
+	# Moving_MRI = Load_Image(Moving_MRI_Filename)
+	# Moving_segHand = Segment_Hand(Moving_MRI, 'Moving_segHand.nii')
+	# SaveSegmentation(Moving_segHand, 'Moving_segHand.nii', verbose = True)
 
-	# Fixed MRI image
-	
-	# Saved MRI after apply ICP on the skin surfaces
-	Moving_MRI_Filename = Moving_MRI_Filename[0:len(Moving_MRI_Filename)-4] + '_transformed.nii'
+	# Fixed_MRI = Load_Image(Fixed_MRI_Filename)
+	# Fixed_segHand = Segment_Hand(Fixed_MRI, 'Fixed_segHand.nii')
 
-	movingImg = Load_Image(Moving_MRI_Filename)
-	fixedImg  = Load_Image(Fixed_MRI_Filename)
+	BrentVTK.main('Fixed_segHand.nii', 'Moving_segHand.nii', 'E:\Google Drive\Research\MRI Wrist Images\CMC OA\VIBE Ground Truth\Volunteer1_GroundTruth.hdr', labels, show_rendering=True, calculateDice=False)
 
-	sitk.Show(movingImg)
-	sitk.Show(fixedImg)
-	a
+	# Load the ICP transformed MRI image
+	movingImg = Load_Image('movingMRItransformed.nii')
+	fixedImg  = Load_Image('fixed_vol_3.nii')
 
-	transformField = Demons_Registration(movingImg, fixedImg)
+	# transformField  = Demons_Registration(movingImg, fixedImg)
 
-	transformedImg	= Apply_Transform(movingImg, fixedImg, transformField)
+	# transformedImg	= Apply_Transform(movingImg, fixedImg, transformField)
 
-	sitk.Show(transformedImg)
+	# sitk.Show(transformedImg)
 
 	# Post_processing('vtk_Transformed_Img.nii', 'HandModel_volunteer_2_carpals.nii')
 
