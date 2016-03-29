@@ -71,21 +71,28 @@ def saveLog(filename, logData):
 	except:
 		print("Failed writing log data to .txt file")
  
-def SaveSlice(sitkImg, sliceNum, filename):
+def SaveSlice(MRI, segmentedImg, seedPoint, filename):
 	
-	ndaImg = sitk.GetArrayFromImage(sitkImg)
+	overlaidImg = BrentPython.OverlayImages(sitkImage=MRI, labelImage=segmentedImg, opacity=0.2, backgroundValue=0)
 
-	ndaImg = ndaImg[:,:,sliceNum]
+	ndaImg = sitk.GetArrayFromImage(overlaidImg)
+
+	# Select the correct slice number to save 2D image
+	ndaImg = ndaImg[seedPoint[2], :, :]
+
+	# Highlight the seed on the 2D image
+	ndaImg[seedPoint[1], seedPoint[0]] = 0
 
 	# Convert back to a SimpleITK image type
-	sitkSlice = sitk.Cast(sitk.GetImageFromArray(ndaImg), sitkImg.GetPixelID())
+	sitkSlice = sitk.Cast(sitk.GetImageFromArray(ndaImg), overlaidImg.GetPixelID())
 
-	BrentPython.SaveSegmentation(sitkSlice, 'sitkSlice.jpg', verbose = True)
+	# overlaidImg = sitk.Cast(overlaidImg, sitk.sitkUInt8)
 
-	a
+	BrentPython.SaveSegmentation(sitkSlice, filename, verbose = True)	
+
+	# BrentPython.SaveSegmentation(segmentedImg, 'segmentedImg.nii', verbose = True)	
 
 	return 0
-
 
 def load_GT(GT_Filename, label):
 
@@ -127,15 +134,12 @@ def load_MRI(MRI_Filename, apply_filtering=False):
 
 	return MRI
 
-def main(MRI_Filename, GT_Filename, label, num_seeds=5, kernelRadius=1):
+def main(MRI_Filename, GT_Filename, label, num_seeds=5, kernelRadius=1, MRI_num=1):
 
 	DiceList = []
 
 	# Load MRI and cast to 16 bit
 	MRI = load_MRI(MRI_Filename)
-
-	SaveSlice(image=MRI, sliceNum=42, filename='test.jpg')
-
 
 	# Load the ground truth (manual segmented) image
 	GroundTruth = load_GT(GT_Filename, label)
@@ -144,6 +148,9 @@ def main(MRI_Filename, GT_Filename, label, num_seeds=5, kernelRadius=1):
 
 	segmentationClass = BoneSegmentation.BoneSeg()
 	segmentationClass.SetScalingFactor(1)
+	segmentationClass.SetLevelSetUpperThreshold(120)
+	segmentationClass.SetShapeMaxRMSError(0.003)
+	segmentationClass.SetShapeMaxIterations(2500)
 	DiceCalulator = Dice.DiceCalulator()
 
 	for i in range(0, len(seedPoints)): 
@@ -152,6 +159,8 @@ def main(MRI_Filename, GT_Filename, label, num_seeds=5, kernelRadius=1):
 
 		# Run segmentation with a randomly selected seed
 		segmentedImg = segmentationClass.Execute(MRI, [seedPoints[i]], True)
+
+		# segmentedImg = GroundTruth 
 
 		# Compute dice overlap between segmentation and ground truth
 		DiceCalulator.SetImages(GroundTruth, segmentedImg)
@@ -171,6 +180,14 @@ def main(MRI_Filename, GT_Filename, label, num_seeds=5, kernelRadius=1):
 
 		filename = 'SeedSensitivityLog.txt'
 		saveLog(filename, logData)
+
+		# Save a screenshot if the dice coefficient is low to understand the low accuracy
+		if dice_value < 2:
+
+			slice_filename =  'ScreenShots\Volunteer_' + str(MRI_num) + '_label_' + str(label) + '_slice_' + str(seedPoints[i][2]) + '_dice_' + str(dice_value) + '.nii'
+
+			SaveSlice(MRI=MRI, segmentedImg=segmentedImg,  seedPoint=seedPoints[i], filename=slice_filename)
+			print('Slice saved')
 
 	return 0
 	
@@ -197,12 +214,9 @@ if __name__ == '__main__':
 			MRI_Filename = MRI_Filenames[i]
 			GT_Filename = GT_Filenames[i]
 
-			# num_seeds = 10 corresponds to ~3 hours
-			# kernelRadius = 5 seems to be a good amount
-
 			# try:
 			
-			main(MRI_Filename, GT_Filename, label, num_seeds=30, kernelRadius=5)	
+			main(MRI_Filename, GT_Filename, label, num_seeds=1, kernelRadius=5, MRI_num=i)	
 			# except:
 				# print('ERROR IN MAIN!!')
 
@@ -214,25 +228,35 @@ if __name__ == '__main__':
 
 
 
-# # DEBUG
-# BrentPython.SaveSegmentation(GroundTruth, 'GroundTruth.nii', verbose = True)
-# BrentPython.SaveSegmentation(segmentedImg, 'segmentedImg.nii', verbose = True)
-# # END DEBUG
-
-# seedListFiles = [\
-# 'SeedList/Volunteer1_SeedList.csv',\
-# 'SeedList/Volunteer2_SeedList.csv',\
-# 'SeedList/Volunteer3_SeedList.csv',\
-# 'SeedList/Volunteer4_SeedList.csv']
 
 
-# Show the seed location on the MRI image
-# ndaGT = ndaGT * 0
-# ndaGT[new_point[0], new_point[1], new_point[2]] = 255
-# GroundTruth = sitk.Cast(sitk.GetImageFromArray(ndaGT), GroundTruth.GetPixelID())
-# GroundTruth.CopyInformation(MRI)
-# sitk.Show(GroundTruth)
-# sitk.Show(MRI)
-# return
-# sitk.Show(GroundTruth, 'GroundTruth')
-# sitk.Show(segmentedImg, 'segmentedImg')
+
+
+def old_garbage():
+	'Old code that is potentiall useful for later'
+	# num_seeds = 10 corresponds to ~3 hours
+	# kernelRadius = 5 seems to be a good amount
+
+
+	# # DEBUG
+	# BrentPython.SaveSegmentation(GroundTruth, 'GroundTruth.nii', verbose = True)
+	# BrentPython.SaveSegmentation(segmentedImg, 'segmentedImg.nii', verbose = True)
+	# # END DEBUG
+
+	# seedListFiles = [\
+	# 'SeedList/Volunteer1_SeedList.csv',\
+	# 'SeedList/Volunteer2_SeedList.csv',\
+	# 'SeedList/Volunteer3_SeedList.csv',\
+	# 'SeedList/Volunteer4_SeedList.csv']
+
+
+	# Show the seed location on the MRI image
+	# ndaGT = ndaGT * 0
+	# ndaGT[new_point[0], new_point[1], new_point[2]] = 255
+	# GroundTruth = sitk.Cast(sitk.GetImageFromArray(ndaGT), GroundTruth.GetPixelID())
+	# GroundTruth.CopyInformation(MRI)
+	# sitk.Show(GroundTruth)
+	# sitk.Show(MRI)
+	# return
+	# sitk.Show(GroundTruth, 'GroundTruth')
+	# sitk.Show(segmentedImg, 'segmentedImg')

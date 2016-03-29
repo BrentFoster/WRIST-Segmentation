@@ -313,7 +313,8 @@ class BoneSeg(object):
         medianFilter.SetRadius([2,2,2])
 
         processedImage = self.sigFilter.Execute(self.image)
-        # print(self.sigFilter)
+ 
+       
         processedImage  = sitk.Cast(processedImage, sitk.sitkUInt16)
 
         processedImage = medianFilter.Execute(processedImage)
@@ -372,7 +373,7 @@ class BoneSeg(object):
 
         self.segImage = self.shapeDetectionFilter.Execute(init_ls, processedImage)
 
-        # print(self.shapeDetectionFilter)
+        print(self.shapeDetectionFilter)
 
         # Want 0 for the background and 1 for the objects
         nda = sitk.GetArrayFromImage(self.segImage)

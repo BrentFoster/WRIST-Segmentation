@@ -3,6 +3,44 @@ import multiprocessing
 import numpy as np
 import timeit
 
+def OverlayImages(sitkImage, labelImage, opacity=0.9, backgroundValue=0):
+	''' Apply a colormap to a label image and put it on top of the input image '''	
+
+	# BinaryToLabelFilter = sitk.BinaryImageToLabelMapFilter()
+	# labelImage = BinaryToLabelFilter.Execute(labelImage)
+
+	overlayFilter = sitk.LabelOverlayImageFilter() 
+	# print(labelImage)
+
+	sitkImage = sitk.Cast(sitkImage, sitk.sitkUInt16)
+	labelImage = sitk.Cast(labelImage, sitk.sitkUInt16)
+	# labelImage.CopyInformation(sitkImage)
+
+	ndaLabel = sitk.GetArrayFromImage(labelImage)
+	ndaLabel = np.asarray(ndaLabel)
+	ndaLabel = ndaLabel*700
+
+	ndaImage = sitk.GetArrayFromImage(sitkImage)
+	ndaImage = np.asarray(ndaImage)
+
+	ndaOverlay = ndaLabel + ndaImage
+
+	overlaidImg = sitk.Cast(sitk.GetImageFromArray(ndaOverlay), labelImage.GetPixelID())
+
+
+	# overlaidImg = sitk.LabelOverlay(sitkImage, labelImage)
+
+	# overlaidImg = overlayFilter.Execute(sitkImage, labelImage, opacity, backgroundValue)
+
+	# overlaidImg = sitk.Cast(overlaidImg, sitk.sitkUInt8)
+
+	# addFilter = sitk.AddImageFilter()
+
+	# overlaidImg = addFilter.Execute(sitkImage, labelImage)
+
+	return overlaidImg
+
+
 def loadSeedPoints(filename):
 	"""
 	Function to load fiducial markers (seed points) saved in a .csv file
