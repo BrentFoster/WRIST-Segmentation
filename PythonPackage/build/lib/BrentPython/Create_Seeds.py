@@ -18,7 +18,7 @@ def New_Seeds(GT_Filename, num_seeds=1, label=1, kernelRadius=2):
 	for i in range(0, num_seeds):
 		try:
 			# Choose some random location out of the index fround above (ndx) 
-			rand_ndx = np.random.random_integers(len(ndx[0]))
+			rand_ndx  = np.random.random_integers(len(ndx[0]))
 			new_point = np.asarray([ndx[2][rand_ndx],  ndx[1][rand_ndx], ndx[0][rand_ndx]])
 			seedPoints.append(new_point)
 		except:

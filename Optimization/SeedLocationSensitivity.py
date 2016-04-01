@@ -2,12 +2,16 @@ import SimpleITK as sitk
 import timeit
 import numpy as np
 
+import copy
+
+
 # Import modules from the BrentPython Python package 
 import BrentPython
 from BrentPython import *
 from BrentPython import BrentFiltering
 from BrentPython import Create_Seeds
 from BrentPython import Dice
+from BrentPython import SpectralClutering
 
 def GetImagePaths():
 	# Brent's MacBook image paths
@@ -72,7 +76,8 @@ def saveLog(filename, logData):
 		print("Failed writing log data to .txt file")
  
 def SaveSlice(MRI, segmentedImg, seedPoint, filename):
-	
+	''' Save a screenshot of the slice where the seed is from with the segmentation overlaid '''
+
 	overlaidImg = BrentPython.OverlayImages(sitkImage=MRI, labelImage=segmentedImg, opacity=0.2, backgroundValue=0)
 
 	ndaImg = sitk.GetArrayFromImage(overlaidImg)
@@ -86,11 +91,7 @@ def SaveSlice(MRI, segmentedImg, seedPoint, filename):
 	# Convert back to a SimpleITK image type
 	sitkSlice = sitk.Cast(sitk.GetImageFromArray(ndaImg), overlaidImg.GetPixelID())
 
-	# overlaidImg = sitk.Cast(overlaidImg, sitk.sitkUInt8)
-
 	BrentPython.SaveSegmentation(sitkSlice, filename, verbose = True)	
-
-	# BrentPython.SaveSegmentation(segmentedImg, 'segmentedImg.nii', verbose = True)	
 
 	return 0
 
@@ -134,9 +135,51 @@ def load_MRI(MRI_Filename, apply_filtering=False):
 
 	return MRI
 
-def main(MRI_Filename, GT_Filename, label, num_seeds=5, kernelRadius=1, MRI_num=1):
+def RunSpectralClustering(sitkImage, seedPoint, refImage):
+	ClusterFilter = SpectralClutering()
+	ClusterFilter.AddSeedLocation(seedPoint)
+	ClusterFilter.SetScaling([2,2,2])
 
-	DiceList = []
+	start_time = timeit.default_timer()
+	labelimg = ClusterFilter.Execute(sitkImage)
+	labelimg.CopyInformation(sitkImage)
+
+	BrentPython.SaveSegmentation(labelimg, 'ScreenShots\labelimg.nii', verbose = True)	
+
+	# Determine how long the algorithm took to run
+	elapsed = timeit.default_timer() - start_time
+
+	print('elapsed time:'),
+	print(elapsed)
+
+	labelimg.CopyInformation(refImage)
+	labelimg = sitk.Cast(labelimg, refImage.GetPixelID())
+
+	return labelimg
+
+def output_measures(GroundTruth, segmentedImg, seedPoint, label, MRI_Filename):
+	''' Create output measures by comparing the segmentation with ground truth '''
+	overlapFitler = sitk.LabelOverlapMeasuresImageFilter()
+	overlapFitler.Execute(GroundTruth, segmentedImg)
+	dice_value = overlapFitler.GetDiceCoefficient()
+	dice_value = round(dice_value, 4)
+	# print(overlapFitler)
+
+	print('Dice = ' + str(dice_value) + 'for location ' + str(seedPoint))
+
+	# Determine how long the algorithm took to run
+	elapsed = timeit.default_timer() - start_time
+
+	# Save the log data to a text file
+	logData = str(dice_value) + ',' + str(label) + ',' + str(elapsed) + ',' + \
+	str(seedPoint) + ',' + MRI_Filename 
+
+	filename = 'SeedSensitivityLog.txt'
+	saveLog(filename, logData)
+
+	return dice_value
+
+def main(MRI_Filename, GT_Filename, label, num_seeds=5, kernelRadius=1, MRI_num=1):
 
 	# Load MRI and cast to 16 bit
 	MRI = load_MRI(MRI_Filename)
@@ -144,14 +187,20 @@ def main(MRI_Filename, GT_Filename, label, num_seeds=5, kernelRadius=1, MRI_num=
 	# Load the ground truth (manual segmented) image
 	GroundTruth = load_GT(GT_Filename, label)
 
+	# Create a random seed
 	seedPoints = Create_Seeds.New_Seeds(GT_Filename, num_seeds, label, kernelRadius)
+	# seedPoints = []
+	# new_point = np.array([214, 656, 80], dtype=int)
+	# seedPoints.append(new_point)
 
+	# Set the parameters for the segmentation class object
 	segmentationClass = BoneSegmentation.BoneSeg()
 	segmentationClass.SetScalingFactor(1)
-	segmentationClass.SetLevelSetUpperThreshold(120)
-	segmentationClass.SetShapeMaxRMSError(0.003)
-	segmentationClass.SetShapeMaxIterations(2500)
-	DiceCalulator = Dice.DiceCalulator()
+	segmentationClass.SetLevelSetUpperThreshold(120) # 200?
+	segmentationClass.SetShapeMaxRMSError(0.005)
+	segmentationClass.SetShapeMaxIterations(1000)
+	segmentationClass.SetShapePropagationScale(4)
+	segmentationClass.SetShapeCurvatureScale(1)
 
 	for i in range(0, len(seedPoints)): 
 		
@@ -159,35 +208,28 @@ def main(MRI_Filename, GT_Filename, label, num_seeds=5, kernelRadius=1, MRI_num=
 
 		# Run segmentation with a randomly selected seed
 		segmentedImg = segmentationClass.Execute(MRI, [seedPoints[i]], True)
+		segmentedImg.CopyInformation(GroundTruth)
+		segmentedImg = sitk.Cast(segmentedImg, GroundTruth.GetPixelID())
 
-		# segmentedImg = GroundTruth 
+		print(GroundTruth.GetSize())
+		print(segmentedImg.GetSize())
 
-		# Compute dice overlap between segmentation and ground truth
-		DiceCalulator.SetImages(GroundTruth, segmentedImg)
-		print(DiceCalulator.Calculate())
-		dice_value = round(DiceCalulator.Calculate(), 4)
+		dice_value = output_measures(GroundTruth, segmentedImg, seedPoints[i], label, MRI_Filename)
+		
+		# Save a screenshot to understand any errors
+		slice_filename =  'ScreenShots\Volunteer_' + str(MRI_num) + '_label_' + str(label) + '_slice_' + str(seedPoints[i][2]) + '_dice_' + str(dice_value) + '.nii'
+		SaveSlice(MRI=MRI, segmentedImg=segmentedImg,  seedPoint=seedPoints[i], filename=slice_filename)
 
-		print('Dice = ' + str(dice_value) + 'for location ' + str(seedPoints[i]))
+		# if dice_value < 0.5:
+		# 	''' Run the spectral clustering on the segmentation to remove leakage '''
+		# 	segmentedImg = RunSpectralClustering(segmentedImg, copy.copy(seedPoints[i]), GroundTruth)
+		# 	segmentedImg.CopyInformation(GroundTruth)
+		# 	segmentedImg = sitk.Cast(segmentedImg, GroundTruth.GetPixelID())
 
-		DiceList.append(dice_value)
+		# 	dice_value = output_measures(GroundTruth, segmentedImg, seedPoints[i], label, MRI_Filename)
 
-		# Determine how long the algorithm took to run
-		elapsed = timeit.default_timer() - start_time
-
-		# Save the log data to a text file
-		logData = str(dice_value) + ',' + str(label) + ',' + str(elapsed) + ',' + \
-		str(seedPoints[i]) + ',' + MRI_Filename 
-
-		filename = 'SeedSensitivityLog.txt'
-		saveLog(filename, logData)
-
-		# Save a screenshot if the dice coefficient is low to understand the low accuracy
-		if dice_value < 2:
-
-			slice_filename =  'ScreenShots\Volunteer_' + str(MRI_num) + '_label_' + str(label) + '_slice_' + str(seedPoints[i][2]) + '_dice_' + str(dice_value) + '.nii'
-
-			SaveSlice(MRI=MRI, segmentedImg=segmentedImg,  seedPoint=seedPoints[i], filename=slice_filename)
-			print('Slice saved')
+		# 	slice_filename =  'ScreenShots\Volunteer_' + str(MRI_num) + '_label_' + str(label) + '_slice_' + str(seedPoints[i][2]) + '_dice_' + str(dice_value) + '_SC.nii'
+		# 	SaveSlice(MRI=MRI, segmentedImg=segmentedImg,  seedPoint=seedPoints[i], filename=slice_filename)
 
 	return 0
 	
@@ -209,34 +251,27 @@ if __name__ == '__main__':
 	[MRI_Filenames, GT_Filenames] = GetImagePaths()
 
 	for i in range(0, len(MRI_Filenames)):
-		for label in range(1,10):
+		for label in range(2,10):
 			print('i = ' + str(i) + ' label = ' + str(label))
 			MRI_Filename = MRI_Filenames[i]
 			GT_Filename = GT_Filenames[i]
 
-			# try:
-			
-			main(MRI_Filename, GT_Filename, label, num_seeds=1, kernelRadius=5, MRI_num=i)	
-			# except:
-				# print('ERROR IN MAIN!!')
+			try:			
+				main(MRI_Filename, GT_Filename, label, num_seeds=30, kernelRadius=5, MRI_num=i+1)	
+			except:
+				print('ERROR IN MAIN!!')
 
 	# Determine how long the algorithm took to run
 	elapsed = timeit.default_timer() - start_time
 	
 	print(Fore.BLUE + "Elapsed Time (secs):" + str(round(elapsed,3)))
 
-
-
-
-
-
-
-
 def old_garbage():
-	'Old code that is potentiall useful for later'
+	'Old code that is potentially useful for later'
 	# num_seeds = 10 corresponds to ~3 hours
 	# kernelRadius = 5 seems to be a good amount
 
+	# segmentedImg = sitk.Cast(segmentedImg, GroundTruth.GetPixelID())
 
 	# # DEBUG
 	# BrentPython.SaveSegmentation(GroundTruth, 'GroundTruth.nii', verbose = True)
