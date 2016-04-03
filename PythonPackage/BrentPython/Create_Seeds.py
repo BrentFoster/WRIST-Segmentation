@@ -24,7 +24,6 @@ def New_Seeds(GT_Filename, num_seeds=1, label=1, kernelRadius=2):
 		except:
 			print('Error in creating random seed point. len(ndx[0]) = ' + str(len(ndx[0])))
 
-	print seedPoints
 	return seedPoints
 
 if __name__ == '__main__':

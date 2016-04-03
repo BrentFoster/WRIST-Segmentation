@@ -222,9 +222,13 @@ class BoneSeg(object):
         # self.segImg = self.erodeFilter.Execute(self.segImg, 0, 1, False)
 
         if self.verbose == True:
+            print('\033[93m' + "Filling Segmentation Holes...")
+        self.HoleFilling()
+
+        if self.verbose == True:
             print('\033[96m' + "Finished with seed point "),
             print(self.seedPoint)
-        
+
         return  self.segImg 
 
     def FlipImage(self,image):
@@ -319,7 +323,8 @@ class BoneSeg(object):
         self.segImg = sitk.Cast(sitk.GetImageFromArray(npshapeBinary), self.image.GetPixelID())
         self.segImg.CopyInformation(self.image)
 
-        print(self.shapeDetectionFilter)
+        if self.verbose == True:
+            print(self.shapeDetectionFilter)
     
     def SigmoidLevelSet(self):
         ''' Pre-processing '''
@@ -376,7 +381,8 @@ class BoneSeg(object):
 
         processedImage = sitk.Cast(processedImage, sitk.sitkFloat32)
 
-        print('Starting ShapeDetectionLevelSetImageFilter')
+        if self.verbose == True:
+            print('Starting ShapeDetectionLevelSetImageFilter')
         
         start_time = timeit.default_timer()
 
@@ -384,11 +390,12 @@ class BoneSeg(object):
 
         elapsed = timeit.default_timer() - start_time
 
-        print("Elapsed Time (secs):" + str(round(elapsed,3)))
+        if self.verbose == True:
+            print("Elapsed Time (secs):" + str(round(elapsed,3)))
 
-        print('Done with ShapeDetectionLevelSetImageFilter!')
+            print('Done with ShapeDetectionLevelSetImageFilter!')
 
-        print(self.shapeDetectionFilter)
+            print(self.shapeDetectionFilter)
         
 
         return self
@@ -421,15 +428,20 @@ class BoneSeg(object):
         processedImage = sitk.Cast(sitk.GetImageFromArray(nda), self.image.GetPixelID())
         processedImage.CopyInformation(self.image)
 
+        if self.verbose == True:
+            BrentPython.SaveSegmentation(processedImage, 'ScreenShots\processedImage.nii', verbose = True)
+        else:
+            BrentPython.SaveSegmentation(processedImage, 'ScreenShots\processedImage.nii', verbose = False)
+ 
 
-        BrentPython.SaveSegmentation(processedImage, 'ScreenShots\processedImage.nii', verbose = True)
-     
         elapsed = timeit.default_timer() - start_time
-        print("Elapsed Time (processedImage):" + str(round(elapsed,3)))
+        if self.verbose == True:
+            print("Elapsed Time (processedImage):" + str(round(elapsed,3)))
 
 
         ''' Create Seed Image '''
-        print('Starting ShapeDetectionLevelSetImageFilter')
+        if self.verbose == True:
+            print('Starting ShapeDetectionLevelSetImageFilter')
         start_time = timeit.default_timer() 
 
         ###Create the seed image###
@@ -456,13 +468,11 @@ class BoneSeg(object):
 
         processedImage = sitk.Cast(processedImage, sitk.sitkFloat32)
 
-        
-
-        iter_step     = 1000
+        iter_step     = self.shapeDetectionFilter.GetNumberOfIterations()
         iter_step_num = 1
         previous_iter = 0
         self.shapeDetectionFilter.SetNumberOfIterations(iter_step)
-
+        
         for i in range(0, iter_step_num):                      
             
             if i == 0:
@@ -476,16 +486,21 @@ class BoneSeg(object):
             self.segImg = self.AddImages(self.segImg, temp_seg, self.shapeDetectionFilter.GetElapsedIterations() + previous_iter)
 
             elapsed = timeit.default_timer() - start_time
-            print("Elapsed Time (level set):" + str(round(elapsed,3)) + 'for iteration ' + str(i*iter_step))
+            if self.verbose == True:
+                print("Elapsed Time (level set):" + str(round(elapsed,3)) + 'for iteration ' + str(i*iter_step))
 
             previous_iter = self.shapeDetectionFilter.GetElapsedIterations()
 
+        if self.verbose == True:
+            BrentPython.SaveSegmentation(self.segImg, 'ScreenShots\segImg.nii', verbose = True)
+        else:
+            BrentPython.SaveSegmentation(self.segImg, 'ScreenShots\segImg.nii', verbose = False)
 
-        BrentPython.SaveSegmentation(self.segImg, 'ScreenShots\segImg.nii', verbose = True)
-        
-        print('Done with ShapeDetectionLevelSetImageFilter!')
 
-        print(self.shapeDetectionFilter)
+        if self.verbose == True:
+            print('Done with ShapeDetectionLevelSetImageFilter!')
+
+            print(self.shapeDetectionFilter)
 
         self.segImg = self.SegToBinary(self.segImg)
         
