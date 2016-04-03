@@ -190,17 +190,32 @@ def main(MRI_Filename, GT_Filename, label, num_seeds=5, kernelRadius=1, MRI_num=
 	# Create a random seed
 	seedPoints = Create_Seeds.New_Seeds(GT_Filename, num_seeds, label, kernelRadius)
 	# seedPoints = []
-	# new_point = np.array([214, 656, 80], dtype=int)
+	# new_point = np.array([355, 633, 147], dtype=int)
 	# seedPoints.append(new_point)
 
 	# Set the parameters for the segmentation class object
 	segmentationClass = BoneSegmentation.BoneSeg()
 	segmentationClass.SetScalingFactor(1)
-	segmentationClass.SetLevelSetUpperThreshold(120) # 200?
-	segmentationClass.SetShapeMaxRMSError(0.005)
+	segmentationClass.SetLevelSetUpperThreshold(120) # 90, 200?
+	segmentationClass.SetShapeMaxRMSError(0.004) # 0.002, 0.004
 	segmentationClass.SetShapeMaxIterations(1000)
 	segmentationClass.SetShapePropagationScale(4)
 	segmentationClass.SetShapeCurvatureScale(1)
+
+	if MRI_num == 1:
+		segmentationClass.SetLevelSetUpperThreshold(120) # 90, 200?
+		segmentationClass.SetShapeMaxRMSError(0.004)
+	elif MRI_num == 2:
+		segmentationClass.SetLevelSetUpperThreshold(90) # 90, 200?
+		segmentationClass.SetShapeMaxRMSError(0.002)
+	elif MRI_num == 3:
+		segmentationClass.SetLevelSetUpperThreshold(200) # 90, 200?
+		segmentationClass.SetShapeMaxRMSError(0.004)
+	elif MRI_num == 4:
+		segmentationClass.SetLevelSetUpperThreshold(160) # 90, 200?
+		segmentationClass.SetShapeMaxRMSError(0.004)
+
+
 
 	for i in range(0, len(seedPoints)): 
 		
@@ -250,14 +265,14 @@ if __name__ == '__main__':
 	
 	[MRI_Filenames, GT_Filenames] = GetImagePaths()
 
-	for i in range(0, len(MRI_Filenames)):
-		for label in range(2,10):
+	for i in [3]: #range(0, len(MRI_Filenames)):
+		for label in range(1,10):
 			print('i = ' + str(i) + ' label = ' + str(label))
 			MRI_Filename = MRI_Filenames[i]
 			GT_Filename = GT_Filenames[i]
 
 			try:			
-				main(MRI_Filename, GT_Filename, label, num_seeds=30, kernelRadius=5, MRI_num=i+1)	
+				main(MRI_Filename, GT_Filename, label, num_seeds=30, kernelRadius=10, MRI_num=i+1)	
 			except:
 				print('ERROR IN MAIN!!')
 
