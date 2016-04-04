@@ -54,7 +54,6 @@ def GetRandomSeeds(GT_Filename, num_seeds, kernelRadius, label):
 	GroundTruth = erodeFilter.Execute(GroundTruth, 0, label, False) 
 
 	sitk.Show(GroundTruth, 'GroundTruth')
-	a
 
 	# Find all the locations within the ground truth bone with an intensity of 1 (current label)
 	ndaGT = sitk.GetArrayFromImage(GroundTruth)

@@ -10,9 +10,6 @@ import EditorLib
 import SimpleITK as sitk
 import sitkUtils
 import numpy as np
-import multiprocessing
-import timeit
-
 
 #
 # BoneSegmentation
@@ -206,24 +203,6 @@ class BoneSegmentation_SlicerWidget:
         self.ShapePropagationScale = self.ShapePropagationScaleInputSlider.value
 
         #
-        # Maximum number of CPUs slider
-        # 
-        self.label = qt.QLabel()
-        self.label.setText("Number of CPUs To Use: ")
-        self.label.setToolTip(
-            "Select the maximum number of logical cores to use for parallel processing to speed up computation. Note: More RAM is needed for higher cores used")
-        self.NumCPUInputSlider = ctk.ctkSliderWidget()
-        num_CPUs = multiprocessing.cpu_count()
-        self.NumCPUInputSlider.minimum = 1
-        self.NumCPUInputSlider.maximum = num_CPUs
-        self.NumCPUInputSlider.value = num_CPUs
-        self.NumCPUInputSlider.connect('valueChanged(double)', self.onNumCPUChange)
-        frameLayout.addRow(self.label, self.NumCPUInputSlider)
-        #Set default value
-        self.NumCPUs = self.NumCPUInputSlider.value
-
-
-        #
         # Image Downsample Scale
         # 
         self.label = qt.QLabel()
@@ -239,12 +218,7 @@ class BoneSegmentation_SlicerWidget:
         #Set default value
         self.NumScaling = self.NumScalingSlider.value
 
-
-
-
-
-
-        
+       
         #
         # Compute button
         #
@@ -254,20 +228,6 @@ class BoneSegmentation_SlicerWidget:
         self.UpdatecomputeButtonState()
         self.computeButton.connect('clicked()', self.onCompute)
 
-        # #
-        # # Output Volume Label
-        # #
-        # self.outputVolumeSelectorLabel = qt.QLabel()
-        # self.outputVolumeSelectorLabel.setText("Output Volume: ")
-        # self.outputVolumeSelectorLabel.setToolTip(
-        #     "Select the output volume to save the segmentation to")
-        # self.outputSelector = slicer.qMRMLNodeComboBox()
-        # self.outputSelector.nodeTypes = ("vtkMRMLScalarVolumeNode", "")
-        # self.outputSelector.noneEnabled = True
-        # self.outputSelector.selectNodeUponCreation = True
-        # self.outputSelector.setMRMLScene(slicer.mrmlScene)
-        # frameLayout.addRow(self.outputVolumeSelectorLabel, self.outputSelector)
-        
     def onNumScalingSliderChange(self, newValue):
         self.NumScaling = newValue
 
@@ -316,34 +276,34 @@ class BoneSegmentation_SlicerWidget:
     def onCompute(self):
         slicer.app.processEvents()
         # TODO: Consider adding a QProgressBar() if not too difficult
-        #Make a list of all the seed point locations
+        # Make a list of all the seed point locations
         fidList = self.markupSelector.currentNode()
         numFids = fidList.GetNumberOfFiducials()
         seedPoints = []
-        #Create a list of the fiducial markers from the 'Markup List' input
+        # Create a list of the fiducial markers from the 'Markup List' input
         for i in range(numFids):
             ras = [0,0,0]
             fidList.GetNthFiducialPosition(i,ras)
             seedPoints.append(ras)
         print(fidList)
 
-        #Find the input image in Slicer and convert to a SimpleITK image type
+        # Find the input image in Slicer and convert to a SimpleITK image type
         imageID = self.inputSelector.currentNode()
         image = sitkUtils.PullFromSlicer(imageID.GetName())
 
-        #Slicer has the fiducial markers in physical coordinate space, but need to have the points in voxel space
-        #Convert using a SimpleITk function   
+        # Slicer has the fiducial markers in physical coordinate space, but need to have the points in voxel space
+        # Convert using a SimpleITk function   
         for i in range(numFids):
             seedPoints[i] = image.TransformPhysicalPointToContinuousIndex(seedPoints[i])
 
-        #Initilize the two classes that are defined at the bottom of this file
+        # Initilize the two classes that are defined at the bottom of this file
         segmentationClass = BoneSeg()
         multiHelper = Multiprocessor()
         #Parameters = [LevelSet Thresholds, LevelSet Iterations, Level Set Error, Shape Level Set Curvature, Shape Level Set Max Error, Shape Level Set Max Its, Shape LS Propagation Scale]
         # parameters = [self.LevelSetThresholds, self.MaxIts, self.MaxRMSError,self.ShapeCurvatureScale, self.ShapeMaxRMSError, self.ShapeMaxIts, self.ShapePropagationScale] #From the sliders above
         parameters = [self.LevelSetThresholds, self.ShapeCurvatureScale, self.ShapeMaxRMSError, self.ShapeMaxIts, self.ShapePropagationScale, self.NumScaling] #From the sliders above
        
-        NumCPUs = self.NumCPUs
+        NumCPUs = 1
         Segmentation = multiHelper.Execute(segmentationClass, seedPoints, image, parameters, NumCPUs, True)
         print(Segmentation)
 
@@ -396,7 +356,7 @@ class Multiprocessor(object):
 
             segmentationLabel = segmentationLabel + tempOutput
 
-        #Convert segmentationArray back into an image
+        # Convert segmentationArray back into an image
         # segmentationLabel = sitk.Cast(sitk.GetImageFromArray(self.segmentationArray), self.MRI_Image.GetPixelID())
         # segmentationLabel.CopyInformation(self.MRI_Image)
         # segmentationLabel = self.segmentationArray
@@ -597,8 +557,6 @@ class BoneSeg(object):
 
         self.image = image
         self.seedPoint = seedPoint
-
-        # self.image = self.FlipImage(self.image) #Flip the MRI
 
         #Convert images to float 32 first
         self.image = sitk.Cast(self.image, sitk.sitkFloat32)
@@ -960,179 +918,3 @@ class BoneSeg(object):
 
         return self
 #############################################################################################
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    # def updateEnableState(self):
-    #     enabled = bool(self.logic.inputVolumeNode) and bool(
-    #         self.logic.labelNode)
-    #     self.applyButton.enabled = enabled
-    #     self.autoApplyButton.enabled = enabled
-    #     if not enabled:
-    #         self.outputVolumeSelectorLabel.text = ""
-
-    # def updateLabelText(self):
-    #     if self.logic.outputVolumeNode:
-    #         self.outputVolumeSelectorLabel.text = self.logic.outputVolumeNode.GetName()
-    #     else:
-    #         self.outputVolumeSelectorLabel.text = ""
-
-    # def onApply(self):
-    #     """Calculate the mask volume
-    #     """
-    #     if self.logic.apply():
-    #         self.updateLabelText()
-
-    # def onAutoApply(self, state):
-    #     """Calculate the mask volume"""
-    #     if state:
-    #         if self.logic.apply():
-    #             self.logic.autoApply()
-    #             self.updateLabelText()
-    #         else:
-    #             self.logic.removeObservers()
-
-# class Slicelet(object):
-#     """A slicer slicelet is a module widget that comes up in stand alone mode
-#   implemented as a python class.
-#   This class provides common wrapper functionality used by all slicer modlets.
-#   """
-#     # TODO: put this in a SliceletLib
-#     # TODO: parse command line arge
-
-#     def __init__(self, widgetClass=None):
-#         self.parent = qt.QFrame()
-#         self.parent.setLayout(qt.QVBoxLayout())
-
-#         # TODO: should have way to pop up python interactor
-#         self.buttons = qt.QFrame()
-#         self.buttons.setLayout(qt.QHBoxLayout())
-#         self.addDataButton = qt.QPushButton("Add Data")
-#         self.buttons.layout().addWidget(self.addDataButton)
-#         self.addDataButton.connect(
-#             "clicked()", slicer.app.ioManager().openAddDataDialog)
-#         self.saveDataButton = qt.QPushButton("Save Data")
-#         self.buttons.layout().addWidget(self.saveDataButton)
-#         self.saveDataButton.connect(
-#             "clicked()", slicer.app.ioManager().openSaveDataDialog)
-
-
-
-
-
-
-#         self.parent.layout().addWidget(self.buttons)
-
-#         #Add a second column of buttons
-#         self.buttonsColTwo = qt.QFrame()
-#         self.buttonsColTwo.setLayout(qt.QHBoxLayout())
-#         self.parent.layout().addWidget(self.buttonsColTwo)
-#         #
-#         # Add fiducial marker button
-#         #
-#         self.addMarkerButton = qt.QPushButton("Add Marker")
-#         self.addMarkerButton.toolTip = "Compute information for the selected markup"
-#         self.buttonsColTwo.layout().addWidget(self.addMarkerButton)
-#         self.addMarkerButton.connect(
-#             'clicked()', self.enableOrDisableFiducialeButton)
-
-#         #
-#         # Delete fiducial marker button
-#         #
-#         self.deleteMarkerButton = qt.QPushButton("Delete Markers")
-#         self.deleteMarkerButton.toolTip = "Remove all the current fiducial markers."
-#         self.buttonsColTwo.layout().addWidget(self.deleteMarkerButton)
-#         self.addMarkerButton.connect(
-#             'clicked()', self.deleteFiducialsButton)
-
-
-
-
-#         self.printMarkersButton = qt.QPushButton("Print Markers")
-#         self.printMarkersButton.toolTip = "Compute information for the selected markup"
-#         self.buttonsColTwo.layout().addWidget(self.printMarkersButton)
-#         self.printMarkersButton.connect(
-#             'clicked()', self.printMarkers)
-
-
-
-#         #
-#         # Add A 2D View of the Input Image
-#         #
-
-#         # layoutManager = slicer.qMRMLLayoutWidget()
-#         # layoutManager.setMRMLScene(slicer.mrmlScene)
-        
-#         # self.viewSlice = qt.QFrame()
-#         # self.viewSlice.setLayout()
-#         layoutManager = slicer.qMRMLLayoutWidget()
-#         layoutManager.setMRMLScene(slicer.mrmlScene)
-#         layoutManager.setLayout(slicer.vtkMRMLLayoutNode.SlicerLayoutOneUpRedSliceView)
-#         self.parent.layout().addWidget(layoutManager)
-
-
-
-#         if widgetClass:
-#             self.widget = widgetClass(self.parent)
-#             self.widget.setup()
-#         self.parent.show()
-
-
-# class BoneSegmentationSlicelet(Slicelet):
-#     """ Creates the interface when module is run as a stand alone gui app.
-#   """
-
-#     def __init__(self):
-#         super(BoneSegmentationSlicelet, self).__init__(BoneSegmentationWidget)
-
-#     def enableOrDisableFiducialeButton(self):
-#         placeModePersistence = 1
-#         # slicer.modules.markups.logic().AddFiducial(1.0, -2.0, 3.3)
-#         slicer.modules.markups.logic().StartPlaceMode(placeModePersistence)
-#         #Change the seed points color
-#         slicer.modules.markups.logic().SetDefaultMarkupsDisplayNodeSelectedColor(0, 255, 0)
-
-
-#     def deleteFiducialsButton(self):
-#         fidList = getNode("vtkMRMLMarkupsFiducialNode1")
-#         fidList.RemoveAllMarkups()
-#         placeModePersistence = 0
-#         slicer.modules.markups.logic().StartPlaceMode(placeModePersistence)
-#         print("Removed all markeup points")
-
-
-#     def printMarkers(self):
-
-#         fidList = getNode("vtkMRMLMarkupsFiducialNode1")
-
-#         numFids = fidList.GetNumberOfFiducials()
-#         for i in range(numFids):
-#             ras = [0,0,0]
-
-#             fidList.GetNthFiducialPosition(i,ras)
-#             print i,": RAS =",ras
-#             ras = [0,0,0,0]
-#             fidList.GetNthFiducialWorldCoordinates(i,ras)
-#             print i,": RAS =",ras       

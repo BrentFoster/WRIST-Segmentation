@@ -406,12 +406,14 @@ class BoneSeg(object):
        
         processedImage  = sitk.Cast(processedImage, sitk.sitkUInt16)
 
-        # sitk.Show(processedImage, 'processedImage - no median')
+        sitk.Show(processedImage, 'processedImage - no median')
 
         processedImage = medianFilter.Execute(processedImage)
 
-        # sitk.Show(processedImage, 'processedImage - filtered')
+        sitk.Show(processedImage, 'processedImage - filtered')
 
+        a
+        
         edgePotentialFilter = sitk.EdgePotentialImageFilter()
         gradientFilter = sitk.GradientImageFilter()
 

@@ -8,3 +8,6 @@
 
 # Ignore any .nii files
 *.nii
+
+# Ignore any transformation files
+*.h5
