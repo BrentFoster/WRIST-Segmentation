@@ -37,18 +37,28 @@ def GetImagePaths():
 
 	# Anisotropic and Bias corrected image paths (using 3D Slicer)
 
+	MRI_Filenames = [\
+	'E:/Google Drive/Research/MRI Wrist Images/CMC OA/Filtered Images/Volunteer1_VIBE_we_filtered.nii', \
+	'E:/Google Drive/Research/MRI Wrist Images/CMC OA/Filtered Images/Volunteer2_VIBE_we_filtered.nii', \
+	'E:/Google Drive/Research/MRI Wrist Images/CMC OA/Filtered Images/Volunteer3_VIBE_we_filtered.nii', \
+	'E:/Google Drive/Research/MRI Wrist Images/CMC OA/Filtered Images/Volunteer4_VIBE_we_filtered.nii']
+
+
 	# MRI_Filenames = [\
 	# 'E:/Google Drive/Research/MRI Wrist Images/CMC OA/Filtered Images/Volunteer1_VIBE_we_filtered.nii', \
 	# 'E:/Google Drive/Research/MRI Wrist Images/CMC OA/Filtered Images/Volunteer2_VIBE_we_filtered.nii', \
 	# 'E:/Google Drive/Research/MRI Wrist Images/CMC OA/Filtered Images/Volunteer3_VIBE_we_filtered.nii', \
 	# 'E:/Google Drive/Research/MRI Wrist Images/CMC OA/Filtered Images/Volunteer4_VIBE_we_filtered.nii']
 
-	# # Ground truth image paths (manually created using 3D Slicer)
-	# GT_Filenames = [\
-	# 'E:/Google Drive/Research/MRI Wrist Images/CMC OA/VIBE Ground Truth/Volunteer1_GroundTruth.hdr',\
-	# 'E:/Google Drive/Research/MRI Wrist Images/CMC OA/VIBE Ground Truth/Volunteer2_GroundTruth.hdr',\
-	# 'E:/Google Drive/Research/MRI Wrist Images/CMC OA/VIBE Ground Truth/Volunteer3_GroundTruth.hdr',\
-	# 'E:/Google Drive/Research/MRI Wrist Images/CMC OA/VIBE Ground Truth/Volunteer4_GroundTruth.hdr']
+
+
+	# Ground truth image paths (manually created using 3D Slicer)
+	GT_Filenames = [\
+	'E:/Google Drive/Research/MRI Wrist Images/CMC OA/VIBE Ground Truth/Volunteer1_GroundTruth.hdr',\
+	'E:/Google Drive/Research/MRI Wrist Images/CMC OA/VIBE Ground Truth/Volunteer2_GroundTruth.hdr',\
+	'E:/Google Drive/Research/MRI Wrist Images/CMC OA/VIBE Ground Truth/Volunteer3_GroundTruth.hdr',\
+	'E:/Google Drive/Research/MRI Wrist Images/CMC OA/VIBE Ground Truth/Volunteer4_GroundTruth.hdr']
+
 
 	# # Thumb maneuver study (Window paths)
 	# MRI_Filenames = [\
@@ -66,6 +76,8 @@ def GetImagePaths():
 	# 'E:\Google Drive\Research\Projects\Thumb Maneuvers\Segmentations\Volunteer 4\Neutral\Volunteer4_Neutral.nii',\
 	# 'E:\Google Drive\Research\Projects\Thumb Maneuvers\Segmentations\Volunteer 5\Radial Abduction\Volunteer5_Position3.nii',\
 	# ]
+
+
 	return MRI_Filenames, GT_Filenames
 
 def loadSeedPoints(filename):
@@ -209,12 +221,14 @@ def EstimateSigmoid(image):
 
 	# Using a linear model (fitted in Matlab and manually selected sigmoid threshold values)
 
-	UpperThreshold = 0.899*(std+mean) - 41.3
+	#UpperThreshold = 0.899*(std+mean) - 41.3
 
-	# print('Mean: ' + str(round(mean,2)))
-	# print('STD: ' + str(round(std,2)))
-	# print('UpperThreshold: ' + str(round(UpperThreshold,2)))
-	# print(' ')
+	UpperThreshold = 0.002575*(std+mean)*(std+mean) - 0.028942*(std+mean) + 36.791614
+
+	print('Mean: ' + str(round(mean,2)))
+	print('STD: ' + str(round(std,2)))
+	print('UpperThreshold: ' + str(round(UpperThreshold,2)))
+	print(' ')
 
 	return UpperThreshold
 
@@ -241,20 +255,20 @@ def main(MRI_Filename, GT_Filename, label, num_seeds=5, kernelRadius=1, MRI_num=
 	segmentationClass.SetLevelSetUpperThreshold(80)
 	segmentationClass.SetShapeMaxRMSError(0.002) #0.004
 	segmentationClass.SetShapeMaxIterations(600)
-	segmentationClass.SetShapePropagationScale(2) #2, 4
+	segmentationClass.SetShapePropagationScale(4) #2, 4
 	segmentationClass.SetShapeCurvatureScale(1)
 
 
 	# Estimate the threshold level by image intensity statistics
 	UpperThreshold = EstimateSigmoid(MRI)
-	#segmentationClass.SetLevelSetUpperThreshold(UpperThreshold)
+	segmentationClass.SetLevelSetUpperThreshold(UpperThreshold)
 
 	for i in range(0, len(seedPoints)): 
 		
 		start_time = timeit.default_timer()
 
 		# Run segmentation with a randomly selected seed
-		segmentedImg = segmentationClass.Execute(MRI, [seedPoints[i]], False)
+		segmentedImg = segmentationClass.Execute(MRI, [seedPoints[i]], True)
 		segmentedImg.CopyInformation(GroundTruth)
 		segmentedImg = sitk.Cast(segmentedImg, GroundTruth.GetPixelID())
 
@@ -293,16 +307,19 @@ if __name__ == '__main__':
 	
 	[MRI_Filenames, GT_Filenames] = GetImagePaths()
 
-	for i in [0]: #range(0, len(MRI_Filenames)):
-		for label in [5]: #range(1,10):
+	for i in [2]:#range(0, len(MRI_Filenames)):
+		for label in [1]:#range(1,10):
+
 			#print('i = ' + str(i) + ' label = ' + str(label))
 			MRI_Filename = MRI_Filenames[i]
 			GT_Filename = GT_Filenames[i]
 
-			# try:			
-			main(MRI_Filename, GT_Filename, label, num_seeds=1, kernelRadius=3, MRI_num=i+1)	
-			# except:
-				# print('ERROR IN MAIN!!')
+
+			try:			
+				main(MRI_Filename, GT_Filename, label, num_seeds=1, kernelRadius=3, MRI_num=i+1)	
+			except:
+				print('ERROR IN MAIN!!')
+
 
 	# Determine how long the algorithm took to run
 	elapsed = timeit.default_timer() - start_time
