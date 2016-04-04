@@ -161,7 +161,7 @@ class BoneSeg(object):
 
         start_time = timeit.default_timer() 
 
-        self.verbose = verbose #Optional argument to output text to terminal
+        self.verbose = verbose # Optional argument to output text to terminal
 
         self.image = image
         self.seedPoint = seedPoint
@@ -184,12 +184,9 @@ class BoneSeg(object):
             elapsed = timeit.default_timer() - start_time
             print("Elapsed Time (Preprocessing ):" + str(round(elapsed,3)))
 
-
-
         # if self.verbose == True:
         #     print('\033[90m' + "Sigmoid shape detection level set...")
         # self.SigmoidLevelSet()
-
 
         if self.verbose == True:
             print('\033[90m' + "Sigmoid shape detection level set by iteration...")
@@ -199,7 +196,6 @@ class BoneSeg(object):
         if self.verbose == True:
             print('\033[90m' + "Scaling image back...")
         self.scaleUpImage()
-
         
         # if self.verbose == True:
         #     print('\033[90m' + "Simple threshold operation...")
@@ -403,14 +399,18 @@ class BoneSeg(object):
     def SigmoidLevelSetIterations(self):
         ''' Pre-processing '''
         start_time = timeit.default_timer() 
-        # medianFilter = sitk.BinaryMedianImageFilter()
-        # medianFilter.SetRadius([2,2,2])
+        medianFilter = sitk.BinaryMedianImageFilter()
+        medianFilter.SetRadius([2,2,2])
 
         processedImage = self.sigFilter.Execute(self.image) 
        
         processedImage  = sitk.Cast(processedImage, sitk.sitkUInt16)
 
-        # processedImage = medianFilter.Execute(processedImage)
+        # sitk.Show(processedImage, 'processedImage - no median')
+
+        processedImage = medianFilter.Execute(processedImage)
+
+        # sitk.Show(processedImage, 'processedImage - filtered')
 
         edgePotentialFilter = sitk.EdgePotentialImageFilter()
         gradientFilter = sitk.GradientImageFilter()

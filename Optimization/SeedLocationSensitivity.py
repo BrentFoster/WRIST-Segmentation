@@ -27,7 +27,6 @@ def GetImagePaths():
 	'/Users/Brent/Google Drive/Research/MRI Wrist Images/CMC OA/VIBE Ground Truth/Volunteer3_GroundTruth.hdr',\
 	'/Users/Brent/Google Drive/Research/MRI Wrist Images/CMC OA/VIBE Ground Truth/Volunteer4_GroundTruth.hdr']
 
-
 	# Brent's Lab PC image paths
 	# Original MRI image paths
 	# MRI_Filenames = [\
@@ -51,22 +50,22 @@ def GetImagePaths():
 	# 'E:/Google Drive/Research/MRI Wrist Images/CMC OA/VIBE Ground Truth/Volunteer3_GroundTruth.hdr',\
 	# 'E:/Google Drive/Research/MRI Wrist Images/CMC OA/VIBE Ground Truth/Volunteer4_GroundTruth.hdr']
 
-	# Thumb maneuver study (Window paths)
-	MRI_Filenames = [\
-	'E:\Google Drive\Research\MRI Wrist Images\Thumb Maneuvers\Filtered Images\Volunteer1_VIBE_Neutral_2.hdr', \
-	'E:\Google Drive\Research\MRI Wrist Images\Thumb Maneuvers\Filtered Images\Volunteer2_VIBE_Neutral.hdr', \
-	'E:\Google Drive\Research\MRI Wrist Images\Thumb Maneuvers\Filtered Images\Volunteer3_VIBE_Position3.hdr',\
-	'E:\Google Drive\Research\MRI Wrist Images\Thumb Maneuvers\Filtered Images\Volunteer4_VIBE_Neutral.hdr', \
-	'E:\Google Drive\Research\MRI Wrist Images\Thumb Maneuvers\Filtered Images\Volunteer5_VIBE_Position3.hdr',\
-	]
+	# # Thumb maneuver study (Window paths)
+	# MRI_Filenames = [\
+	# 'E:\Google Drive\Research\MRI Wrist Images\Thumb Maneuvers\Filtered Images\Volunteer1_VIBE_Neutral_2.hdr', \
+	# 'E:\Google Drive\Research\MRI Wrist Images\Thumb Maneuvers\Filtered Images\Volunteer2_VIBE_Neutral.hdr', \
+	# 'E:\Google Drive\Research\MRI Wrist Images\Thumb Maneuvers\Filtered Images\Volunteer3_VIBE_Position3.hdr',\
+	# 'E:\Google Drive\Research\MRI Wrist Images\Thumb Maneuvers\Filtered Images\Volunteer4_VIBE_Neutral.hdr', \
+	# 'E:\Google Drive\Research\MRI Wrist Images\Thumb Maneuvers\Filtered Images\Volunteer5_VIBE_Position3.hdr',\
+	# ]
 	
-	GT_Filenames = [\
-	'E:\Google Drive\Research\Projects\Thumb Maneuvers\Segmentations\Volunteer 1\Neutral\Volunteer1_Neutral.nii',\
-	'E:\Google Drive\Research\Projects\Thumb Maneuvers\Segmentations\Volunteer 2\Neutral\Volunteer2_Neutral.nii',\
-	'E:\Google Drive\Research\Projects\Thumb Maneuvers\Segmentations\Volunteer 3\Radial Abduction\Volunteer3_Position3.nii',\
-	'E:\Google Drive\Research\Projects\Thumb Maneuvers\Segmentations\Volunteer 4\Neutral\Volunteer4_Neutral.nii',\
-	'E:\Google Drive\Research\Projects\Thumb Maneuvers\Segmentations\Volunteer 5\Radial Abduction\Volunteer5_Position3.nii',\
-	]
+	# GT_Filenames = [\
+	# 'E:\Google Drive\Research\Projects\Thumb Maneuvers\Segmentations\Volunteer 1\Neutral\Volunteer1_Neutral.nii',\
+	# 'E:\Google Drive\Research\Projects\Thumb Maneuvers\Segmentations\Volunteer 2\Neutral\Volunteer2_Neutral.nii',\
+	# 'E:\Google Drive\Research\Projects\Thumb Maneuvers\Segmentations\Volunteer 3\Radial Abduction\Volunteer3_Position3.nii',\
+	# 'E:\Google Drive\Research\Projects\Thumb Maneuvers\Segmentations\Volunteer 4\Neutral\Volunteer4_Neutral.nii',\
+	# 'E:\Google Drive\Research\Projects\Thumb Maneuvers\Segmentations\Volunteer 5\Radial Abduction\Volunteer5_Position3.nii',\
+	# ]
 	return MRI_Filenames, GT_Filenames
 
 def loadSeedPoints(filename):
@@ -230,10 +229,11 @@ def main(MRI_Filename, GT_Filename, label, num_seeds=5, kernelRadius=1, MRI_num=
 	GroundTruth = load_GT(GT_Filename, label)
 
 	# Create a random seed
-	seedPoints = Create_Seeds.New_Seeds(GT_Filename, num_seeds, label, kernelRadius)
-	# seedPoints = []
-	# new_point = np.array([355, 633, 147], dtype=int)
-	# seedPoints.append(newq_point)
+	# seedPoints = Create_Seeds.New_Seeds(GT_Filename, num_seeds, label, kernelRadius)
+	seedPoints = []
+	new_point = np.array([305, 679, 148], dtype=int)
+	seedPoints.append(new_point)
+	print('seedPoints' + str(seedPoints))
 
 	# Set the parameters for the segmentation class object
 	segmentationClass = BoneSegmentation.BoneSeg()
@@ -293,16 +293,16 @@ if __name__ == '__main__':
 	
 	[MRI_Filenames, GT_Filenames] = GetImagePaths()
 
-	for i in [4]:#range(0, len(MRI_Filenames)):
-		for label in [8]:#range(1,10):
+	for i in [0]: #range(0, len(MRI_Filenames)):
+		for label in [5]: #range(1,10):
 			#print('i = ' + str(i) + ' label = ' + str(label))
 			MRI_Filename = MRI_Filenames[i]
 			GT_Filename = GT_Filenames[i]
 
-			try:			
-				main(MRI_Filename, GT_Filename, label, num_seeds=30, kernelRadius=3, MRI_num=i+1)	
-			except:
-				print('ERROR IN MAIN!!')
+			# try:			
+			main(MRI_Filename, GT_Filename, label, num_seeds=1, kernelRadius=3, MRI_num=i+1)	
+			# except:
+				# print('ERROR IN MAIN!!')
 
 	# Determine how long the algorithm took to run
 	elapsed = timeit.default_timer() - start_time
