@@ -468,8 +468,9 @@ class BoneSeg(object):
 
         processedImage = sitk.Cast(processedImage, sitk.sitkFloat32)
 
-        iter_step     = self.shapeDetectionFilter.GetNumberOfIterations()
-        iter_step_num = 1
+        iter_step_num = 20
+        iter_step     = self.shapeDetectionFilter.GetNumberOfIterations()/iter_step_num
+        
         previous_iter = 0
         self.shapeDetectionFilter.SetNumberOfIterations(iter_step)
         
@@ -483,11 +484,14 @@ class BoneSeg(object):
  
 
             temp_seg = self.SegToBinary(image)
-            self.segImg = self.AddImages(self.segImg, temp_seg, self.shapeDetectionFilter.GetElapsedIterations() + previous_iter)
+            #self.segImg = self.AddImages(self.segImg, temp_seg, self.shapeDetectionFilter.GetElapsedIterations() + previous_iter)
+
+            self.segImg = self.AddImages(self.segImg, temp_seg, self.shapeDetectionFilter.GetRMSChange())
+
 
             elapsed = timeit.default_timer() - start_time
             if self.verbose == True:
-                print("Elapsed Time (level set):" + str(round(elapsed,3)) + 'for iteration ' + str(i*iter_step))
+                print("Elapsed Time (level set):" + str(round(elapsed,3)) + ' for iteration ' + str(i*iter_step))
 
             previous_iter = self.shapeDetectionFilter.GetElapsedIterations()
 
@@ -519,8 +523,9 @@ class BoneSeg(object):
 
         # Only change the values which are zero in the current segmented image
         # to keep the iteration value the same in the image
-        ndaOutput[ndaOutput == 0] = ndaTwo[ndaOutput == 0]
+        #ndaOutput[ndaOutput == 0] = ndaTwo[ndaOutput == 0]
 
+        ndaOutput = ndaOutput + ndaTwo
         output = sitk.Cast(sitk.GetImageFromArray(ndaOutput), imageOne.GetPixelID())
         output.CopyInformation(imageOne)
 

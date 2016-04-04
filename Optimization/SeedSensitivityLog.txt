@@ -1,35 +1,21 @@
-0.85,8,3.32187253056,[ 71 169  56],E:\Google Drive\Research\MRI Wrist Images\Thumb Maneuvers\Filtered Images\Volunteer5_VIBE_Position3.hdr
-0.86,8,5.20514729696,[ 75 167  55],E:\Google Drive\Research\MRI Wrist Images\Thumb Maneuvers\Filtered Images\Volunteer5_VIBE_Position3.hdr
-0.85,8,7.06363232356,[ 72 167  57],E:\Google Drive\Research\MRI Wrist Images\Thumb Maneuvers\Filtered Images\Volunteer5_VIBE_Position3.hdr
-0.16,8,8.74448387915,[ 82 176  57],E:\Google Drive\Research\MRI Wrist Images\Thumb Maneuvers\Filtered Images\Volunteer5_VIBE_Position3.hdr
-0.86,8,10.561878534,[ 76 168  59],E:\Google Drive\Research\MRI Wrist Images\Thumb Maneuvers\Filtered Images\Volunteer5_VIBE_Position3.hdr
-0.89,8,3.26812895276,[ 76 173  58],E:\Google Drive\Research\MRI Wrist Images\Thumb Maneuvers\Filtered Images\Volunteer5_VIBE_Position3.hdr
-0.17,8,4.91349336913,[ 82 176  57],E:\Google Drive\Research\MRI Wrist Images\Thumb Maneuvers\Filtered Images\Volunteer5_VIBE_Position3.hdr
-0.89,8,6.72807587535,[ 81 167  60],E:\Google Drive\Research\MRI Wrist Images\Thumb Maneuvers\Filtered Images\Volunteer5_VIBE_Position3.hdr
-0.91,8,8.60712042357,[ 77 175  60],E:\Google Drive\Research\MRI Wrist Images\Thumb Maneuvers\Filtered Images\Volunteer5_VIBE_Position3.hdr
-0.88,8,10.4262877385,[ 73 172  58],E:\Google Drive\Research\MRI Wrist Images\Thumb Maneuvers\Filtered Images\Volunteer5_VIBE_Position3.hdr
-0.88,8,12.2360575268,[ 77 169  58],E:\Google Drive\Research\MRI Wrist Images\Thumb Maneuvers\Filtered Images\Volunteer5_VIBE_Position3.hdr
-0.17,8,13.8672608496,[ 79 175  59],E:\Google Drive\Research\MRI Wrist Images\Thumb Maneuvers\Filtered Images\Volunteer5_VIBE_Position3.hdr
-0.89,8,15.6759583818,[ 81 169  59],E:\Google Drive\Research\MRI Wrist Images\Thumb Maneuvers\Filtered Images\Volunteer5_VIBE_Position3.hdr
-0.87,8,17.4793616317,[ 76 168  55],E:\Google Drive\Research\MRI Wrist Images\Thumb Maneuvers\Filtered Images\Volunteer5_VIBE_Position3.hdr
-0.92,8,19.3872225117,[ 80 175  60],E:\Google Drive\Research\MRI Wrist Images\Thumb Maneuvers\Filtered Images\Volunteer5_VIBE_Position3.hdr
-0.9,8,21.3006477128,[ 83 174  59],E:\Google Drive\Research\MRI Wrist Images\Thumb Maneuvers\Filtered Images\Volunteer5_VIBE_Position3.hdr
-0.9,8,23.2359700494,[ 79 173  60],E:\Google Drive\Research\MRI Wrist Images\Thumb Maneuvers\Filtered Images\Volunteer5_VIBE_Position3.hdr
-0.87,8,25.0701992699,[ 75 166  57],E:\Google Drive\Research\MRI Wrist Images\Thumb Maneuvers\Filtered Images\Volunteer5_VIBE_Position3.hdr
-0.87,8,26.9667346103,[ 73 159  56],E:\Google Drive\Research\MRI Wrist Images\Thumb Maneuvers\Filtered Images\Volunteer5_VIBE_Position3.hdr
-0.89,8,28.8078912191,[ 81 171  59],E:\Google Drive\Research\MRI Wrist Images\Thumb Maneuvers\Filtered Images\Volunteer5_VIBE_Position3.hdr
-0.89,8,30.6465785671,[ 83 166  60],E:\Google Drive\Research\MRI Wrist Images\Thumb Maneuvers\Filtered Images\Volunteer5_VIBE_Position3.hdr
-0.91,8,32.6091932568,[ 79 179  60],E:\Google Drive\Research\MRI Wrist Images\Thumb Maneuvers\Filtered Images\Volunteer5_VIBE_Position3.hdr
-0.89,8,34.4993524042,[ 84 170  61],E:\Google Drive\Research\MRI Wrist Images\Thumb Maneuvers\Filtered Images\Volunteer5_VIBE_Position3.hdr
-0.88,8,3.31481348743,[ 77 165  58],E:\Google Drive\Research\MRI Wrist Images\Thumb Maneuvers\Filtered Images\Volunteer5_VIBE_Position3.hdr
-0.89,8,5.21772385063,[ 83 170  59],E:\Google Drive\Research\MRI Wrist Images\Thumb Maneuvers\Filtered Images\Volunteer5_VIBE_Position3.hdr
-0.88,8,7.09637080105,[ 73 163  54],E:\Google Drive\Research\MRI Wrist Images\Thumb Maneuvers\Filtered Images\Volunteer5_VIBE_Position3.hdr
-0.17,8,8.75686119507,[ 79 176  59],E:\Google Drive\Research\MRI Wrist Images\Thumb Maneuvers\Filtered Images\Volunteer5_VIBE_Position3.hdr
-0.88,8,10.6547578471,[ 74 167  55],E:\Google Drive\Research\MRI Wrist Images\Thumb Maneuvers\Filtered Images\Volunteer5_VIBE_Position3.hdr
-0.89,8,12.5601292793,[ 79 173  56],E:\Google Drive\Research\MRI Wrist Images\Thumb Maneuvers\Filtered Images\Volunteer5_VIBE_Position3.hdr
-0.88,8,14.4901693287,[ 73 164  54],E:\Google Drive\Research\MRI Wrist Images\Thumb Maneuvers\Filtered Images\Volunteer5_VIBE_Position3.hdr
-0.88,8,16.3684005422,[ 79 168  58],E:\Google Drive\Research\MRI Wrist Images\Thumb Maneuvers\Filtered Images\Volunteer5_VIBE_Position3.hdr
-0.88,8,18.2504330715,[ 74 162  57],E:\Google Drive\Research\MRI Wrist Images\Thumb Maneuvers\Filtered Images\Volunteer5_VIBE_Position3.hdr
-0.9,8,20.2154427101,[ 84 174  57],E:\Google Drive\Research\MRI Wrist Images\Thumb Maneuvers\Filtered Images\Volunteer5_VIBE_Position3.hdr
-0.88,8,22.0983962385,[ 74 167  57],E:\Google Drive\Research\MRI Wrist Images\Thumb Maneuvers\Filtered Images\Volunteer5_VIBE_Position3.hdr
-0.9,8,24.0886584571,[ 83 177  59],E:\Google Drive\Research\MRI Wrist Images\Thumb Maneuvers\Filtered Images\Volunteer5_VIBE_Position3.hdr
+0.0,5,49.9089735102,[298 627 147],E:/Google Drive/Research/MRI Wrist Images/CMC OA/Filtered Images/Volunteer2_VIBE_we_filtered.nii
+0.01,4,49.2288545409,[327 692 164],E:/Google Drive/Research/MRI Wrist Images/CMC OA/Filtered Images/Volunteer2_VIBE_we_filtered.nii
+0.0,5,99.6093957128,[309 593 202],E:/Google Drive/Research/MRI Wrist Images/CMC OA/Filtered Images/Volunteer2_VIBE_we_filtered.nii
+0.01,4,50.3793305319,[221 699 104],E:/Google Drive/Research/MRI Wrist Images/CMC OA/Filtered Images/Volunteer1_VIBE_we_filtered.nii
+0.01,4,49.2170295905,[326 587 112],E:/Google Drive/Research/MRI Wrist Images/CMC OA/Filtered Images/Volunteer3_VIBE_we_filtered.nii
+0.97,4,52.9347942541,[332 621 120],E:/Google Drive/Research/MRI Wrist Images/CMC OA/Filtered Images/Volunteer3_VIBE_we_filtered.nii
+0.97,5,108.276153173,[278 558 115],E:/Google Drive/Research/MRI Wrist Images/CMC OA/Filtered Images/Volunteer3_VIBE_we_filtered.nii
+0.97,6,161.372035973,[256 622 129],E:/Google Drive/Research/MRI Wrist Images/CMC OA/Filtered Images/Volunteer3_VIBE_we_filtered.nii
+0.97,4,165.344891951,[328 606 100],E:/Google Drive/Research/MRI Wrist Images/CMC OA/Filtered Images/Volunteer3_VIBE_we_filtered.nii
+0.02,4,56.4046100279,[305 619 136],E:/Google Drive/Research/MRI Wrist Images/CMC OA/Filtered Images/Volunteer3_VIBE_we_filtered.nii
+0.9,4,58.0452401341,[332 592 106],E:/Google Drive/Research/MRI Wrist Images/CMC OA/Filtered Images/Volunteer3_VIBE_we_filtered.nii
+0.87,4,58.5513476049,[323 580 105],E:/Google Drive/Research/MRI Wrist Images/CMC OA/Filtered Images/Volunteer3_VIBE_we_filtered.nii
+0.97,4,57.8543220987,[307 620 114],E:/Google Drive/Research/MRI Wrist Images/CMC OA/Filtered Images/Volunteer3_VIBE_we_filtered.nii
+0.61,4,73.6810136374,[287 626 132],E:/Google Drive/Research/MRI Wrist Images/CMC OA/Filtered Images/Volunteer3_VIBE_we_filtered.nii
+0.67,4,57.3634611429,[283 636 133],E:/Google Drive/Research/MRI Wrist Images/CMC OA/Filtered Images/Volunteer3_VIBE_we_filtered.nii
+0.87,4,351.379389045,[327 593 107],E:/Google Drive/Research/MRI Wrist Images/CMC OA/Filtered Images/Volunteer3_VIBE_we_filtered.nii
+0.93,4,76.7175888312,[324 617 128],E:/Google Drive/Research/MRI Wrist Images/CMC OA/Filtered Images/Volunteer3_VIBE_we_filtered.nii
+0.89,4,165.923547415,[321 597 104],E:/Google Drive/Research/MRI Wrist Images/CMC OA/Filtered Images/Volunteer3_VIBE_we_filtered.nii
+0.97,4,163.556466055,[322 579 112],E:/Google Drive/Research/MRI Wrist Images/CMC OA/Filtered Images/Volunteer3_VIBE_we_filtered.nii
+0.01,4,168.124314992,[298 624 113],E:/Google Drive/Research/MRI Wrist Images/CMC OA/Filtered Images/Volunteer3_VIBE_we_filtered.nii
+0.0,1,170.145015238,[410 527 101],E:/Google Drive/Research/MRI Wrist Images/CMC OA/Filtered Images/Volunteer3_VIBE_we_filtered.nii
