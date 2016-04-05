@@ -24,9 +24,9 @@ def f(MRI_Array, SeedPoint, q, parameter):
 	# segmentationClass = BoneSegmentation.BoneSeg()
 	segmentationClass.SetScalingFactor(1)
 	segmentationClass.SetLevelSetUpperThreshold(80)
-	segmentationClass.SetShapeMaxRMSError(0.002) #0.004
-	segmentationClass.SetShapeMaxIterations(1200)
-	segmentationClass.SetShapePropagationScale(4) #2, 4
+	segmentationClass.SetShapeMaxRMSError(0.004) #0.004
+	segmentationClass.SetShapeMaxIterations(400)
+	segmentationClass.SetShapePropagationScale(2) #2, 4
 	segmentationClass.SetShapeCurvatureScale(1)
 
 
@@ -64,7 +64,7 @@ class Multiprocessor(object):
 		# the number of cpu's then run the parallel computing twice
 		# TODO: Use a 'pool' of works for this whice may be more much efficient for more than one image
 		num_CPUs = multiprocessing.cpu_count() # Might be better to subtract 1 since the OS needs one it seems
-		num_CPUs = 2
+		# num_CPUs = 2
 		if self.verbose == True:
 			print('\033[94m' + "Number of CPUs = "),
 			print(num_CPUs)

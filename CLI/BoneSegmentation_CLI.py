@@ -30,10 +30,14 @@ def main():
 	MRI_Image = sitk.ReadImage(MRI_Filename[0])
 
 	seedPoints = []
-	new_point = np.array([220, 650, 100], dtype=int)
+	new_point = np.array([250, 630, 118], dtype=int)
 	seedPoints.append(new_point)
-	# new_point = np.array([230, 680, 106], dtype=int)
-	# seedPoints.append(new_point)
+	new_point = np.array([230, 680, 106], dtype=int)
+	seedPoints.append(new_point)
+	new_point = np.array([285, 670, 141], dtype=int)
+	seedPoints.append(new_point)
+	new_point = np.array([350, 650, 141], dtype=int)
+	seedPoints.append(new_point)
 	print('seedPoints' + str(seedPoints))
 
 	Segmentation = multiHelper.Execute(segmentationClass, seedPoints, MRI_Image, parameter=[1,2,3], verbose=True)

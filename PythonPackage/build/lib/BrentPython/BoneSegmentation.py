@@ -155,9 +155,31 @@ class BoneSeg(object):
     def SetConnectedComponentDistance(self, distanceThreshold):
         #Distance = Intensity difference NOT location distance
         self.connectedComponentFilter.SetDistanceThreshold(distanceThreshold) 
+   
 
+    def EstimateSigmoid(self):
+        ''' Estimate the upper threshold of the sigmoid based on the 
+        mean and std of the image intensities '''
+        ndaImg = sitk.GetArrayFromImage(self.image)
 
-    def Execute(self, image, seedPoint, verbose=False):
+        # [ndaImg > 25]
+        std = np.std(ndaImg) # 30 25
+        mean = np.mean(ndaImg)
+
+        # Using a linear model (fitted in Matlab and manually selected sigmoid threshold values)
+
+        #UpperThreshold = 0.899*(std+mean) - 41.3
+
+        UpperThreshold = 0.002575*(std+mean)*(std+mean) - 0.028942*(std+mean) + 36.791614
+
+        print('Mean: ' + str(round(mean,2)))
+        print('STD: ' + str(round(std,2)))
+        print('UpperThreshold: ' + str(round(UpperThreshold,2)))
+        print(' ')
+
+        return UpperThreshold
+
+    def Execute(self, image, seedPoint, verbose=False, returnSitkImage=True):
 
         start_time = timeit.default_timer() 
 
@@ -166,8 +188,19 @@ class BoneSeg(object):
         self.image = image
         self.seedPoint = seedPoint
 
-        #Convert images to float 32 first
-        self.image = sitk.Cast(self.image, sitk.sitkFloat32)
+        # Convert images to type float 32 first
+        try:
+            self.image = sitk.Cast(self.image, sitk.sitkFloat32)
+        except:
+            # Convert from numpy array to a SimpleITK image type first then cast
+            self.image = sitk.Cast(sitk.GetImageFromArray(image), sitk.sitkFloat32)
+
+        if self.verbose == True:
+            print('\033[94m' + 'Estimating upper sigmoid threshold level')
+
+        # Estimate the threshold level by image intensity statistics
+        UpperThreshold = self.EstimateSigmoid()
+        self.SetLevelSetUpperThreshold(UpperThreshold)
 
         if self.verbose == True:
             print('\033[94m' + "Current Seed Point: "),
@@ -225,7 +258,16 @@ class BoneSeg(object):
             print('\033[96m' + "Finished with seed point "),
             print(self.seedPoint)
 
-        return  self.segImg 
+        if returnSitkImage == True:
+            # Return a SimpleITK type image
+            return  self.segImg 
+        else:
+            # Return a numpy array image (needed for using multiple logical cores)
+            self.segImg = sitk.Cast(self.segImg, sitk.sitkUInt8)
+            npImg = sitk.GetArrayFromImage(self.segImg)
+
+            return  npImg
+
 
     def FlipImage(self,image):
         #Flip image(s) (if needed)
@@ -399,18 +441,10 @@ class BoneSeg(object):
     def SigmoidLevelSetIterations(self):
         ''' Pre-processing '''
         start_time = timeit.default_timer() 
-        medianFilter = sitk.BinaryMedianImageFilter()
-        medianFilter.SetRadius([2,2,2])
 
         processedImage = self.sigFilter.Execute(self.image) 
        
         processedImage  = sitk.Cast(processedImage, sitk.sitkUInt16)
-
-        # sitk.Show(processedImage, 'processedImage - no median')
-
-        processedImage = medianFilter.Execute(processedImage)
-
-        # sitk.Show(processedImage, 'processedImage - filtered')
 
         edgePotentialFilter = sitk.EdgePotentialImageFilter()
         gradientFilter = sitk.GradientImageFilter()
@@ -419,7 +453,7 @@ class BoneSeg(object):
 
         processedImage = edgePotentialFilter.Execute(gradImage)
 
-        #Want 0 for the background and 1 for the objects
+        # Want 0 for the background and 1 for the objects
         nda = sitk.GetArrayFromImage(processedImage)
         nda = np.asarray(nda)
 
@@ -468,32 +502,31 @@ class BoneSeg(object):
 
         processedImage = sitk.Cast(processedImage, sitk.sitkFloat32)
 
-        iter_step_num = 2
-        iter_step     = self.shapeDetectionFilter.GetNumberOfIterations()/iter_step_num
+        self.segImg = self.shapeDetectionFilter.Execute(init_ls, processedImage)
         
-        previous_iter = 0
-        self.shapeDetectionFilter.SetNumberOfIterations(iter_step)
+        # iter_step_num = 1
+        # iter_step     = self.shapeDetectionFilter.GetNumberOfIterations()/iter_step_num
         
-        for i in range(0, iter_step_num):                      
+        # previous_iter = 0
+        # self.shapeDetectionFilter.SetNumberOfIterations(iter_step)
+
+        # for i in range(0, iter_step_num):                      
             
-            if i == 0:
-                image = self.shapeDetectionFilter.Execute(init_ls, processedImage)
-            else:
-                image = self.shapeDetectionFilter.Execute(image, processedImage)
+        #     if i == 0:
+        #         image = self.shapeDetectionFilter.Execute(init_ls, processedImage)
+        #     else:
+        #         image = self.shapeDetectionFilter.Execute(image, processedImage)
 
  
 
-            temp_seg = self.SegToBinary(image)
-            #self.segImg = self.AddImages(self.segImg, temp_seg, self.shapeDetectionFilter.GetElapsedIterations() + previous_iter)
+        #     temp_seg = self.SegToBinary(image)
+        #     self.segImg = self.AddImages(self.segImg, temp_seg, self.shapeDetectionFilter.GetElapsedIterations() + previous_iter)
 
-            self.segImg = self.AddImages(self.segImg, temp_seg, self.shapeDetectionFilter.GetRMSChange())
+        #     elapsed = timeit.default_timer() - start_time
+        #     if self.verbose == True:
+        #         print("Elapsed Time (level set):" + str(round(elapsed,3)) + ' for iteration ' + str(i*iter_step))
 
-
-            elapsed = timeit.default_timer() - start_time
-            if self.verbose == True:
-                print("Elapsed Time (level set):" + str(round(elapsed,3)) + ' for iteration ' + str(i*iter_step))
-
-            previous_iter = self.shapeDetectionFilter.GetElapsedIterations()
+        #     previous_iter = self.shapeDetectionFilter.GetElapsedIterations()
 
         if self.verbose == True:
             BrentPython.SaveSegmentation(self.segImg, 'ScreenShots\segImg.nii', verbose = True)
