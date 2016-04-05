@@ -156,8 +156,29 @@ class BoneSeg(object):
         #Distance = Intensity difference NOT location distance
         self.connectedComponentFilter.SetDistanceThreshold(distanceThreshold) 
 
+    def EstimateSigmoid(self):
+        ''' Estimate the upper threshold of the sigmoid based on the 
+        mean and std of the image intensities '''
+        ndaImg = sitk.GetArrayFromImage(self.image)
 
-    def Execute(self, image, seedPoint, verbose=False):
+        # [ndaImg > 25]
+        std = np.std(ndaImg) # 30 25
+        mean = np.mean(ndaImg)
+
+        # Using a linear model (fitted in Matlab and manually selected sigmoid threshold values)
+
+        #UpperThreshold = 0.899*(std+mean) - 41.3
+
+        UpperThreshold = 0.002575*(std+mean)*(std+mean) - 0.028942*(std+mean) + 36.791614
+
+        print('Mean: ' + str(round(mean,2)))
+        print('STD: ' + str(round(std,2)))
+        print('UpperThreshold: ' + str(round(UpperThreshold,2)))
+        print(' ')
+
+        return UpperThreshold
+
+    def Execute(self, image, seedPoint, verbose=False, returnSitkImage=True):
 
         start_time = timeit.default_timer() 
 
@@ -167,7 +188,19 @@ class BoneSeg(object):
         self.seedPoint = seedPoint
 
         #Convert images to float 32 first
-        self.image = sitk.Cast(self.image, sitk.sitkFloat32)
+        try:
+            self.image = sitk.Cast(self.image, sitk.sitkFloat32)
+        except:
+            # Convert from numpy array to a SimpleITK image type first
+            self.image = sitk.Cast(sitk.GetImageFromArray(image), sitk.sitkFloat32)
+            # self.image = sitk.Cast(self.image, sitk.sitkFloat32)
+
+        if self.verbose == True:
+            print('\033[94m' + 'Estimating upper sigmoid threshold level')
+
+        # Estimate the threshold level by image intensity statistics
+        # UpperThreshold = self.EstimateSigmoid()
+        # self.SetLevelSetUpperThreshold(UpperThreshold)
 
         if self.verbose == True:
             print('\033[94m' + "Current Seed Point: "),
@@ -225,10 +258,19 @@ class BoneSeg(object):
             print('\033[96m' + "Finished with seed point "),
             print(self.seedPoint)
 
-        return  self.segImg 
+        if returnSitkImage == True:
+            # Return a SimpleITK type image
+            return  self.segImg 
+        else:
+            # Return a numpy array image (needed for using multiple logical cores)
+            self.segImg = sitk.Cast(self.segImg, sitk.sitkUInt8)
+            npImg = sitk.GetArrayFromImage(self.segImg)
+
+            return  npImg
+        
 
     def FlipImage(self,image):
-        #Flip image(s) (if needed)
+        # Flip image(s) (if needed)
         flipFilter = sitk.FlipImageFilter()
         flipFilter.SetFlipAxes((False,True,False))
         image = flipFilter.Execute(self.image)
@@ -429,9 +471,9 @@ class BoneSeg(object):
         processedImage.CopyInformation(self.image)
 
         if self.verbose == True:
-            BrentPython.SaveSegmentation(processedImage, 'ScreenShots\processedImage.nii', verbose = True)
+            BrentPython.SaveSegmentation(processedImage, 'ScreenShots/processedImage.nii', verbose = True)
         else:
-            BrentPython.SaveSegmentation(processedImage, 'ScreenShots\processedImage.nii', verbose = False)
+            BrentPython.SaveSegmentation(processedImage, 'ScreenShots/processedImage.nii', verbose = False)
  
 
         elapsed = timeit.default_timer() - start_time
@@ -451,7 +493,8 @@ class BoneSeg(object):
 
         seedPoint = self.seedPoint[0]
 
-        #In numpy an array is indexed in the opposite order (z,y,x)
+        # In numpy an array is indexed in the opposite order (z,y,x)
+        print('seedPoint' + str(seedPoint))
         nda[seedPoint[2]][seedPoint[1]][seedPoint[0]] = 1
 
         self.segImg = sitk.Cast(sitk.GetImageFromArray(nda), sitk.sitkUInt16)
@@ -462,13 +505,13 @@ class BoneSeg(object):
 
         ''' Segmentation '''
 
-        #Signed distance function using the initial seed point (segImg)
+        # Signed distance function using the initial seed point (segImg)
         init_ls = sitk.SignedMaurerDistanceMap(self.segImg, insideIsPositive=True, useImageSpacing=True)
         init_ls = sitk.Cast(init_ls, sitk.sitkFloat32)
 
         processedImage = sitk.Cast(processedImage, sitk.sitkFloat32)
 
-        iter_step_num = 2
+        iter_step_num = 1
         iter_step     = self.shapeDetectionFilter.GetNumberOfIterations()/iter_step_num
         
         previous_iter = 0
@@ -481,10 +524,8 @@ class BoneSeg(object):
             else:
                 image = self.shapeDetectionFilter.Execute(image, processedImage)
 
- 
-
             temp_seg = self.SegToBinary(image)
-            #self.segImg = self.AddImages(self.segImg, temp_seg, self.shapeDetectionFilter.GetElapsedIterations() + previous_iter)
+            # self.segImg = self.AddImages(self.segImg, temp_seg, self.shapeDetectionFilter.GetElapsedIterations() + previous_iter)
 
             self.segImg = self.AddImages(self.segImg, temp_seg, self.shapeDetectionFilter.GetRMSChange())
 

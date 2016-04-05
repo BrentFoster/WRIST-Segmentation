@@ -19,3 +19,8 @@
 0.97,4,163.556466055,[322 579 112],E:/Google Drive/Research/MRI Wrist Images/CMC OA/Filtered Images/Volunteer3_VIBE_we_filtered.nii
 0.01,4,168.124314992,[298 624 113],E:/Google Drive/Research/MRI Wrist Images/CMC OA/Filtered Images/Volunteer3_VIBE_we_filtered.nii
 0.0,1,170.145015238,[410 527 101],E:/Google Drive/Research/MRI Wrist Images/CMC OA/Filtered Images/Volunteer3_VIBE_we_filtered.nii
+0.0,1,72.6824220008,[473 434 116],E:/Google Drive/Research/MRI Wrist Images/CMC OA/Filtered Images/Volunteer3_VIBE_we_filtered.nii
+0.0,1,66.2712912194,[454 437 131],E:/Google Drive/Research/MRI Wrist Images/CMC OA/Filtered Images/Volunteer3_VIBE_we_filtered.nii
+0.01,5,70.8656498783,[266 562 116],E:/Google Drive/Research/MRI Wrist Images/CMC OA/Filtered Images/Volunteer4_VIBE_we_filtered.nii
+0.01,5,72.2630326297,[249 572 151],E:/Google Drive/Research/MRI Wrist Images/CMC OA/Filtered Images/Volunteer4_VIBE_we_filtered.nii
+0.0,1,65.7004584822,[305 679 148],E:/Google Drive/Research/MRI Wrist Images/CMC OA/Volunteer 3/VIBE/Volunteer3_VIBE_we.hdr

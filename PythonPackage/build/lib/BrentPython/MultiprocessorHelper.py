@@ -25,7 +25,7 @@ def f(MRI_Array, SeedPoint, q, parameter):
 	segmentationClass.SetScalingFactor(1)
 	segmentationClass.SetLevelSetUpperThreshold(80)
 	segmentationClass.SetShapeMaxRMSError(0.002) #0.004
-	segmentationClass.SetShapeMaxIterations(600)
+	segmentationClass.SetShapeMaxIterations(1200)
 	segmentationClass.SetShapePropagationScale(4) #2, 4
 	segmentationClass.SetShapeCurvatureScale(1)
 
@@ -35,7 +35,7 @@ def f(MRI_Array, SeedPoint, q, parameter):
 	q.close()
 
 class Multiprocessor(object):
-	"""Helper class for sliptting a segmentation class (such as from SimpleITK) into
+	""" Helper class for sliptting a segmentation class (such as from SimpleITK) into
 	several logical cores in parallel. Requires: SegmentationClass, Seed List, SimpleITK Image"""
 	def __init__(self):
 		# super(ClassName, self).__init__()
@@ -90,6 +90,7 @@ class Multiprocessor(object):
 		segmentationOutput = sitk.Cast(sitk.GetImageFromArray(self.segmentationArray), self.MRI_Image.GetPixelID())
 		segmentationOutput.CopyInformation(self.MRI_Image)
 
+		print('mch done')
 		return segmentationOutput
 
 	''' Split the Seed List using the multiprocessing library and then execute the pipeline '''
