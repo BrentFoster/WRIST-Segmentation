@@ -18,7 +18,10 @@ import timeit
 def main():		
 	# MRI_Filename = ['/Users/Brent/Google Drive/Research/MRI Wrist Images/CMC OA/Volunteer 1/VIBE/Volunteer1_VIBE_we.hdr']
 	
-	MRI_Filename = ['E:/Google Drive/Research/MRI Wrist Images/CMC OA/Filtered Images/Volunteer1_VIBE_we_filtered.nii']
+	MRI_Filename = ['/Users/Brent/Google Drive/Research/MRI Wrist Images/CMC OA/Filtered Images/Volunteer1_VIBE_we_filtered.nii']
+	
+
+	# MRI_Filename = ['E:/Google Drive/Research/MRI Wrist Images/CMC OA/Filtered Images/Volunteer1_VIBE_we_filtered.nii']
 	
 	# Create objects of the needed classes
 	# Set the parameters for the segmentation class object
@@ -42,9 +45,9 @@ def main():
 
 	Segmentation = multiHelper.Execute(segmentationClass, seedPoints, MRI_Image, parameter=[1,2,3], verbose=True)
 
-	BrentPython.SaveSegmentation(Segmentation, 'ScreenShots\CLI_Segmentation.nii', verbose=True)	
+	BrentPython.SaveSegmentation(Segmentation, 'ScreenShots/CLI_Segmentation.nii', verbose=True)	
 
-	# sitk.Show(Segmentation, 'Segmentation')
+	sitk.Show(Segmentation, 'Segmentation')
 	
 	return 0
 

@@ -13,6 +13,236 @@ from BrentPython import *
 
 class BoneSeg(object):
     """Class of BoneSegmentation. REQUIRED: BoneSeg(MRI_Image,SeedPoint)"""
+    def Execute(self, image, seedPoint, verbose=False, returnSitkImage=True):
+
+        start_time = timeit.default_timer() 
+
+        self.verbose = verbose # Optional argument to output text to terminal
+
+        self.image = image
+        self.seedPoint = seedPoint
+
+        # Convert images to type float 32 first
+        try:
+            self.image = sitk.Cast(self.image, sitk.sitkFloat32)
+        except:
+            # Convert from numpy array to a SimpleITK image type first then cast
+            self.image = sitk.Cast(sitk.GetImageFromArray(image), sitk.sitkFloat32)
+
+        if self.verbose == True:
+            print('\033[94m' + 'Estimating upper sigmoid threshold level')
+
+        # Estimate the threshold level by image intensity statistics
+        LowerThreshold = self.EstimateSigmoid()
+        self.SetLevelSetLowerThreshold(LowerThreshold)
+
+        if self.verbose == True:
+            print('\033[94m' + "Current Seed Point: "),
+            print(self.seedPoint)
+            print('\033[94m' + "Rounding and converting to voxel domain: "), 
+        self.RoundSeedPoint()
+
+        if self.verbose == True:
+            print(self.seedPoint)
+            print('\033[90m' + "Scaling image down...")
+        self.scaleDownImage()
+
+        if self.verbose == True:
+            elapsed = timeit.default_timer() - start_time
+            print("Elapsed Time (Preprocessing ):" + str(round(elapsed,3)))
+
+        # if self.verbose == True:
+        #     print('\033[90m' + "Sigmoid shape detection level set...")
+        # self.SigmoidLevelSet()
+
+        if self.verbose == True:
+            print('\033[90m' + "Sigmoid shape detection level set by iteration...")
+        self.SigmoidLevelSetIterations()
+
+      
+        if self.verbose == True:
+            print('\033[90m' + "Scaling image back...")
+        self.scaleUpImage()
+        
+        # if self.verbose == True:
+        #     print('\033[90m' + "Simple threshold operation...")
+        # try:
+        #     self.ThresholdImage()
+        # except:
+            # print('Error in self.ThresholdImage() step')
+
+        if self.verbose == True:
+            print('\033[93m' + "Filling Segmentation Holes...")
+        self.HoleFilling()
+
+        if self.verbose == True:
+            print('\033[90m' + "Dilating image slightly...")
+        self.segImg  = sitk.Cast(self.segImg, sitk.sitkUInt16)
+        self.segImg = self.dilateFilter.Execute(self.segImg, 0, 1, False)
+
+        # if self.verbose == True:
+        #     print('\033[90m' + "Eroding image slightly...")
+        # self.segImg = self.erodeFilter.Execute(self.segImg, 0, 1, False)
+
+        if self.verbose == True:
+            print('\033[93m' + "Filling Segmentation Holes...")
+        self.HoleFilling()
+
+        if self.verbose == True:
+            print('\033[96m' + "Finished with seed point "),
+            print(self.seedPoint)
+
+        if returnSitkImage == True:
+            # Return a SimpleITK type image
+            return  self.segImg 
+        else:
+            # Return a numpy array image (needed for using multiple logical cores)
+            self.segImg = sitk.Cast(self.segImg, sitk.sitkUInt8)
+            npImg = sitk.GetArrayFromImage(self.segImg)
+
+            return  npImg
+
+
+    def SigmoidLevelSetIterations(self):
+        ''' Pre-processing '''
+        start_time = timeit.default_timer() 
+
+        # TEST
+
+        # self.sigFilter.SetAlpha(0)
+        # sigFilter = sitk.SigmoidImageFilter()
+        
+
+        # self.sigFilter.SetAlpha(50)
+        # self.sigFilter.SetOutputMinimum(0)
+        # self.sigFilter.SetOutputMaximum(255)
+
+        processedImage = self.sigFilter.Execute(self.image) 
+        processedImage  = sitk.Cast(processedImage, sitk.sitkUInt16)
+
+        # sitk.Show(self.image, 'image')
+        # sitk.Show(processedImage, 'processedImage')
+        # a
+
+        # END TEST
+
+
+        
+
+
+        # TEST
+        # processedImage = self.image
+        # END TEST
+
+        edgePotentialFilter = sitk.EdgePotentialImageFilter()
+        gradientFilter = sitk.GradientImageFilter()
+
+        gradImage = gradientFilter.Execute(processedImage)
+
+        processedImage = edgePotentialFilter.Execute(gradImage)
+
+        # sitk.Show(gradImage, 'gradImage')
+
+
+        # END TEST
+
+        # sitk.Show(self.image, 'original image')
+        # sitk.Show(processedImage, 'edgePotentialFilter')
+        
+
+        # # Want 0 for the background and 1 for the objects
+        # nda = sitk.GetArrayFromImage(processedImage)
+        # nda = np.asarray(nda)
+
+        # nda[nda != 1] = 0
+
+        # processedImage = sitk.Cast(sitk.GetImageFromArray(nda), self.image.GetPixelID())
+        # processedImage.CopyInformation(self.image)
+
+        # sitk.Show(processedImage, 'edge potential-thresh')
+
+        
+
+        if self.verbose == True:
+            BrentPython.SaveSegmentation(processedImage, 'ScreenShots/processedImage.nii', verbose = True)
+        else:
+            BrentPython.SaveSegmentation(processedImage, 'ScreenShots/processedImage.nii', verbose = False) 
+
+        elapsed = timeit.default_timer() - start_time
+        if self.verbose == True:
+            print("Elapsed Time (processedImage):" + str(round(elapsed,3)))
+
+        ''' Create Seed Image '''
+        if self.verbose == True:
+            print('Starting ShapeDetectionLevelSetImageFilter')
+        start_time = timeit.default_timer() 
+
+        # Create the seed image
+        nda = sitk.GetArrayFromImage(self.image)
+        nda = np.asarray(nda)
+        nda = nda*0
+
+        seedPoint = self.seedPoint[0]
+
+        # In numpy an array is indexed in the opposite order (z,y,x)
+        nda[seedPoint[2]][seedPoint[1]][seedPoint[0]] = 1
+
+        self.segImg = sitk.Cast(sitk.GetImageFromArray(nda), sitk.sitkUInt16)
+        self.segImg.CopyInformation(self.image)
+
+        self.segImg = sitk.BinaryDilate(self.segImg, 3)
+
+
+        ''' Segmentation '''
+
+        # Signed distance function using the initial seed point (segImg)
+        init_ls = sitk.SignedMaurerDistanceMap(self.segImg, insideIsPositive=True, useImageSpacing=True)
+        init_ls = sitk.Cast(init_ls, sitk.sitkFloat32)
+
+        processedImage = sitk.Cast(processedImage, sitk.sitkFloat32)
+
+        self.segImg = self.shapeDetectionFilter.Execute(init_ls, processedImage)
+        
+        # iter_step_num = 1
+        # iter_step     = self.shapeDetectionFilter.GetNumberOfIterations()/iter_step_num
+        
+        # previous_iter = 0
+        # self.shapeDetectionFilter.SetNumberOfIterations(iter_step)
+
+        # for i in range(0, iter_step_num):                      
+            
+        #     if i == 0:
+        #         image = self.shapeDetectionFilter.Execute(init_ls, processedImage)
+        #     else:
+        #         image = self.shapeDetectionFilter.Execute(image, processedImage)
+
+ 
+
+        #     temp_seg = self.SegToBinary(image)
+        #     self.segImg = self.AddImages(self.segImg, temp_seg, self.shapeDetectionFilter.GetElapsedIterations() + previous_iter)
+
+        #     elapsed = timeit.default_timer() - start_time
+        #     if self.verbose == True:
+        #         print("Elapsed Time (level set):" + str(round(elapsed,3)) + ' for iteration ' + str(i*iter_step))
+
+        #     previous_iter = self.shapeDetectionFilter.GetElapsedIterations()
+
+        if self.verbose == True:
+            BrentPython.SaveSegmentation(self.segImg, 'ScreenShots/segImg.nii', verbose = True)
+        else:
+            BrentPython.SaveSegmentation(self.segImg, 'ScreenShots/segImg.nii', verbose = False)
+
+
+        if self.verbose == True:
+            print('Done with ShapeDetectionLevelSetImageFilter!')
+
+            print(self.shapeDetectionFilter)
+
+        self.segImg = self.SegToBinary(self.segImg)
+        
+        return self
+
+
     def __init__(self):
         self.ScalingFactor = []
         self.AnisotropicIts = []
@@ -70,10 +300,10 @@ class BoneSeg(object):
         self.SetShapeCurvatureScale(1.1)
 
         #Sigmoid Filter
-        self.sigFilter.SetAlpha(0)
-        self.sigFilter.SetBeta(90)
+        self.sigFilter.SetAlpha(90)
+        self.sigFilter.SetBeta(0)
         self.sigFilter.SetOutputMinimum(0)
-        self.sigFilter.SetOutputMaximum(1)
+        self.sigFilter.SetOutputMaximum(255)
 
     def SetShapeMaxIterations(self, MaxIts):
         self.shapeDetectionFilter.SetNumberOfIterations(int(MaxIts))
@@ -178,96 +408,6 @@ class BoneSeg(object):
         print(' ')
 
         return UpperThreshold
-
-    def Execute(self, image, seedPoint, verbose=False, returnSitkImage=True):
-
-        start_time = timeit.default_timer() 
-
-        self.verbose = verbose # Optional argument to output text to terminal
-
-        self.image = image
-        self.seedPoint = seedPoint
-
-        # Convert images to type float 32 first
-        try:
-            self.image = sitk.Cast(self.image, sitk.sitkFloat32)
-        except:
-            # Convert from numpy array to a SimpleITK image type first then cast
-            self.image = sitk.Cast(sitk.GetImageFromArray(image), sitk.sitkFloat32)
-
-        if self.verbose == True:
-            print('\033[94m' + 'Estimating upper sigmoid threshold level')
-
-        # Estimate the threshold level by image intensity statistics
-        UpperThreshold = self.EstimateSigmoid()
-        self.SetLevelSetUpperThreshold(UpperThreshold)
-
-        if self.verbose == True:
-            print('\033[94m' + "Current Seed Point: "),
-            print(self.seedPoint)
-            print('\033[94m' + "Rounding and converting to voxel domain: "), 
-        self.RoundSeedPoint()
-
-        if self.verbose == True:
-            print(self.seedPoint)
-            print('\033[90m' + "Scaling image down...")
-        self.scaleDownImage()
-
-        if self.verbose == True:
-            elapsed = timeit.default_timer() - start_time
-            print("Elapsed Time (Preprocessing ):" + str(round(elapsed,3)))
-
-        # if self.verbose == True:
-        #     print('\033[90m' + "Sigmoid shape detection level set...")
-        # self.SigmoidLevelSet()
-
-        if self.verbose == True:
-            print('\033[90m' + "Sigmoid shape detection level set by iteration...")
-        self.SigmoidLevelSetIterations()
-
-      
-        if self.verbose == True:
-            print('\033[90m' + "Scaling image back...")
-        self.scaleUpImage()
-        
-        # if self.verbose == True:
-        #     print('\033[90m' + "Simple threshold operation...")
-        # try:
-        #     self.ThresholdImage()
-        # except:
-            # print('Error in self.ThresholdImage() step')
-
-        if self.verbose == True:
-            print('\033[93m' + "Filling Segmentation Holes...")
-        self.HoleFilling()
-
-        if self.verbose == True:
-            print('\033[90m' + "Dilating image slightly...")
-        self.segImg  = sitk.Cast(self.segImg, sitk.sitkUInt16)
-        self.segImg = self.dilateFilter.Execute(self.segImg, 0, 1, False)
-
-        # if self.verbose == True:
-        #     print('\033[90m' + "Eroding image slightly...")
-        # self.segImg = self.erodeFilter.Execute(self.segImg, 0, 1, False)
-
-        if self.verbose == True:
-            print('\033[93m' + "Filling Segmentation Holes...")
-        self.HoleFilling()
-
-        if self.verbose == True:
-            print('\033[96m' + "Finished with seed point "),
-            print(self.seedPoint)
-
-        if returnSitkImage == True:
-            # Return a SimpleITK type image
-            return  self.segImg 
-        else:
-            # Return a numpy array image (needed for using multiple logical cores)
-            self.segImg = sitk.Cast(self.segImg, sitk.sitkUInt8)
-            npImg = sitk.GetArrayFromImage(self.segImg)
-
-            return  npImg
-
 
     def FlipImage(self,image):
         #Flip image(s) (if needed)
@@ -437,110 +577,6 @@ class BoneSeg(object):
         
 
         return self
-
-    def SigmoidLevelSetIterations(self):
-        ''' Pre-processing '''
-        start_time = timeit.default_timer() 
-
-        processedImage = self.sigFilter.Execute(self.image) 
-       
-        processedImage  = sitk.Cast(processedImage, sitk.sitkUInt16)
-
-        edgePotentialFilter = sitk.EdgePotentialImageFilter()
-        gradientFilter = sitk.GradientImageFilter()
-
-        gradImage = gradientFilter.Execute(processedImage)
-
-        processedImage = edgePotentialFilter.Execute(gradImage)
-
-        # Want 0 for the background and 1 for the objects
-        nda = sitk.GetArrayFromImage(processedImage)
-        nda = np.asarray(nda)
-
-        nda[nda != 1] = 0
-
-        processedImage = sitk.Cast(sitk.GetImageFromArray(nda), self.image.GetPixelID())
-        processedImage.CopyInformation(self.image)
-
-        if self.verbose == True:
-            BrentPython.SaveSegmentation(processedImage, 'ScreenShots\processedImage.nii', verbose = True)
-        else:
-            BrentPython.SaveSegmentation(processedImage, 'ScreenShots\processedImage.nii', verbose = False) 
-
-        elapsed = timeit.default_timer() - start_time
-        if self.verbose == True:
-            print("Elapsed Time (processedImage):" + str(round(elapsed,3)))
-
-        ''' Create Seed Image '''
-        if self.verbose == True:
-            print('Starting ShapeDetectionLevelSetImageFilter')
-        start_time = timeit.default_timer() 
-
-        # Create the seed image
-        nda = sitk.GetArrayFromImage(self.image)
-        nda = np.asarray(nda)
-        nda = nda*0
-
-        seedPoint = self.seedPoint[0]
-
-        # In numpy an array is indexed in the opposite order (z,y,x)
-        nda[seedPoint[2]][seedPoint[1]][seedPoint[0]] = 1
-
-        self.segImg = sitk.Cast(sitk.GetImageFromArray(nda), sitk.sitkUInt16)
-        self.segImg.CopyInformation(self.image)
-
-        self.segImg = sitk.BinaryDilate(self.segImg, 3)
-
-        ''' Segmentation '''
-
-        # Signed distance function using the initial seed point (segImg)
-        init_ls = sitk.SignedMaurerDistanceMap(self.segImg, insideIsPositive=True, useImageSpacing=True)
-        init_ls = sitk.Cast(init_ls, sitk.sitkFloat32)
-
-        processedImage = sitk.Cast(processedImage, sitk.sitkFloat32)
-
-        self.segImg = self.shapeDetectionFilter.Execute(init_ls, processedImage)
-        
-        # iter_step_num = 1
-        # iter_step     = self.shapeDetectionFilter.GetNumberOfIterations()/iter_step_num
-        
-        # previous_iter = 0
-        # self.shapeDetectionFilter.SetNumberOfIterations(iter_step)
-
-        # for i in range(0, iter_step_num):                      
-            
-        #     if i == 0:
-        #         image = self.shapeDetectionFilter.Execute(init_ls, processedImage)
-        #     else:
-        #         image = self.shapeDetectionFilter.Execute(image, processedImage)
-
- 
-
-        #     temp_seg = self.SegToBinary(image)
-        #     self.segImg = self.AddImages(self.segImg, temp_seg, self.shapeDetectionFilter.GetElapsedIterations() + previous_iter)
-
-        #     elapsed = timeit.default_timer() - start_time
-        #     if self.verbose == True:
-        #         print("Elapsed Time (level set):" + str(round(elapsed,3)) + ' for iteration ' + str(i*iter_step))
-
-        #     previous_iter = self.shapeDetectionFilter.GetElapsedIterations()
-
-        if self.verbose == True:
-            BrentPython.SaveSegmentation(self.segImg, 'ScreenShots\segImg.nii', verbose = True)
-        else:
-            BrentPython.SaveSegmentation(self.segImg, 'ScreenShots\segImg.nii', verbose = False)
-
-
-        if self.verbose == True:
-            print('Done with ShapeDetectionLevelSetImageFilter!')
-
-            print(self.shapeDetectionFilter)
-
-        self.segImg = self.SegToBinary(self.segImg)
-        
-        return self
-
-
 
     def AddImages(self, imageOne, imageTwo, iteration_num):
 
