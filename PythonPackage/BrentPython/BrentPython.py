@@ -110,6 +110,29 @@ def PointsToVoxel(textSeeds, sitkImage):
 		SeedPoints.append(tempVoxelCoordinates)
 	return SeedPoints
 
+def FillHoles(image, verbose=False):
+	''' Fill the holes of a binary SimpleITK image type. Uses the scipy package 
+	since the SimpleITK binary fill does not work well '''
+	
+	from scipy import ndimage
+
+	image  = sitk.Cast(image, sitk.sitkUInt16)
+	npImage = np.asarray(sitk.GetArrayFromImage(image), dtype=int)
+	
+	for i in range(0, npImage.shape[0]):
+		npImage[i,:,:] = ndimage.binary_fill_holes(npImage[i,:,:]).astype(int)
+
+		if verbose == True:
+			progress = round(np.divide(float(i), float(npImage.shape[0])), 2)*100
+			print(str(progress) + '%')
+
+	img_Output = sitk.Cast(sitk.GetImageFromArray(npImage), image.GetPixelID())
+	img_Output.CopyInformation(image)
+
+	return img_Output
+
+
+
 class AlgorithmTime(object):
 	"""Simple class for determining the time a section of code took to execute."""
 	def __init__(self, verbose = False):

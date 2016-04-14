@@ -51,6 +51,11 @@ Update the python package and reinstall script
 # WINDOWS
 cd C:\Users\Brent\BoneSegmentation\PythonPackage & python setup.py bdist & python setup.py install  & cd C:\Users\Brent\BoneSegmentation\CLI & clear & python BoneSegmentation_CLI.py
 
+cd C:\Users\Brent\BoneSegmentation\PythonPackage & python setup.py bdist & python setup.py install  & cd C:\Users\Brent\BoneSegmentation\Optimization & clear & python SeedLocationSensitivity.py
+
+
+
+
 # MACBOOK
 cd /Users/Brent/BoneSegmentation/PythonPackage; python setup.py bdist; python setup.py install  & cd /Users/Brent/BoneSegmentation/Optimization; clear; python SeedLocationSensitivity.py 
 ################

@@ -34,6 +34,7 @@ class BoneSeg(object):
 
         # Estimate the threshold level by image intensity statistics
         LowerThreshold = self.EstimateSigmoid()
+        # LowerThreshold = 350
         self.SetLevelSetLowerThreshold(LowerThreshold)
 
         if self.verbose == True:
@@ -283,15 +284,12 @@ class BoneSeg(object):
         self.SetScalingFactor(1) #X,Y,Z
        
         self.SeedListFilename = "PointList.txt"
-        self.SetMaxVolume(300000) #Pixel counts (TODO change to mm^3)   
+        self.SetMaxVolume(300000) #Pixel counts (TODO change to mm^3) 
+
+        # Morphological Operators
+        self.fillFilter.SetForegroundValue(1) 
+        self.fillFilter.FullyConnectedOff() 
         self.SetBinaryMorphologicalRadius(1)
-        # self.SetLevelSetLowerThreshold(0)
-        # self.SetLevelSetUpperThreshold(75)
-        # self.SetLevelSetIts(2500)
-        # self.SetLevelSetReverseDirection(True)
-        # self.SetLevelSetError(0.03)
-        # self.SetLevelSetPropagation(1)
-        # self.SetLevelSetCurvature(1)
 
         #Shape Detection Filter
         self.SetShapeMaxRMSError(0.001)
@@ -471,12 +469,12 @@ class BoneSeg(object):
         return
 
     def HoleFilling(self):
+        # Cast to 16 bit (needed for the fill filter to work)
         self.segImg  = sitk.Cast(self.segImg, sitk.sitkUInt16)
+
         #Apply the filters to the binary image
-        self.segImg = self.fillFilter.Execute(self.segImg, True, 1)
-        # self.segImg = self.dilateFilter.Execute(self.segImg, 0, 1, False)
-        # self.segImg = self.fillFilter.Execute(self.segImg, True, 1)
-        # self.segImg = self.erodeFilter.Execute(self.segImg, 0, 1, False)  
+        self.segImg = self.fillFilter.Execute(self.segImg)
+
         return self
 
     def ShapeDetection(self):

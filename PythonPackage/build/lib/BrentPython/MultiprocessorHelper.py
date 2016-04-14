@@ -24,11 +24,10 @@ def f(MRI_Array, SeedPoint, q, parameter):
 	# segmentationClass = BoneSegmentation.BoneSeg()
 	segmentationClass.SetScalingFactor(1)
 	segmentationClass.SetLevelSetUpperThreshold(250)
-	segmentationClass.SetShapeMaxRMSError(0.02) #0.004
-	segmentationClass.SetShapeMaxIterations(1000)
-	segmentationClass.SetShapePropagationScale(4) #2, 4
-	segmentationClass.SetShapeCurvatureScale(2)
-
+	segmentationClass.SetShapeMaxRMSError(0.004) #0.004
+	segmentationClass.SetShapeMaxIterations(3000) # 4000
+	segmentationClass.SetShapePropagationScale(4) # 4
+	segmentationClass.SetShapeCurvatureScale(1)
 
 	output = segmentationClass.Execute(MRI_Array,[SeedPoint], verbose=True, returnSitkImage=False)
 	q.put(output)
@@ -65,6 +64,7 @@ class Multiprocessor(object):
 		# TODO: Use a 'pool' of works for this whice may be more much efficient for more than one image
 		num_CPUs = multiprocessing.cpu_count() # Might be better to subtract 1 since the OS needs one it seems
 		# num_CPUs = 2
+
 		if self.verbose == True:
 			print('\033[94m' + "Number of CPUs = "),
 			print(num_CPUs)
@@ -86,11 +86,15 @@ class Multiprocessor(object):
 			for x in range(len(jobOrder)):
 				self.segmentationArray = self.segmentationArray + (x+1)*self.RunMultiprocessing(jobOrder[x])
 
+		# Convert all intensities to one (more than one seed for some bone perhaps)
+		self.segmentationArray[self.segmentationArray != 0] = 1
+
 		# Convert segmentationArray back into an image
-		segmentationOutput = sitk.Cast(sitk.GetImageFromArray(self.segmentationArray), self.MRI_Image.GetPixelID())
+		segmentationOutput = sitk.Cast(sitk.GetImageFromArray(self.segmentationArray), sitk.sitkUInt16)
 		segmentationOutput.CopyInformation(self.MRI_Image)
 
-		print('mch done')
+		segmentationOutput = BrentPython.FillHoles(segmentationOutput, True)		
+
 		return segmentationOutput
 
 	''' Split the Seed List using the multiprocessing library and then execute the pipeline '''
