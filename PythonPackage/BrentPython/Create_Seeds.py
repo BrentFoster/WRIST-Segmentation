@@ -39,6 +39,7 @@ def New_Seeds_Group(GT_Filename, Slice=550, num_seeds=1, label=1, kernelRadius=2
 	''' Split the image into a top and bottom (to get seeds at the top and bottom of some bone) '''
 	# ndaGT = sitk.GetArrayFromImage(GroundTruth)
 	
+
 	ndaGT_top = sitk.GetArrayFromImage(GroundTruth_original)
 	ndaGT_top[:,Slice+1-buffer_size:ndaGT_top.shape[1], :] = 0
 

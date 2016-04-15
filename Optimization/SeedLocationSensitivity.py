@@ -13,6 +13,7 @@ from BrentPython import BrentFiltering
 from BrentPython import Create_Seeds
 from BrentPython import Dice
 from BrentPython import SpectralClutering
+from BrentPython import MultiprocessorHelper
 
 def GetImagePaths():
 	# # Brent's MacBook image paths
@@ -230,7 +231,7 @@ def EstimateSigmoid(image):
 
 	return UpperThreshold
 
-def main(MRI_Filename, GT_Filename, label, num_seeds=5, kernelRadius=1, MRI_num=1):
+def main(MRI_Filename, GT_Filename, label, num_seeds=5, kernelRadius=1, MRI_num=1, use_one_seed=True):
 
 	# Load MRI and cast to 16 bit
 	MRI = load_MRI(MRI_Filename)
@@ -240,21 +241,13 @@ def main(MRI_Filename, GT_Filename, label, num_seeds=5, kernelRadius=1, MRI_num=
 	# Load the ground truth (manual segmented) image
 	GroundTruth = load_GT(GT_Filename, label)
 
-	# Create a random seed
-	seedPoints = Create_Seeds.New_Seeds_Group(GT_Filename, 550, num_seeds, label, kernelRadius)
-	# seedPoints = []
-	# new_point = np.array([305, 679, 148], dtype=int)
-	# seedPoints.append(new_point)
-	print('seedPoints' + str(seedPoints))
-	b
-
 	# Set the parameters for the segmentation class object
 	segmentationClass = BoneSegmentation.BoneSeg()
 	segmentationClass.SetScalingFactor(1)
-	segmentationClass.SetLevelSetUpperThreshold(80)
-	segmentationClass.SetShapeMaxRMSError(0.002) #0.004
-	segmentationClass.SetShapeMaxIterations(600)
-	segmentationClass.SetShapePropagationScale(4) #2, 4
+	segmentationClass.SetLevelSetUpperThreshold(250)
+	segmentationClass.SetShapeMaxRMSError(0.004) #0.004
+	segmentationClass.SetShapeMaxIterations(1000)
+	segmentationClass.SetShapePropagationScale(2) #2, 4
 	segmentationClass.SetShapeCurvatureScale(1)
 
 
@@ -262,31 +255,52 @@ def main(MRI_Filename, GT_Filename, label, num_seeds=5, kernelRadius=1, MRI_num=
 	UpperThreshold = EstimateSigmoid(MRI)
 	segmentationClass.SetLevelSetUpperThreshold(UpperThreshold)
 
-	for i in range(0, len(seedPoints)): 
+	if use_one_seed == True:
+		# Create a random seed
+		seedPoints = Create_Seeds.New_Seeds(GT_Filename, 550, num_seeds, label, kernelRadius)
+
+		for i in range(0, len(seedPoints)): 
 		
-		start_time = timeit.default_timer()
+			start_time = timeit.default_timer()
 
-		# Run segmentation with a randomly selected seed
-		segmentedImg = segmentationClass.Execute(MRI, [seedPoints[i]], True)
-		segmentedImg.CopyInformation(GroundTruth)
-		segmentedImg = sitk.Cast(segmentedImg, GroundTruth.GetPixelID())
+			# Run segmentation with a randomly selected seed
+			segmentedImg = segmentationClass.Execute(MRI, [seedPoints[i]], True)
+			
+			segmentedImg.CopyInformation(GroundTruth)
+			segmentedImg = sitk.Cast(segmentedImg, GroundTruth.GetPixelID())
 
-		dice_value = output_measures(GroundTruth, segmentedImg, seedPoints[i], label, MRI_Filename, MRI_num,i)
-		
-		# Save a screenshot to understand any errors
-		slice_filename =  'ScreenShots\Volunteer_' + str(MRI_num) + '_label_' + str(label) + '_slice_' + str(seedPoints[i][2]) + '_dice_' + str(dice_value) + '.nii'
-		SaveSlice(MRI=MRI, segmentedImg=segmentedImg,  seedPoint=seedPoints[i], filename=slice_filename)
+			dice_value = output_measures(GroundTruth, segmentedImg, seedPoints[i], label, MRI_Filename, MRI_num,i)
+			
+			# Save a screenshot to understand any errors
+			slice_filename = 'ScreenShots\Volunteer_' + str(MRI_num) + '_label_' + str(label) + '_slice_' + str(seedPoints[i][2]) + '_dice_' + str(dice_value) + '.nii'
+			SaveSlice(MRI=MRI, segmentedImg=segmentedImg,  seedPoint=seedPoints[i], filename=slice_filename)
 
-		# if dice_value < 0.5:
-		# 	''' Run the spectral clustering on the segmentation to remove leakage '''
-		# 	segmentedImg = RunSpectralClustering(segmentedImg, copy.copy(seedPoints[i]), GroundTruth)
-		# 	segmentedImg.CopyInformation(GroundTruth)
-		# 	segmentedImg = sitk.Cast(segmentedImg, GroundTruth.GetPixelID())
+	else:
+		# Create pairs of random seeds where one half are in the top half of bone while the other are from the bottom half
+		seedPoints = Create_Seeds.New_Seeds_Group(GT_Filename, 550, num_seeds, label, kernelRadius)
+		print(seedPoints)		
 
-		# 	dice_value = output_measures(GroundTruth, segmentedImg, seedPoints[i], label, MRI_Filename)
+		for i in range(0, len(seedPoints)/2):
+			''' Run segmentation with a randomly selected seed from the top and from the bottom of the bone '''
+			start_time = timeit.default_timer()
+			tempSeeds = [seedPoints[i], seedPoints[i + len(seedPoints)/2]]
 
-		# 	slice_filename =  'ScreenShots\Volunteer_' + str(MRI_num) + '_label_' + str(label) + '_slice_' + str(seedPoints[i][2]) + '_dice_' + str(dice_value) + '_SC.nii'
-		# 	SaveSlice(MRI=MRI, segmentedImg=segmentedImg,  seedPoint=seedPoints[i], filename=slice_filename)
+			print('Iteration number: ' + str(i)) 
+
+			# Use the multiprocessor to run both seeds at the same time
+			multiHelper = MultiprocessorHelper.Multiprocessor()
+
+			segmentedImg = multiHelper.Execute(segmentationClass, tempSeeds, MRI, parameter=[1,2,3], verbose=True)
+			segmentedImg.CopyInformation(GroundTruth)
+			segmentedImg = sitk.Cast(segmentedImg, GroundTruth.GetPixelID())
+
+			dice_value = output_measures(GroundTruth, segmentedImg, tempSeeds, label, MRI_Filename, MRI_num,i)
+			
+			# Save a screenshot to understand any errors
+			slice_filename = 'ScreenShots\Volunteer_' + str(MRI_num) + '_label_' + str(label) + '_slice_' + str(seedPoints[i][2]) + '_dice_' + str(dice_value) + '.nii'
+			SaveSlice(MRI=MRI, segmentedImg=segmentedImg,  seedPoint=seedPoints[i], filename=slice_filename)
+
+
 
 	return 0
 	
@@ -314,7 +328,7 @@ if __name__ == '__main__':
 			GT_Filename = GT_Filenames[i]
 
 			# try:			
-			main(MRI_Filename, GT_Filename, label, num_seeds=10, kernelRadius=3, MRI_num=i+1)	
+			main(MRI_Filename, GT_Filename, label, num_seeds=30, kernelRadius=3, MRI_num=i+1, use_one_seed=False)	
 			# except:
 				# print('ERROR IN MAIN!!')
 
@@ -325,7 +339,25 @@ if __name__ == '__main__':
 	print(Fore.BLUE + "Elapsed Time (secs):" + str(round(elapsed,3)))
 
 def old_garbage():
-	'Old code that is potentially useful for later'
+	'Old code that is potentially (or not) useful for later'
+
+	# seedPoints = []
+	# new_point = np.array([305, 679, 148], dtype=int)
+	# seedPoints.append(new_point)
+
+	# if dice_value < 0.5:
+	# 	''' Run the spectral clustering on the segmentation to remove leakage '''
+	# 	segmentedImg = RunSpectralClustering(segmentedImg, copy.copy(seedPoints[i]), GroundTruth)
+	# 	segmentedImg.CopyInformation(GroundTruth)
+	# 	segmentedImg = sitk.Cast(segmentedImg, GroundTruth.GetPixelID())
+
+	# 	dice_value = output_measures(GroundTruth, segmentedImg, seedPoints[i], label, MRI_Filename)
+
+	# 	slice_filename =  'ScreenShots\Volunteer_' + str(MRI_num) + '_label_' + str(label) + '_slice_' + str(seedPoints[i][2]) + '_dice_' + str(dice_value) + '_SC.nii'
+	# 	SaveSlice(MRI=MRI, segmentedImg=segmentedImg,  seedPoint=seedPoints[i], filename=slice_filename)
+
+
+
 	# num_seeds = 10 corresponds to ~3 hours
 	# kernelRadius = 5 seems to be a good amount
 

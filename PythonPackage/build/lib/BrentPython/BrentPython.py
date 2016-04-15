@@ -11,6 +11,23 @@ from sklearn.feature_extraction import image
 from sklearn.cluster import spectral_clustering
 
 
+def AddImages(sitkImageOne, sitkImageTwo, MakeBinary=True):
+	''' Add two SimpleITK type images together and optionally binarize the resulting image '''
+
+	ndaOne = np.asarray(sitk.GetArrayFromImage(sitkImageOne))
+	ndaTwo = np.asarray(sitk.GetArrayFromImage(sitkImageTwo))
+
+	ndaOutput = ndaOne + ndaTwo
+
+	if MakeBinary == True:
+		ndaOutput[ndaOutput != 0] = 1
+
+	outputImg = sitk.Cast(sitk.GetImageFromArray(ndaOutput), sitkImageOne.GetPixelID())
+
+	return outputImg
+
+
+
 def OverlayImages(sitkImage, labelImage, opacity=0.9, backgroundValue=0):
 	''' Apply a colormap to a label image and put it on top of the input image '''	
 

@@ -1,0 +1,30 @@
+0.97,1,94.7255856995,[array([112, 466, 108], dtype=int64), array([171, 640,  89], dtype=int64)],E:/Google Drive/Research/MRI Wrist Images/CMC OA/Filtered Images/Volunteer1_VIBE_we_filtered.nii
+0.97,1,196.557703071,[array([106, 465,  65], dtype=int64), array([171, 621,  80], dtype=int64)],E:/Google Drive/Research/MRI Wrist Images/CMC OA/Filtered Images/Volunteer1_VIBE_we_filtered.nii
+0.97,1,308.448740743,[array([113, 485,  77], dtype=int64), array([159, 637, 104], dtype=int64)],E:/Google Drive/Research/MRI Wrist Images/CMC OA/Filtered Images/Volunteer1_VIBE_we_filtered.nii
+0.77,1,409.170119897,[array([107, 496, 105], dtype=int64), array([144, 614,  68], dtype=int64)],E:/Google Drive/Research/MRI Wrist Images/CMC OA/Filtered Images/Volunteer1_VIBE_we_filtered.nii
+0.97,1,524.774828138,[array([103, 464, 110], dtype=int64), array([133, 610,  76], dtype=int64)],E:/Google Drive/Research/MRI Wrist Images/CMC OA/Filtered Images/Volunteer1_VIBE_we_filtered.nii
+0.96,1,638.825413172,[array([ 84, 498,  82], dtype=int64), array([168, 603, 100], dtype=int64)],E:/Google Drive/Research/MRI Wrist Images/CMC OA/Filtered Images/Volunteer1_VIBE_we_filtered.nii
+0.97,1,754.668739707,[array([112, 488,  69], dtype=int64), array([163, 610,  87], dtype=int64)],E:/Google Drive/Research/MRI Wrist Images/CMC OA/Filtered Images/Volunteer1_VIBE_we_filtered.nii
+0.69,1,837.474846892,[array([120, 499,  93], dtype=int64), array([193, 617,  72], dtype=int64)],E:/Google Drive/Research/MRI Wrist Images/CMC OA/Filtered Images/Volunteer1_VIBE_we_filtered.nii
+0.79,1,944.73424952,[array([103, 496, 104], dtype=int64), array([176, 602, 114], dtype=int64)],E:/Google Drive/Research/MRI Wrist Images/CMC OA/Filtered Images/Volunteer1_VIBE_we_filtered.nii
+0.97,1,1051.9927566,[array([ 79, 472,  94], dtype=int64), array([166, 610,  94], dtype=int64)],E:/Google Drive/Research/MRI Wrist Images/CMC OA/Filtered Images/Volunteer1_VIBE_we_filtered.nii
+0.96,1,1145.93418826,[array([138, 474,  93], dtype=int64), array([160, 625, 107], dtype=int64)],E:/Google Drive/Research/MRI Wrist Images/CMC OA/Filtered Images/Volunteer1_VIBE_we_filtered.nii
+0.97,1,1248.31489637,[array([ 84, 473,  78], dtype=int64), array([160, 644, 102], dtype=int64)],E:/Google Drive/Research/MRI Wrist Images/CMC OA/Filtered Images/Volunteer1_VIBE_we_filtered.nii
+0.97,1,1363.20701479,[array([ 75, 477,  87], dtype=int64), array([133, 604,  90], dtype=int64)],E:/Google Drive/Research/MRI Wrist Images/CMC OA/Filtered Images/Volunteer1_VIBE_we_filtered.nii
+0.97,1,1472.89772607,[array([106, 484,  65], dtype=int64), array([173, 613, 107], dtype=int64)],E:/Google Drive/Research/MRI Wrist Images/CMC OA/Filtered Images/Volunteer1_VIBE_we_filtered.nii
+0.97,1,1583.88648239,[array([124, 471,  86], dtype=int64), array([155, 606,  81], dtype=int64)],E:/Google Drive/Research/MRI Wrist Images/CMC OA/Filtered Images/Volunteer1_VIBE_we_filtered.nii
+0.97,1,1689.01942565,[array([103, 476,  72], dtype=int64), array([169, 628, 107], dtype=int64)],E:/Google Drive/Research/MRI Wrist Images/CMC OA/Filtered Images/Volunteer1_VIBE_we_filtered.nii
+0.97,1,1791.33802418,[array([ 78, 467,  84], dtype=int64), array([164, 622,  71], dtype=int64)],E:/Google Drive/Research/MRI Wrist Images/CMC OA/Filtered Images/Volunteer1_VIBE_we_filtered.nii
+0.92,1,1887.69329554,[array([100, 498,  97], dtype=int64), array([189, 607,  89], dtype=int64)],E:/Google Drive/Research/MRI Wrist Images/CMC OA/Filtered Images/Volunteer1_VIBE_we_filtered.nii
+0.97,1,1983.43016062,[array([101, 466,  96], dtype=int64), array([158, 624, 104], dtype=int64)],E:/Google Drive/Research/MRI Wrist Images/CMC OA/Filtered Images/Volunteer1_VIBE_we_filtered.nii
+0.96,1,2091.61030331,[array([ 91, 499,  77], dtype=int64), array([177, 630, 103], dtype=int64)],E:/Google Drive/Research/MRI Wrist Images/CMC OA/Filtered Images/Volunteer1_VIBE_we_filtered.nii
+0.94,1,2176.96176515,[array([ 89, 485,  78], dtype=int64), array([160, 640, 103], dtype=int64)],E:/Google Drive/Research/MRI Wrist Images/CMC OA/Filtered Images/Volunteer1_VIBE_we_filtered.nii
+0.97,1,2287.06973099,[array([125, 478,  79], dtype=int64), array([154, 603,  74], dtype=int64)],E:/Google Drive/Research/MRI Wrist Images/CMC OA/Filtered Images/Volunteer1_VIBE_we_filtered.nii
+0.97,1,2395.50138809,[array([105, 483,  71], dtype=int64), array([153, 617, 104], dtype=int64)],E:/Google Drive/Research/MRI Wrist Images/CMC OA/Filtered Images/Volunteer1_VIBE_we_filtered.nii
+0.97,1,2490.35553526,[array([105, 473,  87], dtype=int64), array([183, 622, 104], dtype=int64)],E:/Google Drive/Research/MRI Wrist Images/CMC OA/Filtered Images/Volunteer1_VIBE_we_filtered.nii
+0.97,1,2580.24373239,[array([120, 468, 102], dtype=int64), array([173, 633, 101], dtype=int64)],E:/Google Drive/Research/MRI Wrist Images/CMC OA/Filtered Images/Volunteer1_VIBE_we_filtered.nii
+0.97,1,2675.70259716,[array([124, 485, 108], dtype=int64), array([178, 630,  68], dtype=int64)],E:/Google Drive/Research/MRI Wrist Images/CMC OA/Filtered Images/Volunteer1_VIBE_we_filtered.nii
+0.85,1,2800.86395698,[array([ 90, 500,  91], dtype=int64), array([174, 602,  77], dtype=int64)],E:/Google Drive/Research/MRI Wrist Images/CMC OA/Filtered Images/Volunteer1_VIBE_we_filtered.nii
+0.97,1,2907.42322236,[array([122, 467,  85], dtype=int64), array([152, 610, 105], dtype=int64)],E:/Google Drive/Research/MRI Wrist Images/CMC OA/Filtered Images/Volunteer1_VIBE_we_filtered.nii
+0.79,1,3049.47778515,[array([ 96, 475,  86], dtype=int64), array([151, 618,  61], dtype=int64)],E:/Google Drive/Research/MRI Wrist Images/CMC OA/Filtered Images/Volunteer1_VIBE_we_filtered.nii
+0.97,1,3170.20161808,[array([ 94, 485, 108], dtype=int64), array([160, 642,  85], dtype=int64)],E:/Google Drive/Research/MRI Wrist Images/CMC OA/Filtered Images/Volunteer1_VIBE_we_filtered.nii

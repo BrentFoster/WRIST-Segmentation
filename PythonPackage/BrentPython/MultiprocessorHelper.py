@@ -24,7 +24,7 @@ def f(MRI_Array, SeedPoint, q, parameter):
 	# segmentationClass = BoneSegmentation.BoneSeg()
 	segmentationClass.SetScalingFactor(1)
 	segmentationClass.SetLevelSetUpperThreshold(250)
-	segmentationClass.SetShapeMaxRMSError(0.004) #0.004
+	segmentationClass.SetShapeMaxRMSError(0.002) #0.004
 	segmentationClass.SetShapeMaxIterations(3000) # 4000
 	segmentationClass.SetShapePropagationScale(4) # 4
 	segmentationClass.SetShapeCurvatureScale(1)
