@@ -34,7 +34,12 @@ class BoneSeg(object):
 
         # Estimate the threshold level by image intensity statistics
         LowerThreshold = self.EstimateSigmoid()
-        # LowerThreshold = 350
+
+        # TEST
+        LowerThreshold = LowerThreshold 
+        #LowerThreshold = 200
+        # END TEST
+        
         self.SetLevelSetLowerThreshold(LowerThreshold)
 
         if self.verbose == True:
@@ -114,12 +119,17 @@ class BoneSeg(object):
         # sigFilter = sitk.SigmoidImageFilter()
         
 
-        # self.sigFilter.SetAlpha(50)
+        self.sigFilter.SetBeta(150)
+        self.sigFilter.SetAlpha(0)
+
         # self.sigFilter.SetOutputMinimum(0)
         # self.sigFilter.SetOutputMaximum(255)
 
         processedImage = self.sigFilter.Execute(self.image) 
         processedImage  = sitk.Cast(processedImage, sitk.sitkUInt16)
+
+        BrentPython.SaveSegmentation(processedImage, 'ScreenShots/processedImage.nii', verbose = True)
+        a
 
         # sitk.Show(self.image, 'image')
         # sitk.Show(processedImage, 'processedImage')
@@ -322,12 +332,12 @@ class BoneSeg(object):
         self.thresholdLevelSet.SetPropagationScaling(propagationScale)
         
     def SetLevelSetLowerThreshold(self, lowerThreshold):
-        self.sigFilter.SetAlpha(int(lowerThreshold))
+        self.sigFilter.SetBeta(int(lowerThreshold))
         self.thresholdFilter.SetLowerThreshold(int(lowerThreshold)+1) #Add one so the threshold is greater than Zero
         self.thresholdLevelSet.SetLowerThreshold(int(lowerThreshold))   
-        
+
     def SetLevelSetUpperThreshold(self, upperThreshold):
-        self.sigFilter.SetBeta(int(upperThreshold))
+        self.sigFilter.SetAlpha(int(upperThreshold))
         self.thresholdFilter.SetUpperThreshold(int(upperThreshold))
         self.thresholdLevelSet.SetUpperThreshold(int(upperThreshold))   
         

@@ -245,9 +245,9 @@ def main(MRI_Filename, GT_Filename, label, num_seeds=5, kernelRadius=1, MRI_num=
 	segmentationClass = BoneSegmentation.BoneSeg()
 	segmentationClass.SetScalingFactor(1)
 	segmentationClass.SetLevelSetUpperThreshold(250)
-	segmentationClass.SetShapeMaxRMSError(0.004) #0.004
+	segmentationClass.SetShapeMaxRMSError(0.001) #0.004
 	segmentationClass.SetShapeMaxIterations(1000)
-	segmentationClass.SetShapePropagationScale(2) #2, 4
+	segmentationClass.SetShapePropagationScale(4) #2, 4
 	segmentationClass.SetShapeCurvatureScale(1)
 
 
@@ -257,9 +257,11 @@ def main(MRI_Filename, GT_Filename, label, num_seeds=5, kernelRadius=1, MRI_num=
 
 	if use_one_seed == True:
 		# Create a random seed
-		seedPoints = Create_Seeds.New_Seeds(GT_Filename, 550, num_seeds, label, kernelRadius)
+		seedPoints = Create_Seeds.New_Seeds(GT_Filename, num_seeds, label, kernelRadius)
 
-		for i in range(0, len(seedPoints)): 
+		for i in range(0, len(seedPoints)):
+
+			print('Iteration: ' + str(i)) 
 		
 			start_time = timeit.default_timer()
 
@@ -277,7 +279,7 @@ def main(MRI_Filename, GT_Filename, label, num_seeds=5, kernelRadius=1, MRI_num=
 
 	else:
 		# Create pairs of random seeds where one half are in the top half of bone while the other are from the bottom half
-		seedPoints = Create_Seeds.New_Seeds_Group(GT_Filename, 550, num_seeds, label, kernelRadius)
+		seedPoints = Create_Seeds.New_Seeds_Group(GT_Filename, num_seeds, label, kernelRadius)
 		print(seedPoints)		
 
 		for i in range(0, len(seedPoints)/2):
@@ -299,7 +301,7 @@ def main(MRI_Filename, GT_Filename, label, num_seeds=5, kernelRadius=1, MRI_num=
 			# Save a screenshot to understand any errors
 			slice_filename = 'ScreenShots\Volunteer_' + str(MRI_num) + '_label_' + str(label) + '_slice_' + str(seedPoints[i][2]) + '_dice_' + str(dice_value) + '.nii'
 			SaveSlice(MRI=MRI, segmentedImg=segmentedImg,  seedPoint=seedPoints[i], filename=slice_filename)
-
+	
 
 
 	return 0
@@ -321,16 +323,16 @@ if __name__ == '__main__':
 	[MRI_Filenames, GT_Filenames] = GetImagePaths()
 
 	for i in [0]:#range(0, len(MRI_Filenames)):
-		for label in [1]:#range(1,10):
+		for label in [1]: #range(2,10):
 
-			# print('i = ' + str(i) + ' label = ' + str(label))
+			print('i = ' + str(i) + ' label = ' + str(label))
 			MRI_Filename = MRI_Filenames[i]
 			GT_Filename = GT_Filenames[i]
 
-			# try:			
-			main(MRI_Filename, GT_Filename, label, num_seeds=30, kernelRadius=3, MRI_num=i+1, use_one_seed=False)	
-			# except:
-				# print('ERROR IN MAIN!!')
+			#try:			
+			main(MRI_Filename, GT_Filename, label, num_seeds=1, kernelRadius=1, MRI_num=i+1, use_one_seed=False)	
+			#except:
+			#	print('ERROR IN MAIN!!')
 
 
 	# Determine how long the algorithm took to run

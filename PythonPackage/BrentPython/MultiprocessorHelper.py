@@ -23,9 +23,9 @@ def f(MRI_Array, SeedPoint, q, parameter):
 	# Set the parameters for the segmentation class object
 	# segmentationClass = BoneSegmentation.BoneSeg()
 	segmentationClass.SetScalingFactor(1)
-	segmentationClass.SetLevelSetUpperThreshold(250)
+	#segmentationClass.SetLevelSetUpperThreshold(120) #250 
 	segmentationClass.SetShapeMaxRMSError(0.002) #0.004
-	segmentationClass.SetShapeMaxIterations(3000) # 4000
+	segmentationClass.SetShapeMaxIterations(3000) # 3000
 	segmentationClass.SetShapePropagationScale(4) # 4
 	segmentationClass.SetShapeCurvatureScale(1)
 
@@ -93,7 +93,7 @@ class Multiprocessor(object):
 		segmentationOutput = sitk.Cast(sitk.GetImageFromArray(self.segmentationArray), sitk.sitkUInt16)
 		segmentationOutput.CopyInformation(self.MRI_Image)
 
-		segmentationOutput = BrentPython.FillHoles(segmentationOutput, True)		
+		segmentationOutput = BrentPython.FillHoles(segmentationOutput, False)		
 
 		return segmentationOutput
 

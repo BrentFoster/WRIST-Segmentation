@@ -1,6 +1,9 @@
 import SimpleITK as sitk
 import numpy as np
 
+# Import modules from the BrentPython Python package 
+import BrentPython
+from BrentPython import *
 
 def New_Seeds(GT_Filename, num_seeds=1, label=1, kernelRadius=2):
 	# Load the ground truth image
@@ -28,22 +31,32 @@ def New_Seeds(GT_Filename, num_seeds=1, label=1, kernelRadius=2):
 	return seedPoints
 
 
-def New_Seeds_Group(GT_Filename, Slice=550, num_seeds=1, label=1, kernelRadius=2, buffer_size=50):
+def New_Seeds_Group(GT_Filename, num_seeds=1, label=1, kernelRadius=2, buffer_size=10, save_seeds_as_image=False, seed_img_filename='ScreenShots/img_Output.nii'):
 	# Load the ground truth image
 	GroundTruth_original = sitk.ReadImage(GT_Filename)
 
-	# erodeFilter = sitk.BinaryErodeImageFilter()
-	# erodeFilter.SetKernelRadius(kernelRadius)
-	# GroundTruth = erodeFilter.Execute(GroundTruth_original, 0, label, False) 
+	# Erode the binary image slightly to prevent the seeds to be exactly on the boundary 
+	erodeFilter = sitk.BinaryErodeImageFilter()
+	erodeFilter.SetKernelRadius(kernelRadius)
+	GroundTruth = erodeFilter.Execute(GroundTruth_original, 0, label, False) 
 
 	''' Split the image into a top and bottom (to get seeds at the top and bottom of some bone) '''
-	# ndaGT = sitk.GetArrayFromImage(GroundTruth)
-	
+	# Automatically find the center of the bone to split into two halves
+	ndx = np.where(sitk.GetArrayFromImage(GroundTruth_original) == label)
+	Slice = np.mean(ndx[1])
+
+	print('Slice: ' + str(Slice))
+
+	# Use this slice to split the bone into two halves with a buffer between then
+	# to have the seeds to be near the ends of the bone
 	ndaGT_top = sitk.GetArrayFromImage(GroundTruth_original)
 	ndaGT_top[:,Slice+1-buffer_size:ndaGT_top.shape[1], :] = 0
 
 	ndaGT_bot = sitk.GetArrayFromImage(GroundTruth_original)
 	ndaGT_bot[:, 0:Slice+buffer_size, :] = 0
+
+	# BrentPython.SaveSegmentation(sitk.GetImageFromArray(ndaGT_top), 'ScreenShots/ndaGT_top.nii', verbose = True)	
+	
 
 	''' Use the ground truth image to create random seed locations within bone '''
 	seedPoints = []
@@ -71,22 +84,21 @@ def New_Seeds_Group(GT_Filename, Slice=550, num_seeds=1, label=1, kernelRadius=2
 		except:
 			print('Error in creating random seed point. len(ndx[0]) = ' + str(len(ndx[0])))
 
+	# Optionally save all the seed locations as an image (for rendering and debugging purposes)
+	if save_seeds_as_image == True:
 
+		ndaGT = sitk.GetArrayFromImage(GroundTruth_original)
+		ndaGT = ndaGT*0
 
+		for i in range(0, len(seedPoints)):
+			tempSeed = seedPoints[i]
+			print(tempSeed)
+			ndaGT[tempSeed[2], tempSeed[1], tempSeed[0]] = 255
 
+		img_Output = sitk.Cast(sitk.GetImageFromArray(ndaGT), GroundTruth_original.GetPixelID())
 
-	ndaGT = sitk.GetArrayFromImage(GroundTruth_original)
-	ndaGT = ndaGT*0
-
-	for i in range(0, len(seedPoints)):
-		tempSeed = seedPoints[i]
-		print(tempSeed)
-		ndaGT[tempSeed[2], tempSeed[1], tempSeed[0]] = 255
-
-	img_Output = sitk.Cast(sitk.GetImageFromArray(ndaGT), GroundTruth_original.GetPixelID())
-
-	imageWriter = sitk.ImageFileWriter()
-	imageWriter.Execute(img_Output, 'ScreenShots/img_Output.nii', True)
+		imageWriter = sitk.ImageFileWriter()
+		imageWriter.Execute(img_Output, seed_img_filename, True)
 
 
 
