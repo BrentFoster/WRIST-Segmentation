@@ -119,8 +119,8 @@ class BoneSeg(object):
         # sigFilter = sitk.SigmoidImageFilter()
         
 
-        # self.sigFilter.SetBeta(150)
-        # self.sigFilter.SetAlpha(0)
+        self.sigFilter.SetBeta(150)
+        self.sigFilter.SetAlpha(0)
 
         # self.sigFilter.SetOutputMinimum(0)
         # self.sigFilter.SetOutputMaximum(255)
