@@ -59,6 +59,30 @@ class BoneSegmentation_SlicerWidget:
             self.inputVolumeSelectorLabel, self.inputSelector)
         self.inputSelector.connect('currentNodeChanged(vtkMRMLNode*)', self.onInputSelect)
 
+
+        #
+        # Output Volume Selector
+        #
+        self.outputVolumeSelectorLabel = qt.QLabel()
+        self.outputVolumeSelectorLabel.setText("Output Volume: ")
+        self.outputVolumeSelectorLabel.setToolTip(
+            "Select the output volume to save to")
+        self.outputSelector = slicer.qMRMLNodeComboBox()
+        # self.outputSelector.nodeTypes = ("vtkMRMLScalarVolumeNode", "")
+        self.outputSelector.nodeTypes = ["vtkMRMLLabelMapVolumeNode"]
+        self.outputSelector.noneEnabled = False
+        self.outputSelector.selectNodeUponCreation = True
+        self.outputSelector.setMRMLScene(slicer.mrmlScene)
+        frameLayout.addRow(
+            self.outputVolumeSelectorLabel, self.outputSelector)
+        # self.outputSelector.connect('currentNodeChanged(vtkMRMLNode*)', self.onInputSelect)
+
+
+
+
+
+
+
         #
         # Markup Selector
         #
@@ -310,9 +334,34 @@ class BoneSegmentation_SlicerWidget:
         Segmentation = multiHelper.Execute(segmentationClass, seedPoints, image, parameters, NumCPUs, True)
         print(Segmentation)
 
+        # Segmentation = sitk.Cast(Segmentation, sitk.sitkLabelUInt8)
+
+
+
+        # BinaryToLabelFilter = sitk.BinaryImageToLabelMapFilter()
+        # BinaryToLabelFilter.SetInputForegroundValue(1)
+        # LabelMapToLabelImageFilter = sitk.LabelMapToLabelImageFilter()
+
+        # Segmentation = BinaryToLabelFilter.Execute(Segmentation)
+        # Segmentation = LabelMapToLabelImageFilter.Execute(Segmentation)
+
+
+        # print('done with LabelMapToLabelImageFilter')
+        # print(Segmentation)
+
+        # imageWriter = sitk.ImageFileWriter()
+        # imageWriter.Execute(Segmentation, 'C:\Users\Brent\GitRepositories\BoneSegmentation\SlicerModule\segImg.nii', True)
+
         # Output options in Slicer = {0:'background', 1:'foreground', 2:'label'}
-        sitkUtils.PushLabel(Segmentation,'Segmentation', overwrite=True)     
-        sitkUtils.PushToSlicer(Segmentation, 'SegmentationImage', 1, overwrite=True) 
+        imageID = self.outputSelector.currentNode()
+        # sitkUtils.PushLabel(Segmentation, imageID.GetName(), overwrite=True)     
+        sitkUtils.PushToSlicer(Segmentation, 'Segmentation', 1, overwrite=True) 
+
+        # Find the output image in Slicer to save the segmentation to
+        # imageID = self.outputSelector.currentNode()
+        # image = sitkUtils.PushToSlicer(Segmentation, imageID.GetName(), 1, overwrite=True)
+
+
 
 if __name__ == "__main__":
     # TODO: need a way to access and parse command line arguments

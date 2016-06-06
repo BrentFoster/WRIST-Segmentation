@@ -119,8 +119,8 @@ class BoneSeg(object):
         # sigFilter = sitk.SigmoidImageFilter()
         
 
-        self.sigFilter.SetBeta(150)
-        self.sigFilter.SetAlpha(0)
+        # self.sigFilter.SetBeta(150)
+        # self.sigFilter.SetAlpha(0)
 
         # self.sigFilter.SetOutputMinimum(0)
         # self.sigFilter.SetOutputMaximum(255)
@@ -128,8 +128,8 @@ class BoneSeg(object):
         processedImage = self.sigFilter.Execute(self.image) 
         processedImage  = sitk.Cast(processedImage, sitk.sitkUInt16)
 
-        BrentPython.SaveSegmentation(processedImage, 'ScreenShots/processedImage.nii', verbose = True)
-        a
+        # BrentPython.SaveSegmentation(processedImage, 'ScreenShots/processedImage.nii', verbose = True)
+        
 
         # sitk.Show(self.image, 'image')
         # sitk.Show(processedImage, 'processedImage')
