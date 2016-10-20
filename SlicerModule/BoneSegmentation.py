@@ -21,7 +21,8 @@ class BoneSeg(object):
             self.image = sitk.Cast(self.image, sitk.sitkFloat32)
         except:
             # Convert from numpy array to a SimpleITK image type first then cast
-            self.image = sitk.Cast(sitk.GetImageFromArray(image), sitk.sitkFloat32)
+            self.image = sitk.Cast(sitk.GetImageFromArray(self.image), sitk.sitkFloat32)
+            original_image = self.image # original_image needs to be a SimpleITK image type for later
 
         # Crop the image so that it considers only a search space around the seed point
         # to speed up computation significantly!
@@ -127,9 +128,6 @@ class BoneSeg(object):
 
         return self
 
-
-
-
     def CropImage(self):
         ' Crop the input_image around the initial seed point to speed up computation '
         cropFilter = sitk.CropImageFilter()
@@ -180,8 +178,6 @@ class BoneSeg(object):
         nda = nda*0
 
         seedPoint = self.seedPoint[0]
-
-        print(seedPoint)
 
         # In numpy an array is indexed in the opposite order (z,y,x)
         nda[seedPoint[2]][seedPoint[1]][seedPoint[0]] = 1
@@ -367,10 +363,11 @@ class BoneSeg(object):
 
         UpperThreshold = 0.002575*(std+mean)*(std+mean) - 0.028942*(std+mean) + 36.791614
 
-        # print('Mean: ' + str(round(mean,2)))
-        # print('STD: ' + str(round(std,2)))
-        # print('UpperThreshold: ' + str(round(UpperThreshold,2)))
-        # print(' ')
+        if self.verbose == True:
+            print('Mean: ' + str(round(mean,2)))
+            print('STD: ' + str(round(std,2)))
+            print('UpperThreshold: ' + str(round(UpperThreshold,2)))
+            print(' ')
 
         return UpperThreshold
 

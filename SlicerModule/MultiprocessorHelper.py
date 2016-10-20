@@ -3,14 +3,14 @@ import numpy as np
 import multiprocessing
 import timeit
 
-import BrentPython
-from BrentPython import *
+# import BrentPython
+# from BrentPython import *
 
-def f(MRI_Array, SeedPoint, q, parameter):
+def f(MRI_Array, SeedPoint, q, parameter, searchWindow):
 	""" Function to be used with the Multiprocessor class (needs to be its own function 
 		and not part of the same class to avoid the 'Pickle' type errors. """
-	import BoneSegmentation as BrentSeg # This seems to be needed for Windows
-	segmentationClass = BrentSeg.BoneSeg()
+	import BoneSegmentation # This seems to be needed for Windows
+	segmentationClass = BoneSegmentation.BoneSeg()
 
 	# Change some parameter(s) of the segmentation class for the optimization
 	# if all(parameter != 0): 
@@ -22,14 +22,19 @@ def f(MRI_Array, SeedPoint, q, parameter):
 
 	# Set the parameters for the segmentation class object
 	# segmentationClass = BoneSegmentation.BoneSeg()
-	segmentationClass.SetScalingFactor(1)
+	# segmentationClass.SetScalingFactor(1)
 	#segmentationClass.SetLevelSetUpperThreshold(120) #250 
-	segmentationClass.SetShapeMaxRMSError(0.002) #0.004
-	segmentationClass.SetShapeMaxIterations(3000) # 3000
-	segmentationClass.SetShapePropagationScale(4) # 4
-	segmentationClass.SetShapeCurvatureScale(1)
+	# segmentationClass.SetShapeMaxRMSError(0.002) #0.004
+	# segmentationClass.SetShapeMaxIterations(3000) # 3000
+	# segmentationClass.SetShapePropagationScale(4) # 4
+	# segmentationClass.SetShapeCurvatureScale(1)
 
-	output = segmentationClass.Execute(MRI_Array,[SeedPoint], verbose=True, returnSitkImage=False)
+	output = segmentationClass.Execute(MRI_Array, [SeedPoint], verbose=False, 
+									returnSitkImage=False, convertSeedPhyscial=False,
+									searchWindow=searchWindow)
+
+
+	# output = segmentationClass.Execute(MRI_Array,[SeedPoint], verbose=True, returnSitkImage=False)
 	q.put(output)
 	q.close()
 
@@ -40,17 +45,18 @@ class Multiprocessor(object):
 		# super(ClassName, self).__init__()
 		self = self
 
-	def Execute(self, seedList, MRI_Image, parameter=0, verbose=False):
+	def Execute(self, seedList, MRI_Image, searchWindow, parameter=0, verbose=False):
 		# self.segmentationClass = segmentationClass
 		self.seedList = seedList
 		self.MRI_Image = MRI_Image
 		self.parameter = parameter
-		self.verbose = verbose #Show output to terminal or not
+		self.verbose = verbose # Flag to show output to terminal or not
+		self.searchWindow = searchWindow
 
 		# Convert to voxel coordinates if the seed points are in physical units
 		# self.RoundSeedPoints() 
 
-		# Create an empty segmenationLabel array###
+		# Create an empty segmenationLabel array
 		nda = sitk.GetArrayFromImage(self.MRI_Image)
 		nda = np.asarray(nda)
 		nda = nda*0
@@ -86,14 +92,14 @@ class Multiprocessor(object):
 			for x in range(len(jobOrder)):
 				self.segmentationArray = self.segmentationArray + (x+1)*self.RunMultiprocessing(jobOrder[x])
 
-		# Convert all intensities to one (more than one seed for some bone perhaps)
-		self.segmentationArray[self.segmentationArray != 0] = 1
+		# # Convert all intensities to one (more than one seed for some bone perhaps)
+		# self.segmentationArray[self.segmentationArray != 0] = 1
 
 		# Convert segmentationArray back into an image
 		segmentationOutput = sitk.Cast(sitk.GetImageFromArray(self.segmentationArray), sitk.sitkUInt16)
 		segmentationOutput.CopyInformation(self.MRI_Image)
 
-		segmentationOutput = BrentPython.FillHoles(segmentationOutput, False)		
+		# segmentationOutput = BrentPython.FillHoles(segmentationOutput, False)		
 
 		return segmentationOutput
 
@@ -103,7 +109,7 @@ class Multiprocessor(object):
 		procs = []
 		q = multiprocessing.Queue()
 		for x in jobOrder:
-			p = multiprocessing.Process(target=f, args=(self.MRI_Array, self.seedList[x],q, self.parameter,))
+			p = multiprocessing.Process(target=f, args=(self.MRI_Array, self.seedList[x],q, self.parameter,self.searchWindow,))
 			p.start()
 			procs.append(p) #List of current processes
 
