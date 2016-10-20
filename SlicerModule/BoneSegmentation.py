@@ -6,7 +6,7 @@ import timeit
 
 class BoneSeg(object):
     """Class of BoneSegmentation. REQUIRED: BoneSeg(MRI_Image,SeedPoint)"""
-    def Execute(self, image, seedPoint, verbose=False, returnSitkImage=True):
+    def Execute(self, image, seedPoint, verbose=False, returnSitkImage=True, convertSeedPhyscial=True):
 
         start_time = timeit.default_timer() 
 
@@ -34,7 +34,9 @@ class BoneSeg(object):
             print('\033[94m' + "Current Seed Point: "),
             print(self.seedPoint)
             print('\033[94m' + "Rounding and converting to voxel domain: "), 
-        self.RoundSeedPoint()
+
+        
+        self.RoundSeedPoint(convertSeedPhyscial)
 
         if self.verbose == True:
             print(self.seedPoint)
@@ -122,6 +124,8 @@ class BoneSeg(object):
         nda = nda*0
 
         seedPoint = self.seedPoint[0]
+
+        print(seedPoint)
 
         # In numpy an array is indexed in the opposite order (z,y,x)
         nda[seedPoint[2]][seedPoint[1]][seedPoint[0]] = 1
@@ -330,24 +334,25 @@ class BoneSeg(object):
         self.segImg = self.thresholdFilter.Execute(tempImg)
         return self
 
-    def RoundSeedPoint(self):
+    def RoundSeedPoint(self, convertSeedPhyscial):
         tempseedPoint = np.array(self.seedPoint).astype(int) #Just to be safe make it int again
         tempseedPoint = tempseedPoint[0]
 
-        # Convert from physical to image domain
-        tempFloat = [float(tempseedPoint[0]), float(tempseedPoint[1]), float(tempseedPoint[2])]
+        if convertSeedPhyscial == True:
+            # Convert from physical to image domain
+            tempFloat = [float(tempseedPoint[0]), float(tempseedPoint[1]), float(tempseedPoint[2])]
 
-        # Convert from physical units to voxel coordinates
-        # tempVoxelCoordinates = self.image.TransformPhysicalPointToContinuousIndex(tempFloat)
-        # self.seedPoint = tempVoxelCoordinates
-        self.seedPoint = tempFloat
+            # Convert from physical units to voxel coordinates
+            # tempVoxelCoordinates = self.image.TransformPhysicalPointToContinuousIndex(tempFloat)
+            # self.seedPoint = tempVoxelCoordinates
+            self.seedPoint = tempFloat
 
-        # Need to round the seedPoints because integers are required for indexing
-        ScalingFactor = np.array(self.ScalingFactor)
-        tempseedPoint = np.array(self.seedPoint).astype(int)
-        tempseedPoint = abs(tempseedPoint)
-        tempseedPoint = tempseedPoint/ScalingFactor # Scale the points down as well
-        tempseedPoint = tempseedPoint.round() # Need to round it again for Python 3.3
+            # Need to round the seedPoints because integers are required for indexing
+            ScalingFactor = np.array(self.ScalingFactor)
+            tempseedPoint = np.array(self.seedPoint).astype(int)
+            tempseedPoint = abs(tempseedPoint)
+            tempseedPoint = tempseedPoint/ScalingFactor # Scale the points down as well
+            tempseedPoint = tempseedPoint.round() # Need to round it again for Python 3.3
 
         self.seedPoint = [tempseedPoint]
 
