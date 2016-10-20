@@ -11,6 +11,23 @@ from sklearn.feature_extraction import image
 from sklearn.cluster import spectral_clustering
 
 
+def AddImages(sitkImageOne, sitkImageTwo, MakeBinary=True):
+	''' Add two SimpleITK type images together and optionally binarize the resulting image '''
+
+	ndaOne = np.asarray(sitk.GetArrayFromImage(sitkImageOne))
+	ndaTwo = np.asarray(sitk.GetArrayFromImage(sitkImageTwo))
+
+	ndaOutput = ndaOne + ndaTwo
+
+	if MakeBinary == True:
+		ndaOutput[ndaOutput != 0] = 1
+
+	outputImg = sitk.Cast(sitk.GetImageFromArray(ndaOutput), sitkImageOne.GetPixelID())
+
+	return outputImg
+
+
+
 def OverlayImages(sitkImage, labelImage, opacity=0.9, backgroundValue=0):
 	''' Apply a colormap to a label image and put it on top of the input image '''	
 
@@ -109,6 +126,29 @@ def PointsToVoxel(textSeeds, sitkImage):
 		tempVoxelCoordinates = sitkImage.TransformPhysicalPointToContinuousIndex(tempFloat)
 		SeedPoints.append(tempVoxelCoordinates)
 	return SeedPoints
+
+def FillHoles(image, verbose=False):
+	''' Fill the holes of a binary SimpleITK image type. Uses the scipy package 
+	since the SimpleITK binary fill does not work well '''
+	
+	from scipy import ndimage
+
+	image  = sitk.Cast(image, sitk.sitkUInt16)
+	npImage = np.asarray(sitk.GetArrayFromImage(image), dtype=int)
+	
+	for i in range(0, npImage.shape[0]):
+		npImage[i,:,:] = ndimage.binary_fill_holes(npImage[i,:,:]).astype(int)
+
+		if verbose == True:
+			progress = round(np.divide(float(i), float(npImage.shape[0])), 2)*100
+			print(str(progress) + '%')
+
+	img_Output = sitk.Cast(sitk.GetImageFromArray(npImage), image.GetPixelID())
+	img_Output.CopyInformation(image)
+
+	return img_Output
+
+
 
 class AlgorithmTime(object):
 	"""Simple class for determining the time a section of code took to execute."""

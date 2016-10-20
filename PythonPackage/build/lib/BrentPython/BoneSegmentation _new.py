@@ -13,6 +13,171 @@ from BrentPython import *
 
 class BoneSeg(object):
     """Class of BoneSegmentation. REQUIRED: BoneSeg(MRI_Image,SeedPoint)"""
+    def __init__(self):
+        self.ScalingFactor = []
+        self.AnisotropicIts = []
+        self.AnisotropicTimeStep = []
+        self.AnisotropicConductance = []
+        self.ConfidenceConnectedIts = []
+        self.ConfidenceConnectedMultiplier = []
+        self.ConfidenceConnectedRadius = []
+        self.BinaryMorphologicalRadius = []
+        self.MaxVolume = []
+        self.SeedListFilename = [] 
+
+        ##Initilize the ITK filters##
+        #Filters to down/up sample the image for faster computation
+        self.shrinkFilter = sitk.ShrinkImageFilter()
+        self.expandFilter = sitk.ExpandImageFilter()
+        #Filter to reduce noise while preserving edgdes
+        self.anisotropicFilter = sitk.CurvatureAnisotropicDiffusionImageFilter()
+        #Post-processing filters for fillinging holes and to attempt to remove any leakage areas
+        self.dilateFilter = sitk.BinaryDilateImageFilter()
+        self.erodeFilter = sitk.BinaryErodeImageFilter()
+        self.fillFilter = sitk.BinaryFillholeImageFilter()  
+        self.connectedComponentFilter = sitk.ScalarConnectedComponentImageFilter()
+        self.laplacianFilter = sitk.LaplacianSegmentationLevelSetImageFilter()
+        self.thresholdLevelSet = sitk.ThresholdSegmentationLevelSetImageFilter()
+
+        #Initilize the SimpleITK Filters
+        self.GradientMagnitudeFilter = sitk.GradientMagnitudeImageFilter()
+        self.shapeDetectionFilter = sitk.ShapeDetectionLevelSetImageFilter()
+        self.thresholdFilter = sitk.BinaryThresholdImageFilter()
+        self.sigFilter = sitk.SigmoidImageFilter()
+
+        #Set the deafult values 
+        self.SetDefaultValues()
+
+    def SetDefaultValues(self):
+        #Set the default values of all the parameters here
+        self.SetScalingFactor(1) #X,Y,Z
+       
+        self.SeedListFilename = "PointList.txt"
+        self.SetMaxVolume(300000) #Pixel counts (TODO change to mm^3)   
+        self.SetBinaryMorphologicalRadius(1)
+        # self.SetLevelSetLowerThreshold(0)
+        # self.SetLevelSetUpperThreshold(75)
+        # self.SetLevelSetIts(2500)
+        # self.SetLevelSetReverseDirection(True)
+        # self.SetLevelSetError(0.03)
+        # self.SetLevelSetPropagation(1)
+        # self.SetLevelSetCurvature(1)
+
+        #Shape Detection Filter
+        self.SetShapeMaxRMSError(0.001)
+        self.SetShapeMaxIterations(1000)
+        self.SetShapePropagationScale(4)
+        self.SetShapeCurvatureScale(1.1)
+
+        #Sigmoid Filter
+        self.sigFilter.SetAlpha(0)
+        self.sigFilter.SetBeta(90)
+        self.sigFilter.SetOutputMinimum(0)
+        self.sigFilter.SetOutputMaximum(1)
+
+    def SetShapeMaxIterations(self, MaxIts):
+        self.shapeDetectionFilter.SetNumberOfIterations(int(MaxIts))
+
+    def SetShapePropagationScale(self, propagationScale):
+        self.shapeDetectionFilter.SetPropagationScaling(-1*propagationScale)
+
+    def SetShapeCurvatureScale(self, curvatureScale):
+        self.shapeDetectionFilter.SetCurvatureScaling(curvatureScale)
+
+    def SetShapeMaxRMSError(self, MaxRMSError):
+        self.shapeDetectionFilter.SetMaximumRMSError(MaxRMSError)
+
+    def SetLevelSetCurvature(self, curvatureScale):
+        self.thresholdLevelSet.SetCurvatureScaling(curvatureScale)
+        
+    def SetLevelSetPropagation(self, propagationScale):
+        self.thresholdLevelSet.SetPropagationScaling(propagationScale)
+        
+    def SetLevelSetLowerThreshold(self, lowerThreshold):
+        self.sigFilter.SetAlpha(int(lowerThreshold))
+        self.thresholdFilter.SetLowerThreshold(int(lowerThreshold)+1) #Add one so the threshold is greater than Zero
+        self.thresholdLevelSet.SetLowerThreshold(int(lowerThreshold))   
+        
+    def SetLevelSetUpperThreshold(self, upperThreshold):
+        self.sigFilter.SetBeta(int(upperThreshold))
+        self.thresholdFilter.SetUpperThreshold(int(upperThreshold))
+        self.thresholdLevelSet.SetUpperThreshold(int(upperThreshold))   
+        
+    def SetLevelSetError(self,MaxError):        
+        self.thresholdLevelSet.SetMaximumRMSError(MaxError)
+
+    def SetImage(self, image):
+        self.image = image
+
+    def SefSeedPoint(self, SeedPoint):
+        self.SeedPoint = SeedPoint
+
+    def SetScalingFactor(self, ScalingFactor):
+        ScalingFactor = [int(ScalingFactor),int(ScalingFactor),int(ScalingFactor)]
+        self.ScalingFactor = ScalingFactor
+        self.shrinkFilter.SetShrinkFactors(ScalingFactor)
+        self.expandFilter.SetExpandFactors(ScalingFactor)
+
+    def SetAnisotropicIts(self, AnisotropicIts):
+        self.anisotropicFilter.SetNumberOfIterations(AnisotropicIts)
+    
+    def SetAnisotropicTimeStep(self, AnisotropicTimeStep):
+        self.anisotropicFilter.SetTimeStep(AnisotropicTimeStep)
+    
+    def SetAnisotropicConductance(self, AnisotropicConductance):
+        self.anisotropicFilter.SetConductanceParameter(AnisotropicConductance)
+
+    def SetConfidenceConnectedIts(self, ConfidenceConnectedIts):
+        self.ConfidenceConnectedIts = ConfidenceConnectedIts
+
+    def SetConfidenceConnectedMultiplier(self, ConfidenceConnectedMultiplier):
+        self.ConfidenceConnectedMultiplier = ConfidenceConnectedMultiplier
+
+    def SetConfidenceConnectedRadius(self, ConfidenceConnectedRadius):
+        self.ConfidenceConnectedRadius = ConfidenceConnectedRadius
+
+    def SetBinaryMorphologicalRadius(self, kernelRadius):
+        self.erodeFilter.SetKernelRadius(kernelRadius)
+        self.dilateFilter.SetKernelRadius(kernelRadius) 
+
+    def SetMaxVolume(self, MaxVolume):
+        self.MaxVolume = MaxVolume  
+
+    def SetLaplacianExpansionDirection(self, expansionDirection):       
+        self.laplacianFilter.SetReverseExpansionDirection(expansionDirection)
+
+    def SetLaplacianError(self, RMSError):
+        self.laplacianFilter.SetMaximumRMSError(RMSError)
+
+    def SetConnectedComponentFullyConnected(self, fullyConnected):
+        self.connectedComponentFilter.SetFullyConnected(fullyConnected) 
+
+    def SetConnectedComponentDistance(self, distanceThreshold):
+        #Distance = Intensity difference NOT location distance
+        self.connectedComponentFilter.SetDistanceThreshold(distanceThreshold) 
+
+    def EstimateSigmoid(self):
+        ''' Estimate the upper threshold of the sigmoid based on the 
+        mean and std of the image intensities '''
+        ndaImg = sitk.GetArrayFromImage(self.image)
+
+        # [ndaImg > 25]
+        std = np.std(ndaImg) # 30 25
+        mean = np.mean(ndaImg)
+
+        # Using a linear model (fitted in Matlab and manually selected sigmoid threshold values)
+
+        #UpperThreshold = 0.899*(std+mean) - 41.3
+
+        UpperThreshold = 0.002575*(std+mean)*(std+mean) - 0.028942*(std+mean) + 36.791614
+
+        print('Mean: ' + str(round(mean,2)))
+        print('STD: ' + str(round(std,2)))
+        print('UpperThreshold: ' + str(round(UpperThreshold,2)))
+        print(' ')
+
+        return UpperThreshold
+
     def Execute(self, image, seedPoint, verbose=False, returnSitkImage=True):
 
         start_time = timeit.default_timer() 
@@ -22,25 +187,20 @@ class BoneSeg(object):
         self.image = image
         self.seedPoint = seedPoint
 
-        # Convert images to type float 32 first
+        #Convert images to float 32 first
         try:
             self.image = sitk.Cast(self.image, sitk.sitkFloat32)
         except:
-            # Convert from numpy array to a SimpleITK image type first then cast
+            # Convert from numpy array to a SimpleITK image type first
             self.image = sitk.Cast(sitk.GetImageFromArray(image), sitk.sitkFloat32)
+            # self.image = sitk.Cast(self.image, sitk.sitkFloat32)
 
         if self.verbose == True:
             print('\033[94m' + 'Estimating upper sigmoid threshold level')
 
         # Estimate the threshold level by image intensity statistics
-        LowerThreshold = self.EstimateSigmoid()
-
-        # TEST
-        LowerThreshold = LowerThreshold 
-        #LowerThreshold = 200
-        # END TEST
-        
-        self.SetLevelSetLowerThreshold(LowerThreshold)
+        # UpperThreshold = self.EstimateSigmoid()
+        # self.SetLevelSetUpperThreshold(UpperThreshold)
 
         if self.verbose == True:
             print('\033[94m' + "Current Seed Point: "),
@@ -107,318 +267,10 @@ class BoneSeg(object):
             npImg = sitk.GetArrayFromImage(self.segImg)
 
             return  npImg
-
-
-    def SigmoidLevelSetIterations(self):
-        ''' Pre-processing '''
-        start_time = timeit.default_timer() 
-
-        # TEST
-
-        # self.sigFilter.SetAlpha(0)
-        # sigFilter = sitk.SigmoidImageFilter()
         
-
-        # self.sigFilter.SetBeta(150)
-        # self.sigFilter.SetAlpha(0)
-
-        # self.sigFilter.SetOutputMinimum(0)
-        # self.sigFilter.SetOutputMaximum(255)
-
-        processedImage = self.sigFilter.Execute(self.image) 
-        processedImage  = sitk.Cast(processedImage, sitk.sitkUInt16)
-
-        # BrentPython.SaveSegmentation(processedImage, 'ScreenShots/processedImage.nii', verbose = True)
-        
-
-        # sitk.Show(self.image, 'image')
-        # sitk.Show(processedImage, 'processedImage')
-        # a
-
-        # END TEST
-
-
-        
-
-
-        # TEST
-        # processedImage = self.image
-        # END TEST
-
-        edgePotentialFilter = sitk.EdgePotentialImageFilter()
-        gradientFilter = sitk.GradientImageFilter()
-
-        gradImage = gradientFilter.Execute(processedImage)
-
-        processedImage = edgePotentialFilter.Execute(gradImage)
-
-        # sitk.Show(gradImage, 'gradImage')
-
-
-        # END TEST
-
-        # sitk.Show(self.image, 'original image')
-        # sitk.Show(processedImage, 'edgePotentialFilter')
-        
-
-        # # Want 0 for the background and 1 for the objects
-        # nda = sitk.GetArrayFromImage(processedImage)
-        # nda = np.asarray(nda)
-
-        # nda[nda != 1] = 0
-
-        # processedImage = sitk.Cast(sitk.GetImageFromArray(nda), self.image.GetPixelID())
-        # processedImage.CopyInformation(self.image)
-
-        # sitk.Show(processedImage, 'edge potential-thresh')
-
-        
-
-        if self.verbose == True:
-            BrentPython.SaveSegmentation(processedImage, 'ScreenShots/processedImage.nii', verbose = True)
-        else:
-            BrentPython.SaveSegmentation(processedImage, 'ScreenShots/processedImage.nii', verbose = False) 
-
-        elapsed = timeit.default_timer() - start_time
-        if self.verbose == True:
-            print("Elapsed Time (processedImage):" + str(round(elapsed,3)))
-
-        ''' Create Seed Image '''
-        if self.verbose == True:
-            print('Starting ShapeDetectionLevelSetImageFilter')
-        start_time = timeit.default_timer() 
-
-        # Create the seed image
-        nda = sitk.GetArrayFromImage(self.image)
-        nda = np.asarray(nda)
-        nda = nda*0
-
-        seedPoint = self.seedPoint[0]
-
-        # In numpy an array is indexed in the opposite order (z,y,x)
-        nda[seedPoint[2]][seedPoint[1]][seedPoint[0]] = 1
-
-        self.segImg = sitk.Cast(sitk.GetImageFromArray(nda), sitk.sitkUInt16)
-        self.segImg.CopyInformation(self.image)
-
-        self.segImg = sitk.BinaryDilate(self.segImg, 3)
-
-
-        ''' Segmentation '''
-
-        # Signed distance function using the initial seed point (segImg)
-        init_ls = sitk.SignedMaurerDistanceMap(self.segImg, insideIsPositive=True, useImageSpacing=True)
-        init_ls = sitk.Cast(init_ls, sitk.sitkFloat32)
-
-        processedImage = sitk.Cast(processedImage, sitk.sitkFloat32)
-
-        self.segImg = self.shapeDetectionFilter.Execute(init_ls, processedImage)
-        
-        # iter_step_num = 1
-        # iter_step     = self.shapeDetectionFilter.GetNumberOfIterations()/iter_step_num
-        
-        # previous_iter = 0
-        # self.shapeDetectionFilter.SetNumberOfIterations(iter_step)
-
-        # for i in range(0, iter_step_num):                      
-            
-        #     if i == 0:
-        #         image = self.shapeDetectionFilter.Execute(init_ls, processedImage)
-        #     else:
-        #         image = self.shapeDetectionFilter.Execute(image, processedImage)
-
- 
-
-        #     temp_seg = self.SegToBinary(image)
-        #     self.segImg = self.AddImages(self.segImg, temp_seg, self.shapeDetectionFilter.GetElapsedIterations() + previous_iter)
-
-        #     elapsed = timeit.default_timer() - start_time
-        #     if self.verbose == True:
-        #         print("Elapsed Time (level set):" + str(round(elapsed,3)) + ' for iteration ' + str(i*iter_step))
-
-        #     previous_iter = self.shapeDetectionFilter.GetElapsedIterations()
-
-        if self.verbose == True:
-            BrentPython.SaveSegmentation(self.segImg, 'ScreenShots/segImg.nii', verbose = True)
-        else:
-            BrentPython.SaveSegmentation(self.segImg, 'ScreenShots/segImg.nii', verbose = False)
-
-
-        if self.verbose == True:
-            print('Done with ShapeDetectionLevelSetImageFilter!')
-
-            print(self.shapeDetectionFilter)
-
-        self.segImg = self.SegToBinary(self.segImg)
-        
-        return self
-
-
-    def __init__(self):
-        self.ScalingFactor = []
-        self.AnisotropicIts = []
-        self.AnisotropicTimeStep = []
-        self.AnisotropicConductance = []
-        self.ConfidenceConnectedIts = []
-        self.ConfidenceConnectedMultiplier = []
-        self.ConfidenceConnectedRadius = []
-        self.BinaryMorphologicalRadius = []
-        self.MaxVolume = []
-        self.SeedListFilename = [] 
-
-        ##Initilize the ITK filters##
-        #Filters to down/up sample the image for faster computation
-        self.shrinkFilter = sitk.ShrinkImageFilter()
-        self.expandFilter = sitk.ExpandImageFilter()
-        #Filter to reduce noise while preserving edgdes
-        self.anisotropicFilter = sitk.CurvatureAnisotropicDiffusionImageFilter()
-        #Post-processing filters for fillinging holes and to attempt to remove any leakage areas
-        self.dilateFilter = sitk.BinaryDilateImageFilter()
-        self.erodeFilter = sitk.BinaryErodeImageFilter()
-        self.fillFilter = sitk.BinaryFillholeImageFilter()  
-        self.connectedComponentFilter = sitk.ScalarConnectedComponentImageFilter()
-        self.laplacianFilter = sitk.LaplacianSegmentationLevelSetImageFilter()
-        self.thresholdLevelSet = sitk.ThresholdSegmentationLevelSetImageFilter()
-
-        #Initilize the SimpleITK Filters
-        self.GradientMagnitudeFilter = sitk.GradientMagnitudeImageFilter()
-        self.shapeDetectionFilter = sitk.ShapeDetectionLevelSetImageFilter()
-        self.thresholdFilter = sitk.BinaryThresholdImageFilter()
-        self.sigFilter = sitk.SigmoidImageFilter()
-
-        #Set the deafult values 
-        self.SetDefaultValues()
-
-    def SetDefaultValues(self):
-        #Set the default values of all the parameters here
-        self.SetScalingFactor(1) #X,Y,Z
-       
-        self.SeedListFilename = "PointList.txt"
-        self.SetMaxVolume(300000) #Pixel counts (TODO change to mm^3) 
-
-        # Morphological Operators
-        self.fillFilter.SetForegroundValue(1) 
-        self.fillFilter.FullyConnectedOff() 
-        self.SetBinaryMorphologicalRadius(1)
-
-        #Shape Detection Filter
-        self.SetShapeMaxRMSError(0.001)
-        self.SetShapeMaxIterations(1000)
-        self.SetShapePropagationScale(4)
-        self.SetShapeCurvatureScale(1.1)
-
-        #Sigmoid Filter
-        self.sigFilter.SetAlpha(90)
-        self.sigFilter.SetBeta(0)
-        self.sigFilter.SetOutputMinimum(0)
-        self.sigFilter.SetOutputMaximum(255)
-
-    def SetShapeMaxIterations(self, MaxIts):
-        self.shapeDetectionFilter.SetNumberOfIterations(int(MaxIts))
-
-    def SetShapePropagationScale(self, propagationScale):
-        self.shapeDetectionFilter.SetPropagationScaling(-1*propagationScale)
-
-    def SetShapeCurvatureScale(self, curvatureScale):
-        self.shapeDetectionFilter.SetCurvatureScaling(curvatureScale)
-
-    def SetShapeMaxRMSError(self, MaxRMSError):
-        self.shapeDetectionFilter.SetMaximumRMSError(MaxRMSError)
-
-    def SetLevelSetCurvature(self, curvatureScale):
-        self.thresholdLevelSet.SetCurvatureScaling(curvatureScale)
-        
-    def SetLevelSetPropagation(self, propagationScale):
-        self.thresholdLevelSet.SetPropagationScaling(propagationScale)
-        
-    def SetLevelSetLowerThreshold(self, lowerThreshold):
-        self.sigFilter.SetBeta(int(lowerThreshold))
-        self.thresholdFilter.SetLowerThreshold(int(lowerThreshold)+1) #Add one so the threshold is greater than Zero
-        self.thresholdLevelSet.SetLowerThreshold(int(lowerThreshold))   
-
-    def SetLevelSetUpperThreshold(self, upperThreshold):
-        self.sigFilter.SetAlpha(int(upperThreshold))
-        self.thresholdFilter.SetUpperThreshold(int(upperThreshold))
-        self.thresholdLevelSet.SetUpperThreshold(int(upperThreshold))   
-        
-    def SetLevelSetError(self,MaxError):        
-        self.thresholdLevelSet.SetMaximumRMSError(MaxError)
-
-    def SetImage(self, image):
-        self.image = image
-
-    def SefSeedPoint(self, SeedPoint):
-        self.SeedPoint = SeedPoint
-
-    def SetScalingFactor(self, ScalingFactor):
-        ScalingFactor = [int(ScalingFactor),int(ScalingFactor),int(ScalingFactor)]
-        self.ScalingFactor = ScalingFactor
-        self.shrinkFilter.SetShrinkFactors(ScalingFactor)
-        self.expandFilter.SetExpandFactors(ScalingFactor)
-
-    def SetAnisotropicIts(self, AnisotropicIts):
-        self.anisotropicFilter.SetNumberOfIterations(AnisotropicIts)
-    
-    def SetAnisotropicTimeStep(self, AnisotropicTimeStep):
-        self.anisotropicFilter.SetTimeStep(AnisotropicTimeStep)
-    
-    def SetAnisotropicConductance(self, AnisotropicConductance):
-        self.anisotropicFilter.SetConductanceParameter(AnisotropicConductance)
-
-    def SetConfidenceConnectedIts(self, ConfidenceConnectedIts):
-        self.ConfidenceConnectedIts = ConfidenceConnectedIts
-
-    def SetConfidenceConnectedMultiplier(self, ConfidenceConnectedMultiplier):
-        self.ConfidenceConnectedMultiplier = ConfidenceConnectedMultiplier
-
-    def SetConfidenceConnectedRadius(self, ConfidenceConnectedRadius):
-        self.ConfidenceConnectedRadius = ConfidenceConnectedRadius
-
-    def SetBinaryMorphologicalRadius(self, kernelRadius):
-        self.erodeFilter.SetKernelRadius(kernelRadius)
-        self.dilateFilter.SetKernelRadius(kernelRadius) 
-
-    def SetMaxVolume(self, MaxVolume):
-        self.MaxVolume = MaxVolume  
-
-    def SetLaplacianExpansionDirection(self, expansionDirection):       
-        self.laplacianFilter.SetReverseExpansionDirection(expansionDirection)
-
-    def SetLaplacianError(self, RMSError):
-        self.laplacianFilter.SetMaximumRMSError(RMSError)
-
-    def SetConnectedComponentFullyConnected(self, fullyConnected):
-        self.connectedComponentFilter.SetFullyConnected(fullyConnected) 
-
-    def SetConnectedComponentDistance(self, distanceThreshold):
-        #Distance = Intensity difference NOT location distance
-        self.connectedComponentFilter.SetDistanceThreshold(distanceThreshold) 
-   
-
-    def EstimateSigmoid(self):
-        ''' Estimate the upper threshold of the sigmoid based on the 
-        mean and std of the image intensities '''
-        ndaImg = sitk.GetArrayFromImage(self.image)
-
-        # [ndaImg > 25]
-        std = np.std(ndaImg) # 30 25
-        mean = np.mean(ndaImg)
-
-        # Using a linear model (fitted in Matlab and manually selected sigmoid threshold values)
-
-        #UpperThreshold = 0.899*(std+mean) - 41.3
-
-        UpperThreshold = 0.002575*(std+mean)*(std+mean) - 0.028942*(std+mean) + 36.791614
-
-        print('Mean: ' + str(round(mean,2)))
-        print('STD: ' + str(round(std,2)))
-        print('UpperThreshold: ' + str(round(UpperThreshold,2)))
-        print(' ')
-
-        return UpperThreshold
 
     def FlipImage(self,image):
-        #Flip image(s) (if needed)
+        # Flip image(s) (if needed)
         flipFilter = sitk.FlipImageFilter()
         flipFilter.SetFlipAxes((False,True,False))
         image = flipFilter.Execute(self.image)
@@ -479,12 +331,12 @@ class BoneSeg(object):
         return
 
     def HoleFilling(self):
-        # Cast to 16 bit (needed for the fill filter to work)
         self.segImg  = sitk.Cast(self.segImg, sitk.sitkUInt16)
-
         #Apply the filters to the binary image
-        self.segImg = self.fillFilter.Execute(self.segImg)
-
+        self.segImg = self.fillFilter.Execute(self.segImg, True, 1)
+        # self.segImg = self.dilateFilter.Execute(self.segImg, 0, 1, False)
+        # self.segImg = self.fillFilter.Execute(self.segImg, True, 1)
+        # self.segImg = self.erodeFilter.Execute(self.segImg, 0, 1, False)  
         return self
 
     def ShapeDetection(self):
@@ -585,6 +437,121 @@ class BoneSeg(object):
         
 
         return self
+
+    def SigmoidLevelSetIterations(self):
+        ''' Pre-processing '''
+        start_time = timeit.default_timer() 
+        medianFilter = sitk.BinaryMedianImageFilter()
+        medianFilter.SetRadius([2,2,2])
+
+        processedImage = self.sigFilter.Execute(self.image) 
+       
+        processedImage  = sitk.Cast(processedImage, sitk.sitkUInt16)
+
+        # sitk.Show(processedImage, 'processedImage - no median')
+
+        processedImage = medianFilter.Execute(processedImage)
+
+        # sitk.Show(processedImage, 'processedImage - filtered')
+
+        edgePotentialFilter = sitk.EdgePotentialImageFilter()
+        gradientFilter = sitk.GradientImageFilter()
+
+        gradImage = gradientFilter.Execute(processedImage)
+
+        processedImage = edgePotentialFilter.Execute(gradImage)
+
+        #Want 0 for the background and 1 for the objects
+        nda = sitk.GetArrayFromImage(processedImage)
+        nda = np.asarray(nda)
+
+        nda[nda != 1] = 0
+
+        processedImage = sitk.Cast(sitk.GetImageFromArray(nda), self.image.GetPixelID())
+        processedImage.CopyInformation(self.image)
+
+        if self.verbose == True:
+            BrentPython.SaveSegmentation(processedImage, 'ScreenShots/processedImage.nii', verbose = True)
+        else:
+            BrentPython.SaveSegmentation(processedImage, 'ScreenShots/processedImage.nii', verbose = False)
+ 
+
+        elapsed = timeit.default_timer() - start_time
+        if self.verbose == True:
+            print("Elapsed Time (processedImage):" + str(round(elapsed,3)))
+
+
+        ''' Create Seed Image '''
+        if self.verbose == True:
+            print('Starting ShapeDetectionLevelSetImageFilter')
+        start_time = timeit.default_timer() 
+
+        ###Create the seed image###
+        nda = sitk.GetArrayFromImage(self.image)
+        nda = np.asarray(nda)
+        nda = nda*0
+
+        seedPoint = self.seedPoint[0]
+
+        # In numpy an array is indexed in the opposite order (z,y,x)
+        print('seedPoint' + str(seedPoint))
+        nda[seedPoint[2]][seedPoint[1]][seedPoint[0]] = 1
+
+        self.segImg = sitk.Cast(sitk.GetImageFromArray(nda), sitk.sitkUInt16)
+        self.segImg.CopyInformation(self.image)
+
+        self.segImg = sitk.BinaryDilate(self.segImg, 3)
+
+
+        ''' Segmentation '''
+
+        # Signed distance function using the initial seed point (segImg)
+        init_ls = sitk.SignedMaurerDistanceMap(self.segImg, insideIsPositive=True, useImageSpacing=True)
+        init_ls = sitk.Cast(init_ls, sitk.sitkFloat32)
+
+        processedImage = sitk.Cast(processedImage, sitk.sitkFloat32)
+
+        iter_step_num = 1
+        iter_step     = self.shapeDetectionFilter.GetNumberOfIterations()/iter_step_num
+        
+        previous_iter = 0
+        self.shapeDetectionFilter.SetNumberOfIterations(iter_step)
+        
+        for i in range(0, iter_step_num):                      
+            
+            if i == 0:
+                image = self.shapeDetectionFilter.Execute(init_ls, processedImage)
+            else:
+                image = self.shapeDetectionFilter.Execute(image, processedImage)
+
+            temp_seg = self.SegToBinary(image)
+            # self.segImg = self.AddImages(self.segImg, temp_seg, self.shapeDetectionFilter.GetElapsedIterations() + previous_iter)
+
+            self.segImg = self.AddImages(self.segImg, temp_seg, self.shapeDetectionFilter.GetRMSChange())
+
+
+            elapsed = timeit.default_timer() - start_time
+            if self.verbose == True:
+                print("Elapsed Time (level set):" + str(round(elapsed,3)) + ' for iteration ' + str(i*iter_step))
+
+            previous_iter = self.shapeDetectionFilter.GetElapsedIterations()
+
+        if self.verbose == True:
+            BrentPython.SaveSegmentation(self.segImg, 'ScreenShots\segImg.nii', verbose = True)
+        else:
+            BrentPython.SaveSegmentation(self.segImg, 'ScreenShots\segImg.nii', verbose = False)
+
+
+        if self.verbose == True:
+            print('Done with ShapeDetectionLevelSetImageFilter!')
+
+            print(self.shapeDetectionFilter)
+
+        self.segImg = self.SegToBinary(self.segImg)
+        
+        return self
+
+
 
     def AddImages(self, imageOne, imageTwo, iteration_num):
 

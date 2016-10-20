@@ -1,19 +1,12 @@
-#############################################################################################
-###SEGMENTATION CLASS###
-#############################################################################################
-
 import SimpleITK as sitk
 import numpy as np
 
 
 import timeit
-import BrentPython
-from BrentPython import *
-
 
 class BoneSeg(object):
     """Class of BoneSegmentation. REQUIRED: BoneSeg(MRI_Image,SeedPoint)"""
-    def Execute(self, image, seedPoint, verbose=False, returnSitkImage=True):
+    def Execute(self, image, seedPoint, verbose=False, returnSitkImage=True, convertSeedPhyscial=True):
 
         start_time = timeit.default_timer() 
 
@@ -34,11 +27,6 @@ class BoneSeg(object):
 
         # Estimate the threshold level by image intensity statistics
         LowerThreshold = self.EstimateSigmoid()
-
-        # TEST
-        LowerThreshold = LowerThreshold 
-        #LowerThreshold = 200
-        # END TEST
         
         self.SetLevelSetLowerThreshold(LowerThreshold)
 
@@ -46,7 +34,9 @@ class BoneSeg(object):
             print('\033[94m' + "Current Seed Point: "),
             print(self.seedPoint)
             print('\033[94m' + "Rounding and converting to voxel domain: "), 
-        self.RoundSeedPoint()
+
+        
+        self.RoundSeedPoint(convertSeedPhyscial)
 
         if self.verbose == True:
             print(self.seedPoint)
@@ -70,13 +60,6 @@ class BoneSeg(object):
             print('\033[90m' + "Scaling image back...")
         self.scaleUpImage()
         
-        # if self.verbose == True:
-        #     print('\033[90m' + "Simple threshold operation...")
-        # try:
-        #     self.ThresholdImage()
-        # except:
-            # print('Error in self.ThresholdImage() step')
-
         if self.verbose == True:
             print('\033[93m' + "Filling Segmentation Holes...")
         self.HoleFilling()
@@ -113,37 +96,11 @@ class BoneSeg(object):
         ''' Pre-processing '''
         start_time = timeit.default_timer() 
 
-        # TEST
-
-        # self.sigFilter.SetAlpha(0)
-        # sigFilter = sitk.SigmoidImageFilter()
-        
-
-        # self.sigFilter.SetBeta(150)
-        # self.sigFilter.SetAlpha(0)
-
-        # self.sigFilter.SetOutputMinimum(0)
-        # self.sigFilter.SetOutputMaximum(255)
+        self.sigFilter.SetBeta(150)
+        self.sigFilter.SetAlpha(0)
 
         processedImage = self.sigFilter.Execute(self.image) 
         processedImage  = sitk.Cast(processedImage, sitk.sitkUInt16)
-
-        # BrentPython.SaveSegmentation(processedImage, 'ScreenShots/processedImage.nii', verbose = True)
-        
-
-        # sitk.Show(self.image, 'image')
-        # sitk.Show(processedImage, 'processedImage')
-        # a
-
-        # END TEST
-
-
-        
-
-
-        # TEST
-        # processedImage = self.image
-        # END TEST
 
         edgePotentialFilter = sitk.EdgePotentialImageFilter()
         gradientFilter = sitk.GradientImageFilter()
@@ -151,33 +108,6 @@ class BoneSeg(object):
         gradImage = gradientFilter.Execute(processedImage)
 
         processedImage = edgePotentialFilter.Execute(gradImage)
-
-        # sitk.Show(gradImage, 'gradImage')
-
-
-        # END TEST
-
-        # sitk.Show(self.image, 'original image')
-        # sitk.Show(processedImage, 'edgePotentialFilter')
-        
-
-        # # Want 0 for the background and 1 for the objects
-        # nda = sitk.GetArrayFromImage(processedImage)
-        # nda = np.asarray(nda)
-
-        # nda[nda != 1] = 0
-
-        # processedImage = sitk.Cast(sitk.GetImageFromArray(nda), self.image.GetPixelID())
-        # processedImage.CopyInformation(self.image)
-
-        # sitk.Show(processedImage, 'edge potential-thresh')
-
-        
-
-        if self.verbose == True:
-            BrentPython.SaveSegmentation(processedImage, 'ScreenShots/processedImage.nii', verbose = True)
-        else:
-            BrentPython.SaveSegmentation(processedImage, 'ScreenShots/processedImage.nii', verbose = False) 
 
         elapsed = timeit.default_timer() - start_time
         if self.verbose == True:
@@ -194,6 +124,8 @@ class BoneSeg(object):
         nda = nda*0
 
         seedPoint = self.seedPoint[0]
+
+        print(seedPoint)
 
         # In numpy an array is indexed in the opposite order (z,y,x)
         nda[seedPoint[2]][seedPoint[1]][seedPoint[0]] = 1
@@ -213,37 +145,7 @@ class BoneSeg(object):
         processedImage = sitk.Cast(processedImage, sitk.sitkFloat32)
 
         self.segImg = self.shapeDetectionFilter.Execute(init_ls, processedImage)
-        
-        # iter_step_num = 1
-        # iter_step     = self.shapeDetectionFilter.GetNumberOfIterations()/iter_step_num
-        
-        # previous_iter = 0
-        # self.shapeDetectionFilter.SetNumberOfIterations(iter_step)
-
-        # for i in range(0, iter_step_num):                      
-            
-        #     if i == 0:
-        #         image = self.shapeDetectionFilter.Execute(init_ls, processedImage)
-        #     else:
-        #         image = self.shapeDetectionFilter.Execute(image, processedImage)
-
- 
-
-        #     temp_seg = self.SegToBinary(image)
-        #     self.segImg = self.AddImages(self.segImg, temp_seg, self.shapeDetectionFilter.GetElapsedIterations() + previous_iter)
-
-        #     elapsed = timeit.default_timer() - start_time
-        #     if self.verbose == True:
-        #         print("Elapsed Time (level set):" + str(round(elapsed,3)) + ' for iteration ' + str(i*iter_step))
-
-        #     previous_iter = self.shapeDetectionFilter.GetElapsedIterations()
-
-        if self.verbose == True:
-            BrentPython.SaveSegmentation(self.segImg, 'ScreenShots/segImg.nii', verbose = True)
-        else:
-            BrentPython.SaveSegmentation(self.segImg, 'ScreenShots/segImg.nii', verbose = False)
-
-
+     
         if self.verbose == True:
             print('Done with ShapeDetectionLevelSetImageFilter!')
 
@@ -266,13 +168,13 @@ class BoneSeg(object):
         self.MaxVolume = []
         self.SeedListFilename = [] 
 
-        ##Initilize the ITK filters##
-        #Filters to down/up sample the image for faster computation
+        ## Initilize the ITK filters ##
+        # Filters to down/up sample the image for faster computation
         self.shrinkFilter = sitk.ShrinkImageFilter()
         self.expandFilter = sitk.ExpandImageFilter()
-        #Filter to reduce noise while preserving edgdes
+        # Filter to reduce noise while preserving edgdes
         self.anisotropicFilter = sitk.CurvatureAnisotropicDiffusionImageFilter()
-        #Post-processing filters for fillinging holes and to attempt to remove any leakage areas
+        # Post-processing filters for fillinging holes and to attempt to remove any leakage areas
         self.dilateFilter = sitk.BinaryDilateImageFilter()
         self.erodeFilter = sitk.BinaryErodeImageFilter()
         self.fillFilter = sitk.BinaryFillholeImageFilter()  
@@ -280,17 +182,17 @@ class BoneSeg(object):
         self.laplacianFilter = sitk.LaplacianSegmentationLevelSetImageFilter()
         self.thresholdLevelSet = sitk.ThresholdSegmentationLevelSetImageFilter()
 
-        #Initilize the SimpleITK Filters
+        # Initilize the SimpleITK Filters
         self.GradientMagnitudeFilter = sitk.GradientMagnitudeImageFilter()
         self.shapeDetectionFilter = sitk.ShapeDetectionLevelSetImageFilter()
         self.thresholdFilter = sitk.BinaryThresholdImageFilter()
         self.sigFilter = sitk.SigmoidImageFilter()
 
-        #Set the deafult values 
+        # Set the deafult values 
         self.SetDefaultValues()
 
     def SetDefaultValues(self):
-        #Set the default values of all the parameters here
+        # Set the default values of all the parameters here
         self.SetScalingFactor(1) #X,Y,Z
        
         self.SeedListFilename = "PointList.txt"
@@ -301,13 +203,13 @@ class BoneSeg(object):
         self.fillFilter.FullyConnectedOff() 
         self.SetBinaryMorphologicalRadius(1)
 
-        #Shape Detection Filter
+        # Shape Detection Filter
         self.SetShapeMaxRMSError(0.001)
         self.SetShapeMaxIterations(1000)
         self.SetShapePropagationScale(4)
         self.SetShapeCurvatureScale(1.1)
 
-        #Sigmoid Filter
+        # Sigmoid Filter
         self.sigFilter.SetAlpha(90)
         self.sigFilter.SetBeta(0)
         self.sigFilter.SetOutputMinimum(0)
@@ -333,7 +235,7 @@ class BoneSeg(object):
         
     def SetLevelSetLowerThreshold(self, lowerThreshold):
         self.sigFilter.SetBeta(int(lowerThreshold))
-        self.thresholdFilter.SetLowerThreshold(int(lowerThreshold)+1) #Add one so the threshold is greater than Zero
+        self.thresholdFilter.SetLowerThreshold(int(lowerThreshold)+1) # Add one so the threshold is greater than Zero
         self.thresholdLevelSet.SetLowerThreshold(int(lowerThreshold))   
 
     def SetLevelSetUpperThreshold(self, upperThreshold):
@@ -405,8 +307,7 @@ class BoneSeg(object):
         mean = np.mean(ndaImg)
 
         # Using a linear model (fitted in Matlab and manually selected sigmoid threshold values)
-
-        #UpperThreshold = 0.899*(std+mean) - 41.3
+        # UpperThreshold = 0.899*(std+mean) - 41.3
 
         UpperThreshold = 0.002575*(std+mean)*(std+mean) - 0.028942*(std+mean) + 36.791614
 
@@ -433,22 +334,25 @@ class BoneSeg(object):
         self.segImg = self.thresholdFilter.Execute(tempImg)
         return self
 
-    def RoundSeedPoint(self):
+    def RoundSeedPoint(self, convertSeedPhyscial):
         tempseedPoint = np.array(self.seedPoint).astype(int) #Just to be safe make it int again
         tempseedPoint = tempseedPoint[0]
-        #Convert from physical to image domain
-        tempFloat = [float(tempseedPoint[0]), float(tempseedPoint[1]), float(tempseedPoint[2])]
-        #Convert from physical units to voxel coordinates
-        # tempVoxelCoordinates = self.image.TransformPhysicalPointToContinuousIndex(tempFloat)
-        # self.seedPoint = tempVoxelCoordinates
-        self.seedPoint = tempFloat
 
-        #Need to round the seedPoints because integers are required for indexing
-        ScalingFactor = np.array(self.ScalingFactor)
-        tempseedPoint = np.array(self.seedPoint).astype(int)
-        tempseedPoint = abs(tempseedPoint)
-        tempseedPoint = tempseedPoint/ScalingFactor #Scale the points down as well
-        tempseedPoint = tempseedPoint.round() #Need to round it again for Python 3.3
+        if convertSeedPhyscial == True:
+            # Convert from physical to image domain
+            tempFloat = [float(tempseedPoint[0]), float(tempseedPoint[1]), float(tempseedPoint[2])]
+
+            # Convert from physical units to voxel coordinates
+            # tempVoxelCoordinates = self.image.TransformPhysicalPointToContinuousIndex(tempFloat)
+            # self.seedPoint = tempVoxelCoordinates
+            self.seedPoint = tempFloat
+
+            # Need to round the seedPoints because integers are required for indexing
+            ScalingFactor = np.array(self.ScalingFactor)
+            tempseedPoint = np.array(self.seedPoint).astype(int)
+            tempseedPoint = abs(tempseedPoint)
+            tempseedPoint = tempseedPoint/ScalingFactor # Scale the points down as well
+            tempseedPoint = tempseedPoint.round() # Need to round it again for Python 3.3
 
         self.seedPoint = [tempseedPoint]
 
@@ -469,7 +373,7 @@ class BoneSeg(object):
 
     def savePointList(self):
         try:
-            #Save the user defined points in a .txt for automatimating testing (TODO)
+            # Save the user defined points in a .txt for automatimating testing (TODO)
             text_file = open(self.SeedListFilename, "r+")
             text_file.readlines()
             text_file.write("%s\n" % self.seedPoint)
@@ -482,7 +386,7 @@ class BoneSeg(object):
         # Cast to 16 bit (needed for the fill filter to work)
         self.segImg  = sitk.Cast(self.segImg, sitk.sitkUInt16)
 
-        #Apply the filters to the binary image
+        # Apply the filters to the binary image
         self.segImg = self.fillFilter.Execute(self.segImg)
 
         return self
@@ -492,7 +396,7 @@ class BoneSeg(object):
 
         self.segImg = sitk.Cast(self.segImg, sitk.sitkUInt16)
 
-        #Signed distance function using the initial levelset segmentation
+        # Signed distance function using the initial levelset segmentation
         init_ls = sitk.SignedMaurerDistanceMap(self.segImg, insideIsPositive=True, useImageSpacing=True)
 
         gradientImage = self.GradientMagnitudeFilter.Execute(self.image)
@@ -501,8 +405,8 @@ class BoneSeg(object):
 
         npshapeBinary = np.asarray(sitk.GetArrayFromImage(shapeBinary), dtype='float64')
 
-        npshapeBinary[npshapeBinary > 0.2] = 1 #Make into a binary again
-        # npshapeBinary[npshapeBinary < 0] = 0 #Make into a binary again
+        npshapeBinary[npshapeBinary > 0.2] = 1 # Make into a binary again
+        # npshapeBinary[npshapeBinary < 0] = 0 # Make into a binary again
 
         npshapeBinary[npshapeBinary != 1] = 0
 
@@ -514,17 +418,8 @@ class BoneSeg(object):
     
     def SigmoidLevelSet(self):
         ''' Pre-processing '''
-
-
         processedImage = self.sigFilter.Execute(self.image)
- 
-       
         processedImage  = sitk.Cast(processedImage, sitk.sitkUInt16)
-
-        # medianFilter = sitk.BinaryMedianImageFilter()
-        # medianFilter.SetRadius([2,2,2])
-        # processedImage = medianFilter.Execute(processedImage)
-
 
         edgePotentialFilter = sitk.EdgePotentialImageFilter()
         gradientFilter = sitk.GradientImageFilter()
@@ -543,14 +438,13 @@ class BoneSeg(object):
         processedImage.CopyInformation(self.image)
 
         ''' Create Seed Image '''
-        ###Create the seed image###
         nda = sitk.GetArrayFromImage(self.image)
         nda = np.asarray(nda)
         nda = nda*0
 
         seedPoint = self.seedPoint[0]
 
-        #In numpy an array is indexed in the opposite order (z,y,x)
+        # In numpy, an array is indexed in the opposite order (z,y,x)
         nda[seedPoint[2]][seedPoint[1]][seedPoint[0]] = 1
 
         self.segImg = sitk.Cast(sitk.GetImageFromArray(nda), sitk.sitkUInt16)
@@ -560,8 +454,7 @@ class BoneSeg(object):
 
 
         ''' Segmentation '''
-
-        #Signed distance function using the initial seed point (segImg)
+        # Signed distance function using the initial seed point (segImg)
         init_ls = sitk.SignedMaurerDistanceMap(self.segImg, insideIsPositive=True, useImageSpacing=True)
         init_ls = sitk.Cast(init_ls, sitk.sitkFloat32)
 
@@ -595,10 +488,6 @@ class BoneSeg(object):
         ndaTwo = np.asarray(ndaTwo) 
         ndaTwo[ndaTwo != 0] = iteration_num
 
-        # Only change the values which are zero in the current segmented image
-        # to keep the iteration value the same in the image
-        #ndaOutput[ndaOutput == 0] = ndaTwo[ndaOutput == 0]
-
         ndaOutput = ndaOutput + ndaTwo
         output = sitk.Cast(sitk.GetImageFromArray(ndaOutput), imageOne.GetPixelID())
         output.CopyInformation(imageOne)
@@ -619,18 +508,17 @@ class BoneSeg(object):
         return image
 
 
-
     def LaplacianLevelSet(self):
-        #Check the image type of self.segImg and image are the same (for Python 3.3 and 3.4)
+        # Check the image type of self.segImg and image are the same (for Python 3.3 and 3.4)
         self.segImg = sitk.Cast(self.segImg, self.image.GetPixelID()) #Can't be a 32 bit float
         self.segImg.CopyInformation(self.image)
 
-        #Additional post-processing (Lapacian Level Set Filter)
-        #Binary image needs to have a value of 0 and 1/2*(x+1)
+        # Additional post-processing (Lapacian Level Set Filter)
+        # Binary image needs to have a value of 0 and 1/2*(x+1)
         nda = sitk.GetArrayFromImage(self.segImg)
         nda = np.asarray(nda)
 
-        #Fix the intensities of the output of the laplcian; 0 = 1 and ~! 1 is 0 then 1 == x+1
+        # Fix the intensities of the output of the laplcian; 0 = 1 and ~! 1 is 0 then 1 == x+1
         nda[nda == 1] = 0.5
 
         self.segImg = sitk.GetImageFromArray(nda)
@@ -645,7 +533,7 @@ class BoneSeg(object):
         nda = sitk.GetArrayFromImage(self.segImg)
         nda = np.asarray(nda)
 
-        #Fix the intensities of the output of the laplcian; 0 = 1 and ~! 1 is 0 then 1 == x+1
+        # Fix the intensities of the output of the laplcian; 0 = 1 and ~! 1 is 0 then 1 == x+1
         nda[nda <= 0.3] = 0
         nda[nda != 0] = 1
 
@@ -661,8 +549,8 @@ class BoneSeg(object):
         self.segImg = sitk.Cast(self.segImg, 1) #Can't be a 32 bit float
         # self.segImg.CopyInformation(segmentation)
 
-        #Try to remove leakage areas by first eroding the binary and
-        #get the labels that are still connected to the original seed location
+        # Try to remove leakage areas by first eroding the binary and
+        # get the labels that are still connected to the original seed location
 
         self.segImg = self.erodeFilter.Execute(self.segImg, 0, 1, False)
 
@@ -671,28 +559,25 @@ class BoneSeg(object):
         nda = sitk.GetArrayFromImage(self.segImg)
         nda = np.asarray(nda)
 
-        #In numpy an array is indexed in the opposite order (z,y,x)
+        # In numpy an array is indexed in the opposite order (z,y,x)
         tempseedPoint = self.seedPoint[0]
         val = nda[tempseedPoint[2]][tempseedPoint[1]][tempseedPoint[0]]
 
-        #Keep only the label that intersects with the seed point
+        # Keep only the label that intersects with the seed point
         nda[nda != val] = 0 
         nda[nda != 0] = 1
 
         self.segImg = sitk.GetImageFromArray(nda)
 
-        #Undo the earlier erode filter by dilating by same radius
+        # Undo the earlier erode filter by dilating by same radius
         self.dilateFilter.SetKernelRadius(3)
         self.segImg = self.dilateFilter.Execute(self.segImg, 0, 1, False)
-
-        # self.segImg = sitk.Cast(self.segImg, segmentation.GetPixelID())
-        # self.segImg.CopyInformation(segmentation)
 
         return self
 
     def LeakageCheck(self):
 
-        #Check the image type of self.segImg and image are the same (for Python 3.3 and 3.4)
+        # Check the image type of self.segImg and image are the same (for Python 3.3 and 3.4)
         # self.segImg = sitk.Cast(self.segImg, segmentation.GetPixelID()) #Can't be a 32 bit float
         # self.segImg.CopyInformation(segmentation)
 
@@ -705,7 +590,7 @@ class BoneSeg(object):
                 print('\033[97m' + "Failed check with volume "),
                 print(volume)
                 print("Skipping this label")
-            #Clearing the label is the same as ignoring it since they're added together later
+            # Clearing the label is the same as ignoring it since they're added together later
             nda = nda*0 
             self.segImg = sitk.Cast(sitk.GetImageFromArray(nda), self.segImg.GetPixelID())
             
@@ -717,8 +602,7 @@ class BoneSeg(object):
         return self
 
     def ThresholdLevelSet(self):
-
-        ###Create the seed image###
+        # Create the seed image
         nda = sitk.GetArrayFromImage(self.image)
         nda = np.asarray(nda)
         nda = nda*0
@@ -726,7 +610,7 @@ class BoneSeg(object):
         seedPoint = self.seedPoint[0]
         if self.verbose == True:
             print(seedPoint)
-        #In numpy an array is indexed in the opposite order (z,y,x)
+        # In numpy an array is indexed in the opposite order (z,y,x)
         nda[seedPoint[2]][seedPoint[1]][seedPoint[0]] = 1
 
         seg = sitk.Cast(sitk.GetImageFromArray(nda), sitk.sitkUInt16)
@@ -744,7 +628,7 @@ class BoneSeg(object):
         nda = sitk.GetArrayFromImage(threshOutput)
         nda = np.asarray(nda)
 
-        #Fix the intensities of the output of the level set; 0 = 1 and ~! 1 is 0 then 1 == x+1
+        # Fix the intensities of the output of the level set; 0 = 1 and ~! 1 is 0 then 1 == x+1
         nda[nda > 0] = 1
         nda[nda < 0] = 0
 
