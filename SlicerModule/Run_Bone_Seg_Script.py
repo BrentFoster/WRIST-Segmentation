@@ -13,54 +13,70 @@ def SaveSegmentation(image, filename, verbose = False):
 	if verbose == True:
 		print("Segmentation saved")
 
+def AddImages(image_one, image_two):
+	addFilter = sitk.AddImageFilter()
+	combined_img = addFilter.Execute(image_one, image_two)
+
+	return combined_img
+
 
 def RunSegmentation(input_image, seedPoint, searchWindow):
 	seedPoint = np.array(seedPoint).astype(int)
 
-	im_size = np.asarray(input_image.GetSize())
+	# im_size = np.asarray(input_image.GetSize())
 
-	' Crop the input_image around the initial seed point to speed up computation '
-	cropFilter = sitk.CropImageFilter()
-	addFilter = sitk.AddImageFilter()
+	# ' Crop the input_image around the initial seed point to speed up computation '
+	# cropFilter = sitk.CropImageFilter()
+	# addFilter = sitk.AddImageFilter()
 
-	cropFilter.SetLowerBoundaryCropSize(seedPoint - searchWindow)
-	cropFilter.SetUpperBoundaryCropSize(im_size - seedPoint - searchWindow)
+	# cropFilter.SetLowerBoundaryCropSize(seedPoint - searchWindow)
+	# cropFilter.SetUpperBoundaryCropSize(im_size - seedPoint - searchWindow)
 
-	cropNdxOne = seedPoint - searchWindow
-	cropNdxTwo = seedPoint + searchWindow
+	# print(im_size - seedPoint - searchWindow)
+	# asdf
+
+
+	# cropNdxOne = seedPoint - searchWindow
+	# cropNdxTwo = seedPoint + searchWindow
 	
-	cropped_img = cropFilter.Execute(input_image)
+	# cropped_img = cropFilter.Execute(input_image)
 
-	# The seed point is now in the middle of the search window
-	seedPoint = np.asarray(searchWindow)
+	# # The seed point is now in the middle of the search window
+	# seedPoint = np.asarray(searchWindow)
 
 	' Run the Segmentation '
 	segmentationClass = BoneSegmentation.BoneSeg()
-	seg_img = segmentationClass.Execute(cropped_img, [seedPoint], verbose=False, returnSitkImage=True, convertSeedPhyscial=False)
-
-	' Indexing to put the segmentation of the cropped image back into the original MRI '
-	input_image_nda = sitk.GetArrayFromImage(input_image)
-	input_image_nda = np.asarray(input_image_nda)
-
-	seg_img_nda = sitk.GetArrayFromImage(seg_img)
-	seg_img_nda = np.asarray(seg_img_nda)
-
-	cropped_img_nda = sitk.GetArrayFromImage(cropped_img)
-	cropped_img_nda = np.asarray(cropped_img_nda)
-
-	cropped_img_nda[seg_img_nda == 1] = cropped_img_nda[seg_img_nda == 1] + 500;
-	seg_img_nda = cropped_img_nda;
-
-	input_image_nda[cropNdxOne[2]:cropNdxTwo[2],
-					cropNdxOne[1]:cropNdxTwo[1],
-					cropNdxOne[0]:cropNdxTwo[0]] = seg_img_nda
+	# seg_img = segmentationClass.Execute(cropped_img, [seedPoint], verbose=False, returnSitkImage=True, convertSeedPhyscial=False)
+	seg_img = segmentationClass.Execute(input_image, [seedPoint], verbose=False, 
+										returnSitkImage=True, convertSeedPhyscial=False,
+										searchWindow=searchWindow)
 
 
-	' Return the final image '
-	outputImg = sitk.Cast(sitk.GetImageFromArray(input_image_nda), sitk.sitkUInt16)
-	outputImg.CopyInformation(input_image)
+	return seg_img
 
-	return outputImg
+	# ' Indexing to put the segmentation of the cropped image back into the original MRI '
+	# input_image_nda = sitk.GetArrayFromImage(input_image)
+	# input_image_nda = np.asarray(input_image_nda)
+
+	# seg_img_nda = sitk.GetArrayFromImage(seg_img)
+	# seg_img_nda = np.asarray(seg_img_nda)
+
+	# cropped_img_nda = sitk.GetArrayFromImage(cropped_img)
+	# cropped_img_nda = np.asarray(cropped_img_nda)
+
+	# cropped_img_nda[seg_img_nda == 1] = cropped_img_nda[seg_img_nda == 1] + 500;
+	# seg_img_nda = cropped_img_nda;
+
+	# input_image_nda[cropNdxOne[2]:cropNdxTwo[2],
+	# 				cropNdxOne[1]:cropNdxTwo[1],
+	# 				cropNdxOne[0]:cropNdxTwo[0]] = seg_img_nda
+
+
+	# ' Return the final image '
+	# outputImg = sitk.Cast(sitk.GetImageFromArray(input_image_nda), sitk.sitkUInt16)
+	# outputImg.CopyInformation(input_image)
+
+	# return outputImg
 
 
 
@@ -76,11 +92,20 @@ if __name__ == "__main__":
 	searchWindow = [50,50,40];
 
 	' Run the Segmentation '
+
 	outputImg = RunSegmentation(input_image, seedPoint, searchWindow)
 
-	outputImg = RunSegmentation(outputImg, [290,630,150], searchWindow)
+	outputImg_temp = RunSegmentation(input_image, [290,630,150], searchWindow)
+	outputImg = AddImages(outputImg, outputImg_temp)
 
-	outputImg = RunSegmentation(outputImg, [210,670,140], searchWindow)
+	outputImg_temp = RunSegmentation(input_image, [370, 600, 120], searchWindow)
+	outputImg = AddImages(outputImg, outputImg_temp)
+
+	# outputImg_temp = RunSegmentation(input_image, [350, 660, 120], searchWindow)
+	# outputImg = AddImages(outputImg, outputImg_temp)
+
+	# outputImg_temp = RunSegmentation(input_image, [210,670,140], searchWindow)
+	# outputImg = AddImages(outputImg, outputImg_temp)
 
 	' Show the final output image '
 	sitk.Show(outputImg)

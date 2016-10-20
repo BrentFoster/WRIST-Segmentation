@@ -6,14 +6,15 @@ import timeit
 
 class BoneSeg(object):
     """Class of BoneSegmentation. REQUIRED: BoneSeg(MRI_Image,SeedPoint)"""
-    def Execute(self, image, seedPoint, verbose=False, returnSitkImage=True, convertSeedPhyscial=True):
+    def Execute(self, original_image, original_seedPoint, verbose=False, returnSitkImage=True, convertSeedPhyscial=True, searchWindow=[50,50,40]):
 
         start_time = timeit.default_timer() 
 
         self.verbose = verbose # Optional argument to output text to terminal
 
-        self.image = image
-        self.seedPoint = seedPoint
+        self.image = original_image
+        self.seedPoint = original_seedPoint
+        self.searchWindow = searchWindow
 
         # Convert images to type float 32 first
         try:
@@ -22,6 +23,12 @@ class BoneSeg(object):
             # Convert from numpy array to a SimpleITK image type first then cast
             self.image = sitk.Cast(sitk.GetImageFromArray(image), sitk.sitkFloat32)
 
+        # Crop the image so that it considers only a search space around the seed point
+        # to speed up computation significantly!
+        print(self.seedPoint)
+        self.CropImage()
+        print(self.seedPoint)
+        
         if self.verbose == True:
             print('\033[94m' + 'Estimating upper sigmoid threshold level')
 
@@ -81,6 +88,9 @@ class BoneSeg(object):
             print('\033[96m' + "Finished with seed point "),
             print(self.seedPoint)
 
+        ' Uncrop the image '
+        self.UnCropImage(original_image, original_seedPoint)
+
         if returnSitkImage == True:
             # Return a SimpleITK type image
             return  self.segImg 
@@ -90,6 +100,52 @@ class BoneSeg(object):
             npImg = sitk.GetArrayFromImage(self.segImg)
 
             return  npImg
+
+
+    def UnCropImage(self, original_image, original_seedPoint):
+        ' Indexing to put the segmentation of the cropped image back into the original MRI '
+
+        # Need the original seed point to know where the cropped volume is in the original image
+        cropNdxOne = original_seedPoint[0] - self.searchWindow
+        cropNdxTwo = original_seedPoint[0]+ self.searchWindow
+
+        original_image_nda = sitk.GetArrayFromImage(original_image)
+        original_image_nda = np.asarray(original_image_nda)
+
+        seg_img_nda = sitk.GetArrayFromImage(self.segImg)
+        seg_img_nda = np.asarray(seg_img_nda)
+
+        original_image_nda = original_image_nda*0;
+
+        original_image_nda[cropNdxOne[2]:cropNdxTwo[2],
+                        cropNdxOne[1]:cropNdxTwo[1],
+                        cropNdxOne[0]:cropNdxTwo[0]] = seg_img_nda
+
+        # Convert back to SimpleITK image type
+        self.segImg = sitk.Cast(sitk.GetImageFromArray(original_image_nda), sitk.sitkUInt16)
+        self.segImg.CopyInformation(original_image)
+
+        return self
+
+
+
+
+    def CropImage(self):
+        ' Crop the input_image around the initial seed point to speed up computation '
+        cropFilter = sitk.CropImageFilter()
+        addFilter = sitk.AddImageFilter()
+
+        im_size = np.asarray(self.image.GetSize())
+
+        cropFilter.SetLowerBoundaryCropSize(self.seedPoint[0] - self.searchWindow)
+        cropFilter.SetUpperBoundaryCropSize(im_size - self.seedPoint[0] - self.searchWindow)
+
+        self.image = cropFilter.Execute(self.image)
+
+        # The seed point is now in the middle of the search window
+        self.seedPoint = [np.asarray(self.searchWindow)]
+
+        # return self
 
 
     def SigmoidLevelSetIterations(self):
@@ -311,10 +367,10 @@ class BoneSeg(object):
 
         UpperThreshold = 0.002575*(std+mean)*(std+mean) - 0.028942*(std+mean) + 36.791614
 
-        print('Mean: ' + str(round(mean,2)))
-        print('STD: ' + str(round(std,2)))
-        print('UpperThreshold: ' + str(round(UpperThreshold,2)))
-        print(' ')
+        # print('Mean: ' + str(round(mean,2)))
+        # print('STD: ' + str(round(std,2)))
+        # print('UpperThreshold: ' + str(round(UpperThreshold,2)))
+        # print(' ')
 
         return UpperThreshold
 
