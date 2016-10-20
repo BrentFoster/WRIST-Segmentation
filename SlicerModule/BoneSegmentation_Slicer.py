@@ -302,6 +302,73 @@ class BoneSegmentation_SlicerWidget:
 
     def onCompute(self):
         slicer.app.processEvents()
+
+
+
+        # TEST TEST TEST 
+        # Find the input image in Slicer and convert to a SimpleITK image type
+        # imageID = self.inputSelector.currentNode()
+        # image = sitkUtils.PullFromSlicer(imageID.GetName())
+
+        import subprocess
+        import numpy as np
+        import json
+        x = np.random.rand(2,2)
+
+        from subprocess import Popen, PIPE
+
+
+# import sys
+# sys.path.insert(0, 'C:\Users\Brent\GitRepositories\BoneSegmentation\SlicerModule')
+# import joblib_test
+# reload(joblib_test)
+# joblib_test.main(5)
+
+        import os
+        print(os.path.dirname(os.path.abspath(__file__)))
+        print(os.getcwd())
+
+
+        fullCmd ="python " + "C:\Users\Brent\GitRepositories\BoneSegmentation\SlicerModule\joblib_test.py " + json.dumps(x.tolist())
+        proc = Popen(fullCmd, stdout=PIPE, shell=False)
+
+        output = proc.communicate()[0]
+        print('output')
+        print(output)
+        # print(subprocess.check_output(
+        #     fullCmd, 
+        #     shell = True, 
+        #     stdin = subprocess.PIPE, 
+        #     # stdout = subprocess.PIPE, 
+        #     # stderr = subprocess.STDOUT,
+        #     bufsize = 0
+        # ))
+
+
+        print('done!')
+
+
+
+
+
+
+        # "python joblib_test.py json.dumps(x.tolist())"
+
+
+        return 0
+
+        # END TEST TEST TEST 
+
+
+
+
+
+
+
+
+
+
+
         # TODO: Consider adding a QProgressBar() if not too difficult
         # Make a list of all the seed point locations
         fidList = self.markupSelector.currentNode()
@@ -331,7 +398,9 @@ class BoneSegmentation_SlicerWidget:
         parameters = [self.LevelSetThresholds, self.ShapeCurvatureScale, self.ShapeMaxRMSError, self.ShapeMaxIts, self.ShapePropagationScale, self.NumScaling] #From the sliders above
        
         NumCPUs = 1
-        Segmentation = multiHelper.Execute(segmentationClass, seedPoints, image, parameters, NumCPUs, True)
+        # Segmentation = multiHelper.Execute(segmentationClass, seedPoints, image, parameters, NumCPUs, True)
+        Segmentation = slicer.cli.run(multiHelper.Execute(segmentationClass, seedPoints, image, parameters, NumCPUs, True), None, parameters)
+
         print(Segmentation)
 
         # Segmentation = sitk.Cast(Segmentation, sitk.sitkLabelUInt8)
