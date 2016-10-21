@@ -310,31 +310,31 @@ class BoneSegmentation_SlicerWidget:
         # imageID = self.inputSelector.currentNode()
         # image = sitkUtils.PullFromSlicer(imageID.GetName())
 
-        import subprocess
-        import numpy as np
-        import json
-        x = np.random.rand(2,2)
+        # import subprocess
+        # import numpy as np
+        # import json
+        # x = np.random.rand(2,2)
 
-        from subprocess import Popen, PIPE
-
-
-# import sys
-# sys.path.insert(0, 'C:\Users\Brent\GitRepositories\BoneSegmentation\SlicerModule')
-# import joblib_test
-# reload(joblib_test)
-# joblib_test.main(5)
-
-        import os
-        print(os.path.dirname(os.path.abspath(__file__)))
-        print(os.getcwd())
+        # from subprocess import Popen, PIPE
 
 
-        fullCmd ="python " + "C:\Users\Brent\GitRepositories\BoneSegmentation\SlicerModule\joblib_test.py " + json.dumps(x.tolist())
-        proc = Popen(fullCmd, stdout=PIPE, shell=False)
+        # import sys
+        # sys.path.insert(0, 'C:\Users\Brent\GitRepositories\BoneSegmentation\SlicerModule')
+        # import joblib_test
+        # reload(joblib_test)
+        # joblib_test.main(5)
 
-        output = proc.communicate()[0]
-        print('output')
-        print(output)
+        # import os
+        # print(os.path.dirname(os.path.abspath(__file__)))
+        # print(os.getcwd())
+
+
+        # fullCmd ="python " + "C:\Users\Brent\GitRepositories\BoneSegmentation\SlicerModule\joblib_test.py " + json.dumps(x.tolist())
+        # proc = Popen(fullCmd, stdout=PIPE, shell=False)
+
+        # output = proc.communicate()[0]
+        # print('output')
+        # print(output)
         # print(subprocess.check_output(
         #     fullCmd, 
         #     shell = True, 
@@ -345,7 +345,7 @@ class BoneSegmentation_SlicerWidget:
         # ))
 
 
-        print('done!')
+        # print('done!')
 
 
 
@@ -355,7 +355,7 @@ class BoneSegmentation_SlicerWidget:
         # "python joblib_test.py json.dumps(x.tolist())"
 
 
-        return 0
+        # return 0
 
         # END TEST TEST TEST 
 
@@ -398,8 +398,8 @@ class BoneSegmentation_SlicerWidget:
         parameters = [self.LevelSetThresholds, self.ShapeCurvatureScale, self.ShapeMaxRMSError, self.ShapeMaxIts, self.ShapePropagationScale, self.NumScaling] #From the sliders above
        
         NumCPUs = 1
-        # Segmentation = multiHelper.Execute(segmentationClass, seedPoints, image, parameters, NumCPUs, True)
-        Segmentation = slicer.cli.run(multiHelper.Execute(segmentationClass, seedPoints, image, parameters, NumCPUs, True), None, parameters)
+        Segmentation = multiHelper.Execute(segmentationClass, seedPoints, image, parameters, NumCPUs, True)
+        # Segmentation = slicer.cli.run(multiHelper.Execute(segmentationClass, seedPoints, image, parameters, NumCPUs, True), None, parameters)
 
         print(Segmentation)
 
@@ -469,10 +469,9 @@ class Multiprocessor(object):
         segmentationLabel = sitk.Cast(sitk.GetImageFromArray(nda), self.MRI_Image.GetPixelID())
         segmentationLabel.CopyInformation(self.MRI_Image)
       
-
         for x in range(len(seedList)):
             tempOutput = self.RunSegmentation(seedList[x])
-            tempOutput = sitk.Cast(tempOutput, self.MRI_Image.GetPixelID())
+            tempOutput = sitk.Cast(sitk.GetImageFromArray(tempOutput), self.MRI_Image.GetPixelID())
             tempOutput.CopyInformation(self.MRI_Image)
 
             segmentationLabel = segmentationLabel + tempOutput
@@ -502,8 +501,15 @@ class Multiprocessor(object):
         segmentationClass.SetShapePropagationScale(self.parameters[4])
         segmentationClass.SetScalingFactor(self.parameters[5])
 
+        searchWindow = [50,50,40]
 
-        segmentation = segmentationClass.Execute(self.MRI_Image,[SeedPoint])
+        # segmentation = segmentationClass.Execute(self.MRI_Image,[SeedPoint])
+        segmentation = segmentationClass.Execute(self.MRI_Image, [SeedPoint], verbose=True, 
+                                    returnSitkImage=False, convertSeedPhyscialFlag=True,
+                                    searchWindow=searchWindow)
+
+
+        print('DONE WITH SEGMENTATION!')
 
         return segmentation
 

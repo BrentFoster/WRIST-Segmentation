@@ -1,12 +1,11 @@
 import SimpleITK as sitk
 import numpy as np
 
-
 import timeit
 
 class BoneSeg(object):
     """Class of BoneSegmentation. REQUIRED: BoneSeg(MRI_Image,SeedPoint)"""
-    def Execute(self, original_image, original_seedPoint, verbose=False, returnSitkImage=True, convertSeedPhyscial=True, searchWindow=[50,50,40]):
+    def Execute(self, original_image, original_seedPoint, verbose=False, returnSitkImage=True, convertSeedPhyscialFlag=True, searchWindow=[50,50,40]):
 
         start_time = timeit.default_timer() 
 
@@ -14,7 +13,9 @@ class BoneSeg(object):
 
         self.image = original_image
         self.seedPoint = original_seedPoint
+        self.original_seedPoint = original_seedPoint
         self.searchWindow = searchWindow
+        self.convertSeedPhyscialFlag = convertSeedPhyscialFlag
 
         # Convert images to type float 32 first
         try:
@@ -24,12 +25,36 @@ class BoneSeg(object):
             self.image = sitk.Cast(sitk.GetImageFromArray(self.image), sitk.sitkFloat32)
             original_image = self.image # original_image needs to be a SimpleITK image type for later
 
+        # Convert the seed point to image coordinates (from physical) if needed and round
+        self.RoundSeedPoint()
+
+        print(' ')
+        print('Finished rounding seed point...')
+        print('self.seedPoint')
+        print(self.seedPoint)
+        print('self.original_seedPoint')
+        print(self.original_seedPoint)
+        print(' ')
+
+
         # Crop the image so that it considers only a search space around the seed point
         # to speed up computation significantly!
-        print(self.seedPoint)
+        print('Cropping image...')
+        # print(self.seedPoint)
         self.CropImage()
-        print(self.seedPoint)
-        
+
+        print('Uncropping image')
+        self.segImg = self.image
+        self.UnCropImage(original_image)
+
+
+        self.segImg = sitk.Cast(self.segImg, sitk.sitkUInt8)
+        npImg = sitk.GetArrayFromImage(self.segImg)
+
+        return  npImg
+
+
+
         if self.verbose == True:
             print('\033[94m' + 'Estimating upper sigmoid threshold level')
 
@@ -43,13 +68,10 @@ class BoneSeg(object):
             print(self.seedPoint)
             print('\033[94m' + "Rounding and converting to voxel domain: "), 
 
-        
-        self.RoundSeedPoint(convertSeedPhyscial)
-
         if self.verbose == True:
             print(self.seedPoint)
             print('\033[90m' + "Scaling image down...")
-        self.scaleDownImage()
+        # self.scaleDownImage()
 
         if self.verbose == True:
             elapsed = timeit.default_timer() - start_time
@@ -61,12 +83,17 @@ class BoneSeg(object):
 
         if self.verbose == True:
             print('\033[90m' + "Sigmoid shape detection level set by iteration...")
+        print('self.image.GetSize()')
+        print(self.image.GetSize())
         self.SigmoidLevelSetIterations()
 
       
         if self.verbose == True:
             print('\033[90m' + "Scaling image back...")
-        self.scaleUpImage()
+        # self.scaleUpImage()
+
+        print('self.image.GetSize()')
+        print(self.image.GetSize())
         
         if self.verbose == True:
             print('\033[93m' + "Filling Segmentation Holes...")
@@ -90,7 +117,7 @@ class BoneSeg(object):
             print(self.seedPoint)
 
         ' Uncrop the image '
-        self.UnCropImage(original_image, original_seedPoint)
+        self.UnCropImage(original_image)
 
         if returnSitkImage == True:
             # Return a SimpleITK type image
@@ -103,12 +130,38 @@ class BoneSeg(object):
             return  npImg
 
 
-    def UnCropImage(self, original_image, original_seedPoint):
+    def RoundSeedPoint(self):
+        tempseedPoint = np.array(self.seedPoint).astype(int) #Just to be safe make it int again
+        tempseedPoint = tempseedPoint[0]
+
+        if self.convertSeedPhyscialFlag == True:
+            # Convert from physical to image domain
+            tempFloat = [float(tempseedPoint[0]), float(tempseedPoint[1]), float(tempseedPoint[2])]
+
+            # Convert from physical units to voxel coordinates
+            # tempVoxelCoordinates = self.image.TransformPhysicalPointToContinuousIndex(tempFloat)
+            # self.seedPoint = tempVoxelCoordinates
+            self.seedPoint = tempFloat
+
+            # Need to round the seedPoints because integers are required for indexing
+            ScalingFactor = np.array(self.ScalingFactor)
+            tempseedPoint = np.array(self.seedPoint).astype(int)
+            tempseedPoint = abs(tempseedPoint)
+            tempseedPoint = tempseedPoint/ScalingFactor # Scale the points down as well
+            tempseedPoint = tempseedPoint.round() # Need to round it again for Python 3.3
+
+        self.seedPoint = [tempseedPoint]
+        self.original_seedPoint = [tempseedPoint]
+
+        return self
+
+
+    def UnCropImage(self, original_image):
         ' Indexing to put the segmentation of the cropped image back into the original MRI '
 
         # Need the original seed point to know where the cropped volume is in the original image
-        cropNdxOne = original_seedPoint[0] - self.searchWindow
-        cropNdxTwo = original_seedPoint[0]+ self.searchWindow
+        cropNdxOne = np.asarray(self.original_seedPoint[0]) - self.searchWindow
+        cropNdxTwo = np.asarray(self.original_seedPoint[0]) + self.searchWindow
 
         original_image_nda = sitk.GetArrayFromImage(original_image)
         original_image_nda = np.asarray(original_image_nda)
@@ -135,15 +188,15 @@ class BoneSeg(object):
 
         im_size = np.asarray(self.image.GetSize())
 
-        cropFilter.SetLowerBoundaryCropSize(self.seedPoint[0] - self.searchWindow)
-        cropFilter.SetUpperBoundaryCropSize(im_size - self.seedPoint[0] - self.searchWindow)
+        cropFilter.SetLowerBoundaryCropSize(np.asarray(self.seedPoint[0]) - self.searchWindow)
+        cropFilter.SetUpperBoundaryCropSize(im_size - np.asarray(self.seedPoint[0]) - self.searchWindow)
 
         self.image = cropFilter.Execute(self.image)
 
         # The seed point is now in the middle of the search window
         self.seedPoint = [np.asarray(self.searchWindow)]
 
-        # return self
+        return self
 
 
     def SigmoidLevelSetIterations(self):
@@ -177,7 +230,12 @@ class BoneSeg(object):
         nda = np.asarray(nda)
         nda = nda*0
 
+        print('seedPoint = self.seedPoint[0]')
         seedPoint = self.seedPoint[0]
+        print(seedPoint)
+        print('Size of nda')
+        print(nda.shape)
+        print(' ')
 
         # In numpy an array is indexed in the opposite order (z,y,x)
         nda[seedPoint[2]][seedPoint[1]][seedPoint[0]] = 1
@@ -385,30 +443,6 @@ class BoneSeg(object):
             print('Error in copying information from self.image')
         tempImg = self.segImg * self.image
         self.segImg = self.thresholdFilter.Execute(tempImg)
-        return self
-
-    def RoundSeedPoint(self, convertSeedPhyscial):
-        tempseedPoint = np.array(self.seedPoint).astype(int) #Just to be safe make it int again
-        tempseedPoint = tempseedPoint[0]
-
-        if convertSeedPhyscial == True:
-            # Convert from physical to image domain
-            tempFloat = [float(tempseedPoint[0]), float(tempseedPoint[1]), float(tempseedPoint[2])]
-
-            # Convert from physical units to voxel coordinates
-            # tempVoxelCoordinates = self.image.TransformPhysicalPointToContinuousIndex(tempFloat)
-            # self.seedPoint = tempVoxelCoordinates
-            self.seedPoint = tempFloat
-
-            # Need to round the seedPoints because integers are required for indexing
-            ScalingFactor = np.array(self.ScalingFactor)
-            tempseedPoint = np.array(self.seedPoint).astype(int)
-            tempseedPoint = abs(tempseedPoint)
-            tempseedPoint = tempseedPoint/ScalingFactor # Scale the points down as well
-            tempseedPoint = tempseedPoint.round() # Need to round it again for Python 3.3
-
-        self.seedPoint = [tempseedPoint]
-
         return self
     
     def scaleDownImage(self):
