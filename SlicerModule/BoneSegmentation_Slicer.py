@@ -98,22 +98,22 @@ class BoneSegmentation_SlicerWidget:
         frameLayout.addRow(self.markupSelectorLabel, self.markupSelector)
         self.markupSelector.connect('currentNodeChanged(vtkMRMLNode*)', self.onMarkupSelect)
 
-        #
-        # Level set threshold range slider
-        #
-        self.label = qt.QLabel()
-        self.label.setText("Level Set Threshold Range: ")
-        self.label.setToolTip(
-            "Select the threshold range that the level set will slow down when near the max/min")
-        self.thresholdInputSlider = ctk.ctkRangeWidget()
-        self.thresholdInputSlider.minimum = 0
-        self.thresholdInputSlider.maximum = 150
-        self.thresholdInputSlider.minimumValue = 0
-        self.thresholdInputSlider.maximumValue = 60
-        self.thresholdInputSlider.connect('valuesChanged(double,double)', self.onthresholdInputSliderRelease)
-        frameLayout.addRow(self.label, self.thresholdInputSlider)
-        #Set default value
-        self.LevelSetThresholds = (self.thresholdInputSlider.minimumValue, self.thresholdInputSlider.maximumValue)
+        # #
+        # # Level set threshold range slider
+        # #
+        # self.label = qt.QLabel()
+        # self.label.setText("Level Set Threshold Range: ")
+        # self.label.setToolTip(
+        #     "Select the threshold range that the level set will slow down when near the max/min")
+        # self.thresholdInputSlider = ctk.ctkRangeWidget()
+        # self.thresholdInputSlider.minimum = 0
+        # self.thresholdInputSlider.maximum = 150
+        # self.thresholdInputSlider.minimumValue = 0
+        # self.thresholdInputSlider.maximumValue = 60
+        # self.thresholdInputSlider.connect('valuesChanged(double,double)', self.onthresholdInputSliderRelease)
+        # frameLayout.addRow(self.label, self.thresholdInputSlider)
+        # #Set default value
+        # self.LevelSetThresholds = (self.thresholdInputSlider.minimumValue, self.thresholdInputSlider.maximumValue)
 
         # #
         # # Level set maximum iterations slider
@@ -253,15 +253,13 @@ class BoneSegmentation_SlicerWidget:
         self.label.setToolTip(
             "Select the size of the cube to use for defining the search space around the initial seed location.")
         self.WindowScalingSlider = ctk.ctkSliderWidget()
-        self.WindowScalingSlider.minimum = 1
-        self.WindowScalingSlider.maximum = 50
-        self.WindowScalingSlider.value = 30
+        self.WindowScalingSlider.minimum = 5
+        self.WindowScalingSlider.maximum = 200
+        self.WindowScalingSlider.value = 40
         self.WindowScalingSlider.connect('valueChanged(double)', self.onWindowScalingSliderChange)
         frameLayout.addRow(self.label, self.WindowScalingSlider)
         #Set default value
         self.WindowScaling = self.WindowScalingSlider.value
-
-
        
         #
         # Compute button
@@ -417,7 +415,7 @@ class BoneSegmentation_SlicerWidget:
         multiHelper = Multiprocessor()
         #Parameters = [LevelSet Thresholds, LevelSet Iterations, Level Set Error, Shape Level Set Curvature, Shape Level Set Max Error, Shape Level Set Max Its, Shape LS Propagation Scale]
         # parameters = [self.LevelSetThresholds, self.MaxIts, self.MaxRMSError,self.ShapeCurvatureScale, self.ShapeMaxRMSError, self.ShapeMaxIts, self.ShapePropagationScale] #From the sliders above
-        parameters = [self.LevelSetThresholds, self.ShapeCurvatureScale, self.ShapeMaxRMSError, self.ShapeMaxIts, self.ShapePropagationScale, self.NumScaling, self.WindowScaling] #From the sliders above
+        parameters = [self.ShapeCurvatureScale, self.ShapeMaxRMSError, self.ShapeMaxIts, self.ShapePropagationScale, self.NumScaling, self.WindowScaling] #From the sliders above
        
         NumCPUs = 1
         Segmentation = multiHelper.Execute(seedPoints, image, parameters, NumCPUs, True)
@@ -512,18 +510,18 @@ class Multiprocessor(object):
         # Change some parameters(s) of the segmentation class for the optimization
         # Parameters = [LevelSet Thresholds, LevelSet Iterations, Level Set Error, Shape Level Set Curvature, Shape Level Set Max Error, Shape Level Set Max Its]
         print(self.parameters)
-        segmentationClass.SetLevelSetLowerThreshold(self.parameters[0][0])
-        segmentationClass.SetLevelSetUpperThreshold(self.parameters[0][1])
+        # segmentationClass.SetLevelSetLowerThreshold(self.parameters[0][0])
+        # segmentationClass.SetLevelSetUpperThreshold(self.parameters[0][1])
 
         # Shape Detection Filter
-        segmentationClass.SetShapeCurvatureScale(self.parameters[1])
-        segmentationClass.SetShapeMaxRMSError(self.parameters[2])
-        segmentationClass.SetShapeMaxIterations(self.parameters[3])
-        segmentationClass.SetShapePropagationScale(self.parameters[4])
-        segmentationClass.SetScalingFactor(self.parameters[5])
+        segmentationClass.SetShapeCurvatureScale(self.parameters[0])
+        segmentationClass.SetShapeMaxRMSError(self.parameters[1])
+        segmentationClass.SetShapeMaxIterations(self.parameters[2])
+        segmentationClass.SetShapePropagationScale(self.parameters[3])
+        segmentationClass.SetScalingFactor(self.parameters[4])
 
         # Search Window Size
-        segmentationClass.SetSearchWindowSize(self.parameters[6])
+        segmentationClass.SetSearchWindowSize(self.parameters[5])
 
         # segmentation = segmentationClass.Execute(self.MRI_Image,[SeedPoint])
         segmentation = segmentationClass.Execute(self.MRI_Image, [SeedPoint], verbose=True, 

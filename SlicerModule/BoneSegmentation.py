@@ -27,28 +27,11 @@ class BoneSeg(object):
         # Convert the seed point to image coordinates (from physical) if needed and round
         self.RoundSeedPoint()
 
-        # print(' ')
-        # print('Finished rounding seed point...')
-        # print('self.seedPoint')
-        # print(self.seedPoint)
-        # print('self.original_seedPoint')
-        # print(self.original_seedPoint)
-        # print(' ')
-
-
         # Crop the image so that it considers only a search space around the seed point
         # to speed up computation significantly!
-        print('Cropping image...')
-        # print(self.seedPoint)
+        if self.verbose == True:
+            print('\033[94m' + 'Cropping image')
         self.CropImage()
-
-        # print('Uncropping image')
-        # self.segImg = self.image
-        # self.UnCropImage(original_image)
-        # self.segImg = sitk.Cast(self.segImg, sitk.sitkUInt8)
-        # npImg = sitk.GetArrayFromImage(self.segImg)
-
-        # return  npImg
 
         if self.verbose == True:
             print('\033[94m' + 'Estimating upper sigmoid threshold level')
@@ -81,13 +64,9 @@ class BoneSeg(object):
 
         self.SigmoidLevelSetIterations()
 
-      
-        # if self.verbose == True:
-        #     print('\033[90m' + "Scaling image back...")
-        # self.scaleUpImage()
-
-        # print('self.image.GetSize()')
-        # print(self.image.GetSize())
+        if self.verbose == True:
+            print('\033[90m' + "Scaling image back...")
+        self.scaleUpImage()
         
         # if self.verbose == True:
         #     print('\033[93m' + "Filling Segmentation Holes...")
@@ -214,8 +193,14 @@ class BoneSeg(object):
         ''' Pre-processing '''
         start_time = timeit.default_timer() 
 
-        self.sigFilter.SetBeta(150)
-        self.sigFilter.SetAlpha(0)
+        # self.sigFilter.SetBeta(120)
+        # self.sigFilter.SetAlpha(0)
+
+        print('GetAlpha')
+        print(self.sigFilter.GetAlpha())
+
+        print('GetBeta')
+        print(self.sigFilter.GetBeta())
 
         processedImage = self.sigFilter.Execute(self.image) 
         processedImage  = sitk.Cast(processedImage, sitk.sitkUInt16)
@@ -331,8 +316,8 @@ class BoneSeg(object):
         self.SetShapeCurvatureScale(1.1)
 
         # Sigmoid Filter
-        self.sigFilter.SetAlpha(90)
-        self.sigFilter.SetBeta(0)
+        self.sigFilter.SetAlpha(0)
+        self.sigFilter.SetBeta(120)
         self.sigFilter.SetOutputMinimum(0)
         self.sigFilter.SetOutputMaximum(255)
 
