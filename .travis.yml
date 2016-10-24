@@ -8,6 +8,12 @@ python:
    #- "3.3"
    #- "3.4"
    
+# Build these specific branches
+branches:
+  only:
+  - master
+  - release
+
 before_install:
    ####################################################
    #Works for 2.7, 3.3 and 3.4 but not 2.6, 3.2, or pypy
