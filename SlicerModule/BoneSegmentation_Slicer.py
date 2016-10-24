@@ -239,11 +239,28 @@ class BoneSegmentation_SlicerWidget:
         self.NumScalingSlider = ctk.ctkSliderWidget()
         self.NumScalingSlider.minimum = 1
         self.NumScalingSlider.maximum = 5
-        self.NumScalingSlider.value = 2
+        self.NumScalingSlider.value = 1
         self.NumScalingSlider.connect('valueChanged(double)', self.onNumScalingSliderChange)
         frameLayout.addRow(self.label, self.NumScalingSlider)
         #Set default value
         self.NumScaling = self.NumScalingSlider.value
+
+        #
+        # Search Space Window Size 
+        # 
+        self.label = qt.QLabel()
+        self.label.setText("Search Space Size: ")
+        self.label.setToolTip(
+            "Select the size of the cube to use for defining the search space around the initial seed location.")
+        self.WindowScalingSlider = ctk.ctkSliderWidget()
+        self.WindowScalingSlider.minimum = 1
+        self.WindowScalingSlider.maximum = 50
+        self.WindowScalingSlider.value = 30
+        self.WindowScalingSlider.connect('valueChanged(double)', self.onWindowScalingSliderChange)
+        frameLayout.addRow(self.label, self.WindowScalingSlider)
+        #Set default value
+        self.WindowScaling = self.WindowScalingSlider.value
+
 
        
         #
@@ -255,8 +272,12 @@ class BoneSegmentation_SlicerWidget:
         self.UpdatecomputeButtonState()
         self.computeButton.connect('clicked()', self.onCompute)
 
+
     def onNumScalingSliderChange(self, newValue):
         self.NumScaling = newValue
+
+    def onWindowScalingSliderChange(self, newValue):
+        self.WindowScaling = newValue
 
     def onShapePropagationScaleInputSliderChange(self, newValue):
         self.ShapePropagationScale = newValue
@@ -391,14 +412,15 @@ class BoneSegmentation_SlicerWidget:
             seedPoints[i] = image.TransformPhysicalPointToContinuousIndex(seedPoints[i])
 
         # Initilize the two classes that are defined at the bottom of this file
+        import BoneSegmentation
         segmentationClass = BoneSegmentation.BoneSeg()
         multiHelper = Multiprocessor()
         #Parameters = [LevelSet Thresholds, LevelSet Iterations, Level Set Error, Shape Level Set Curvature, Shape Level Set Max Error, Shape Level Set Max Its, Shape LS Propagation Scale]
         # parameters = [self.LevelSetThresholds, self.MaxIts, self.MaxRMSError,self.ShapeCurvatureScale, self.ShapeMaxRMSError, self.ShapeMaxIts, self.ShapePropagationScale] #From the sliders above
-        parameters = [self.LevelSetThresholds, self.ShapeCurvatureScale, self.ShapeMaxRMSError, self.ShapeMaxIts, self.ShapePropagationScale, self.NumScaling] #From the sliders above
+        parameters = [self.LevelSetThresholds, self.ShapeCurvatureScale, self.ShapeMaxRMSError, self.ShapeMaxIts, self.ShapePropagationScale, self.NumScaling, self.WindowScaling] #From the sliders above
        
         NumCPUs = 1
-        Segmentation = multiHelper.Execute(segmentationClass, seedPoints, image, parameters, NumCPUs, True)
+        Segmentation = multiHelper.Execute(seedPoints, image, parameters, NumCPUs, True)
         # Segmentation = slicer.cli.run(multiHelper.Execute(segmentationClass, seedPoints, image, parameters, NumCPUs, True), None, parameters)
 
         print(Segmentation)
@@ -451,8 +473,7 @@ class Multiprocessor(object):
     def __init__(self):
         self = self
 
-    def Execute(self, segmentationClass, seedList, MRI_Image, parameters, numCPUS, verbose = False):
-        self.segmentationClass = segmentationClass
+    def Execute(self, seedList, MRI_Image, parameters, numCPUS, verbose = False):
         self.seedList = seedList
         self.MRI_Image = MRI_Image
         self.parameters = parameters
@@ -489,24 +510,24 @@ class Multiprocessor(object):
         segmentationClass = BoneSegmentation.BoneSeg()
 
         # Change some parameters(s) of the segmentation class for the optimization
-        #Parameters = [LevelSet Thresholds, LevelSet Iterations, Level Set Error, Shape Level Set Curvature, Shape Level Set Max Error, Shape Level Set Max Its]
+        # Parameters = [LevelSet Thresholds, LevelSet Iterations, Level Set Error, Shape Level Set Curvature, Shape Level Set Max Error, Shape Level Set Max Its]
         print(self.parameters)
         segmentationClass.SetLevelSetLowerThreshold(self.parameters[0][0])
         segmentationClass.SetLevelSetUpperThreshold(self.parameters[0][1])
 
-        #Shape Detection Filter
+        # Shape Detection Filter
         segmentationClass.SetShapeCurvatureScale(self.parameters[1])
         segmentationClass.SetShapeMaxRMSError(self.parameters[2])
         segmentationClass.SetShapeMaxIterations(self.parameters[3])
         segmentationClass.SetShapePropagationScale(self.parameters[4])
         segmentationClass.SetScalingFactor(self.parameters[5])
 
-        searchWindow = [50,50,40]
+        # Search Window Size
+        segmentationClass.SetSearchWindowSize(self.parameters[6])
 
         # segmentation = segmentationClass.Execute(self.MRI_Image,[SeedPoint])
         segmentation = segmentationClass.Execute(self.MRI_Image, [SeedPoint], verbose=True, 
-                                    returnSitkImage=False, convertSeedPhyscialFlag=True,
-                                    searchWindow=searchWindow)
+                                    returnSitkImage=False, convertSeedPhyscialFlag=True)
 
 
         print('DONE WITH SEGMENTATION!')

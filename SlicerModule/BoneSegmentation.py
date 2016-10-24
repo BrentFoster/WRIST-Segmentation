@@ -5,7 +5,7 @@ import timeit
 
 class BoneSeg(object):
     """Class of BoneSegmentation. REQUIRED: BoneSeg(MRI_Image,SeedPoint)"""
-    def Execute(self, original_image, original_seedPoint, verbose=False, returnSitkImage=True, convertSeedPhyscialFlag=True, searchWindow=[50,50,40]):
+    def Execute(self, original_image, original_seedPoint, verbose=False, returnSitkImage=True, convertSeedPhyscialFlag=True):
 
         start_time = timeit.default_timer() 
 
@@ -14,7 +14,6 @@ class BoneSeg(object):
         self.image = original_image
         self.seedPoint = original_seedPoint
         self.original_seedPoint = original_seedPoint
-        self.searchWindow = searchWindow
         self.convertSeedPhyscialFlag = convertSeedPhyscialFlag
 
         # Convert images to type float 32 first
@@ -28,13 +27,13 @@ class BoneSeg(object):
         # Convert the seed point to image coordinates (from physical) if needed and round
         self.RoundSeedPoint()
 
-        print(' ')
-        print('Finished rounding seed point...')
-        print('self.seedPoint')
-        print(self.seedPoint)
-        print('self.original_seedPoint')
-        print(self.original_seedPoint)
-        print(' ')
+        # print(' ')
+        # print('Finished rounding seed point...')
+        # print('self.seedPoint')
+        # print(self.seedPoint)
+        # print('self.original_seedPoint')
+        # print(self.original_seedPoint)
+        # print(' ')
 
 
         # Crop the image so that it considers only a search space around the seed point
@@ -43,17 +42,13 @@ class BoneSeg(object):
         # print(self.seedPoint)
         self.CropImage()
 
-        print('Uncropping image')
-        self.segImg = self.image
-        self.UnCropImage(original_image)
+        # print('Uncropping image')
+        # self.segImg = self.image
+        # self.UnCropImage(original_image)
+        # self.segImg = sitk.Cast(self.segImg, sitk.sitkUInt8)
+        # npImg = sitk.GetArrayFromImage(self.segImg)
 
-
-        self.segImg = sitk.Cast(self.segImg, sitk.sitkUInt8)
-        npImg = sitk.GetArrayFromImage(self.segImg)
-
-        return  npImg
-
-
+        # return  npImg
 
         if self.verbose == True:
             print('\033[94m' + 'Estimating upper sigmoid threshold level')
@@ -71,52 +66,52 @@ class BoneSeg(object):
         if self.verbose == True:
             print(self.seedPoint)
             print('\033[90m' + "Scaling image down...")
-        # self.scaleDownImage()
+        self.scaleDownImage()
 
         if self.verbose == True:
             elapsed = timeit.default_timer() - start_time
             print("Elapsed Time (Preprocessing ):" + str(round(elapsed,3)))
 
-        # if self.verbose == True:
-        #     print('\033[90m' + "Sigmoid shape detection level set...")
-        # self.SigmoidLevelSet()
+        if self.verbose == True:
+            print('\033[90m' + "Sigmoid shape detection level set...")
+        self.SigmoidLevelSet()
 
         if self.verbose == True:
             print('\033[90m' + "Sigmoid shape detection level set by iteration...")
-        print('self.image.GetSize()')
-        print(self.image.GetSize())
+
         self.SigmoidLevelSetIterations()
 
       
-        if self.verbose == True:
-            print('\033[90m' + "Scaling image back...")
+        # if self.verbose == True:
+        #     print('\033[90m' + "Scaling image back...")
         # self.scaleUpImage()
 
-        print('self.image.GetSize()')
-        print(self.image.GetSize())
+        # print('self.image.GetSize()')
+        # print(self.image.GetSize())
         
-        if self.verbose == True:
-            print('\033[93m' + "Filling Segmentation Holes...")
-        self.HoleFilling()
+        # if self.verbose == True:
+        #     print('\033[93m' + "Filling Segmentation Holes...")
+        # self.HoleFilling()
 
-        if self.verbose == True:
-            print('\033[90m' + "Dilating image slightly...")
-        self.segImg  = sitk.Cast(self.segImg, sitk.sitkUInt16)
-        self.segImg = self.dilateFilter.Execute(self.segImg, 0, 1, False)
+        # if self.verbose == True:
+        #     print('\033[90m' + "Dilating image slightly...")
+        # self.segImg  = sitk.Cast(self.segImg, sitk.sitkUInt16)
+        # self.segImg = self.dilateFilter.Execute(self.segImg, 0, 1, False)
 
         # if self.verbose == True:
         #     print('\033[90m' + "Eroding image slightly...")
         # self.segImg = self.erodeFilter.Execute(self.segImg, 0, 1, False)
 
-        if self.verbose == True:
-            print('\033[93m' + "Filling Segmentation Holes...")
-        self.HoleFilling()
+        # if self.verbose == True:
+        #     print('\033[93m' + "Filling Segmentation Holes...")
+        # self.HoleFilling()
 
         if self.verbose == True:
             print('\033[96m' + "Finished with seed point "),
             print(self.seedPoint)
 
         ' Uncrop the image '
+        # self.segImg = self.image
         self.UnCropImage(original_image)
 
         if returnSitkImage == True:
@@ -188,8 +183,24 @@ class BoneSeg(object):
 
         im_size = np.asarray(self.image.GetSize())
 
-        cropFilter.SetLowerBoundaryCropSize(np.asarray(self.seedPoint[0]) - self.searchWindow)
-        cropFilter.SetUpperBoundaryCropSize(im_size - np.asarray(self.seedPoint[0]) - self.searchWindow)
+        print('im_size')
+        print(im_size)
+
+        print('self.searchWindow')
+        print(self.searchWindow)
+        print(' ')
+
+        print(' np.asarray(self.seedPoint[0])')
+        print(np.asarray(self.seedPoint[0]))
+        print('np.asarray(self.seedPoint[0]) - self.searchWindow')
+        print(np.asarray(self.seedPoint[0]) - self.searchWindow)
+
+        # These need the numpy .tolist() for some reason
+        cfLowerBound = np.asarray(np.asarray(self.seedPoint[0]) - self.searchWindow, dtype=np.uint32).tolist()
+        cfUpperBound = np.asarray(im_size - np.asarray(self.seedPoint[0]) - self.searchWindow, dtype=np.uint32).tolist()
+
+        cropFilter.SetLowerBoundaryCropSize(cfLowerBound)
+        cropFilter.SetUpperBoundaryCropSize(cfUpperBound)
 
         self.image = cropFilter.Execute(self.image)
 
@@ -230,12 +241,12 @@ class BoneSeg(object):
         nda = np.asarray(nda)
         nda = nda*0
 
-        print('seedPoint = self.seedPoint[0]')
+        # print('seedPoint = self.seedPoint[0]')
         seedPoint = self.seedPoint[0]
-        print(seedPoint)
-        print('Size of nda')
-        print(nda.shape)
-        print(' ')
+        # print(seedPoint)
+        # print('Size of nda')
+        # print(nda.shape)
+        # print(' ')
 
         # In numpy an array is indexed in the opposite order (z,y,x)
         nda[seedPoint[2]][seedPoint[1]][seedPoint[0]] = 1
@@ -325,8 +336,14 @@ class BoneSeg(object):
         self.sigFilter.SetOutputMinimum(0)
         self.sigFilter.SetOutputMaximum(255)
 
+        # Search Space Window
+        self.SetSearchWindowSize(50)
+
     def SetShapeMaxIterations(self, MaxIts):
         self.shapeDetectionFilter.SetNumberOfIterations(int(MaxIts))
+
+    def SetSearchWindowSize(self, searchWindow):
+        self.searchWindow = [searchWindow, searchWindow, searchWindow]
 
     def SetShapePropagationScale(self, propagationScale):
         self.shapeDetectionFilter.SetPropagationScaling(-1*propagationScale)

@@ -24,6 +24,7 @@ def AddImages(image_one, image_two):
 	return combined_img
 
 def RunSegmentation(input_image, seedPoint, searchWindow):
+
 	seedPoint = np.array(seedPoint).astype(int)
 
 	# im_size = np.asarray(input_image.GetSize())
@@ -49,10 +50,11 @@ def RunSegmentation(input_image, seedPoint, searchWindow):
 
 	' Run the Segmentation '
 	segmentationClass = BoneSegmentation.BoneSeg()
+	segmentationClass.SetSearchWindowSize(searchWindow)
+
 	# seg_img = segmentationClass.Execute(cropped_img, [seedPoint], verbose=False, returnSitkImage=True, convertSeedPhyscial=False)
 	seg_img = segmentationClass.Execute(input_image, [seedPoint], verbose=False, 
-										returnSitkImage=True, convertSeedPhyscial=False,
-										searchWindow=searchWindow)
+										returnSitkImage=True, convertSeedPhyscialFlag=False)
 
 
 	return seg_img
@@ -100,11 +102,11 @@ if __name__ == "__main__":
 	# seedPoints.append(new_point)
 	# new_point = np.array([210, 670, 140], dtype=int)
 	# seedPoints.append(new_point)
-	print('seedPoints' + str(seedPoints))
+	# print('seedPoints' + str(seedPoints))
 
 
 	' Define other variables '
-	searchWindow = [50,50,40];
+	searchWindow = 50;
 	# Create objects of the needed classes
 	# Set the parameters for the segmentation class object
 	# segmentationClass = BoneSegmentation.BoneSeg()
