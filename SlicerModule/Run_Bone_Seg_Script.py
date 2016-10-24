@@ -106,7 +106,7 @@ if __name__ == "__main__":
 
 
 	' Define other variables '
-	searchWindow = 50;
+	searchWindow = 200;
 	# Create objects of the needed classes
 	# Set the parameters for the segmentation class object
 	# segmentationClass = BoneSegmentation.BoneSeg()

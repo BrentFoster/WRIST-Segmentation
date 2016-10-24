@@ -162,22 +162,22 @@ class BoneSeg(object):
 
         im_size = np.asarray(self.image.GetSize())
 
-        print('im_size')
-        print(im_size)
+        # Check to make sure the search window size won't go outside of the image dimensions
+        for i in range(0,3):
+            print(self.searchWindow[i])
+            print(self.seedPoint[0])
+            if self.searchWindow[i] > self.seedPoint[0][i]:
+                self.searchWindow[i] = self.seedPoint[0][i]
+            if self.searchWindow[i] > im_size[i] - self.seedPoint[0][i]:
+                self.searchWindow[i] = im_size[i] - self.seedPoint[0][i]
 
-        print('self.searchWindow')
-        print(self.searchWindow)
-        print(' ')
-
-        print(' np.asarray(self.seedPoint[0])')
-        print(np.asarray(self.seedPoint[0]))
-        print('np.asarray(self.seedPoint[0]) - self.searchWindow')
-        print(np.asarray(self.seedPoint[0]) - self.searchWindow)
-
-        # These need the numpy .tolist() for some reason
-        cfLowerBound = np.asarray(np.asarray(self.seedPoint[0]) - self.searchWindow, dtype=np.uint32).tolist()
-        cfUpperBound = np.asarray(im_size - np.asarray(self.seedPoint[0]) - self.searchWindow, dtype=np.uint32).tolist()
-
+        cfLowerBound = np.asarray(np.asarray(self.seedPoint[0]) - self.searchWindow)
+        cfUpperBound = np.asarray(im_size - np.asarray(self.seedPoint[0]) - self.searchWindow)
+        
+        # These need to be changed to a list using numpy .tolist() for some reason
+        cfLowerBound = cfLowerBound.tolist()
+        cfUpperBound = cfUpperBound.tolist()
+        
         cropFilter.SetLowerBoundaryCropSize(cfLowerBound)
         cropFilter.SetUpperBoundaryCropSize(cfUpperBound)
 
