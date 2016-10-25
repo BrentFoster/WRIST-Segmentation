@@ -12,9 +12,12 @@ class BoneSeg(object):
         self.verbose = verbose # Optional argument to output text to terminal
 
         self.image = original_image
+        self.original_image = original_image
         self.seedPoint = original_seedPoint
         self.original_seedPoint = original_seedPoint
         self.convertSeedPhyscialFlag = convertSeedPhyscialFlag
+
+        self.current_bone = 'Pisiform'
 
         # Convert images to type float 32 first
         try:
@@ -22,7 +25,10 @@ class BoneSeg(object):
         except:
             # Convert from numpy array to a SimpleITK image type first then cast
             self.image = sitk.Cast(sitk.GetImageFromArray(self.image), sitk.sitkFloat32)
-            original_image = self.image # original_image needs to be a SimpleITK image type for later
+            self.original_image = self.image # original_image needs to be a SimpleITK image type for later
+
+        # Define what the anatimical prior volume and bounding box is for each carpal bone
+        self.DefineAnatomicPrior('Men')
 
         # Convert the seed point to image coordinates (from physical) if needed and round
         self.RoundSeedPoint()
@@ -38,6 +44,7 @@ class BoneSeg(object):
 
         # Estimate the threshold level by image intensity statistics
         LowerThreshold = self.EstimateSigmoid()
+        # LowerThreshold = 120
         
         self.SetLevelSetLowerThreshold(LowerThreshold)
 
@@ -46,52 +53,43 @@ class BoneSeg(object):
             print(self.seedPoint)
             print('\033[94m' + "Rounding and converting to voxel domain: "), 
 
-        if self.verbose == True:
-            print(self.seedPoint)
-            print('\033[90m' + "Scaling image down...")
-        self.scaleDownImage()
+        # if self.verbose == True:
+        #     print(self.seedPoint)
+        #     print('\033[90m' + "Scaling image down...")
+        # self.scaleDownImage()
 
         if self.verbose == True:
             elapsed = timeit.default_timer() - start_time
             print("Elapsed Time (Preprocessing ):" + str(round(elapsed,3)))
 
         if self.verbose == True:
-            print('\033[90m' + "Sigmoid shape detection level set...")
-        self.SigmoidLevelSet()
-
-        if self.verbose == True:
+            print(' ')
             print('\033[90m' + "Sigmoid shape detection level set by iteration...")
-
         self.SigmoidLevelSetIterations()
 
-        if self.verbose == True:
-            print('\033[90m' + "Scaling image back...")
-        self.scaleUpImage()
+        # if self.verbose == True:
+        #     print('\033[90m' + "Scaling image back...")
+        # self.scaleUpImage()
         
-        # if self.verbose == True:
-        #     print('\033[93m' + "Filling Segmentation Holes...")
-        # self.HoleFilling()
-
-        # if self.verbose == True:
-        #     print('\033[90m' + "Dilating image slightly...")
-        # self.segImg  = sitk.Cast(self.segImg, sitk.sitkUInt16)
-        # self.segImg = self.dilateFilter.Execute(self.segImg, 0, 1, False)
-
-        # if self.verbose == True:
-        #     print('\033[90m' + "Eroding image slightly...")
-        # self.segImg = self.erodeFilter.Execute(self.segImg, 0, 1, False)
-
-        # if self.verbose == True:
-        #     print('\033[93m' + "Filling Segmentation Holes...")
-        # self.HoleFilling()
+        if self.verbose == True:
+            print('\033[93m' + "Filling Segmentation Holes...")
+        self.HoleFilling()
 
         if self.verbose == True:
             print('\033[96m' + "Finished with seed point "),
             print(self.seedPoint)
 
-        ' Uncrop the image '
-        # self.segImg = self.image
-        self.UnCropImage(original_image)
+        if self.verbose == True:
+            print('\033[93m' + "Finding Connected Components...")
+        self.ConnectedComponent()
+
+        if self.verbose == True:
+            print('\033[90m' + "Uncropping Image...")
+        self.UnCropImage()
+
+        if self.verbose == True:
+            print('\033[93m' + "Running Leakage Check...")
+        self.LeakageCheck()
 
         if returnSitkImage == True:
             # Return a SimpleITK type image
@@ -102,6 +100,150 @@ class BoneSeg(object):
             npImg = sitk.GetArrayFromImage(self.segImg)
 
             return  npImg
+
+
+    def DefineAnatomicPrior(self, Group='Unknown', relaxation=0.3):
+        # The prior anatomical knowledge on the bone volume and dimensions is addeded
+        # from Crisco et al. Carpal Bone Size and Scaling in Men Versus Women. J Hand Surgery 2005
+
+        if Group == 'Unknown':
+            self.Prior_Volumes = {
+            'Scaphoid-vol':[2390,673], 'Scaphoid-x':[27, 3.1], 'Scaphoid-y':[16.5,1.8], 'Scaphoid-z':[13.1,1.2], 
+            'Lunate-vol':[1810,578], 'Lunate-x':[19.4, 2.3], 'Lunate-y':[18.5,2.2], 'Lunate-z':[13.2,1.7], 
+            'Triquetrum-vol':[1341,331], 'Triquetrum-x':[19.7,2], 'Triquetrum-y':[18.5,2.2], 'Triquetrum-z':[13.2,1.7], 
+            'Pisiform-vol':[712,219], 'Pisiform-x':[14.7,1.7], 'Pisiform-y':[11.5,1.4], 'Pisiform-z':[9.5,1.1], 
+            'Trapezium-vol':[1970,576], 'Trapezium-x':[23.6,2.5], 'Trapezium-y':[16.6,1.8], 'Trapezium-z':[14.6,2.2], 
+            'Trapezoid-vol':[1258,321], 'Trapezoid-x':[19.3,1.8], 'Trapezoid-y':[114.4,1.5], 'Trapezoid-z':[11.7,1.0], 
+            'Capitate-vol':[3123,743], 'Capitate-x':[26.3,2.3], 'Capitate-y':[19.5,1.9], 'Capitate-z':[15,1.6],  
+            'Hamate-vol':[2492,555], 'Hamate-x':[26.1,2.2], 'Hamate-y':[21.6,2], 'Hamate-z':[16,1.4]
+            }
+        elif Group == 'Men':
+            self.Prior_Volumes = {
+            'Scaphoid-vol':[2903,461], 'Scaphoid-x':[29.3, 2.7], 'Scaphoid-y':[17.8,1.2], 'Scaphoid-z':[14.1,0.9], 
+            'Lunate-vol':[2252,499], 'Lunate-x':[20.9,2.2], 'Lunate-y':[20.1,1.8], 'Lunate-z':[14.4,1.3], 
+            'Triquetrum-vol':[1579,261], 'Triquetrum-x':[20.9,1.8], 'Triquetrum-y':[14.9,0.7], 'Triquetrum-z':[12.6,0.9], 
+            'Pisiform-vol':[854,203], 'Pisiform-x':[15.7,1.4], 'Pisiform-y':[12.3,1.3], 'Pisiform-z':[10,1.2], 
+            'Trapezium-vol':[2394,443], 'Trapezium-x':[25.4,1.8], 'Trapezium-y':[17.5,1.8], 'Trapezium-z':[16.1,1.8], 
+            'Trapezoid-vol':[1497,237], 'Trapezoid-x':[20.6,1.4], 'Trapezoid-y':[15.5,0.8], 'Trapezoid-z':[12.3,0.7], 
+            'Capitate-vol':[3700,563], 'Capitate-x':[28,1.8], 'Capitate-y':[20.8,1.7], 'Capitate-z':[16,1.6],  
+            'Hamate-vol':[2940,378], 'Hamate-x':[27.5,1.9], 'Hamate-y':[23,1.8], 'Hamate-z':[16.9,1.2]
+            }
+        elif Group == 'Women':
+            self.Prior_Volumes_Women = {
+            'Scaphoid-vol':[1877,407], 'Scaphoid-x':[24.8,1.6], 'Scaphoid-y':[15.3,1.5], 'Scaphoid-z':[12.2,0.6], 
+            'Lunate-vol':[1368,165], 'Lunate-x':[18,1.1], 'Lunate-y':[16.9,0.8], 'Lunate-z':[11.9,0.8], 
+            'Triquetrum-vol':[1103,193], 'Triquetrum-x':[18.5,1.3], 'Triquetrum-y':[13.3,0.6], 'Triquetrum-z':[10.8,0.7], 
+            'Pisiform-vol':[569,121], 'Pisiform-x':[13.7,1.4], 'Pisiform-y':[10.7,1], 'Pisiform-z':[8.9,0.7], 
+            'Trapezium-vol':[1547,328], 'Trapezium-x':[21.8,1.8], 'Trapezium-y':[15.8,1.5], 'Trapezium-z':[13.1,1.2], 
+            'Trapezoid-vol':[1020,191], 'Trapezoid-x':[18,0.9], 'Trapezoid-y':[13.3,1.2], 'Trapezoid-z':[11.1,0.8], 
+            'Capitate-vol':[2547,344], 'Capitate-x':[24.6,1.1], 'Capitate-y':[18.2,1], 'Capitate-z':[13.9,0.8],  
+            'Hamate-vol':[2045,264], 'Hamate-x':[24.7,1.4], 'Hamate-y':[20.1,0.8], 'Hamate-z':[15,0.9]
+            }
+        else:
+            # Raise an erorr since 
+            raise ValueError('Group must be either "Men", "Women", or "Unknown". Value given was ' + Group)
+
+
+        # Allow some relaxation around the anatomical prior knowledge contraint
+        # Calculate what the ranges should be for each measure using average and standard deviation and relaxation term
+        self.lower_range_volume = (self.Prior_Volumes[self.current_bone + '-vol'][0] - self.Prior_Volumes[self.current_bone + '-vol'][1])*(1-relaxation)
+        self.upper_range_volume = (self.Prior_Volumes[self.current_bone + '-vol'][0] + self.Prior_Volumes[self.current_bone + '-vol'][1])*(1+relaxation)
+
+        self.lower_range_x = (self.Prior_Volumes[self.current_bone + '-x'][0] - self.Prior_Volumes[self.current_bone + '-x'][1])*(1-relaxation)
+        self.upper_range_x = (self.Prior_Volumes[self.current_bone + '-x'][0] + self.Prior_Volumes[self.current_bone + '-x'][1])*(1+relaxation)
+
+        self.lower_range_y = (self.Prior_Volumes[self.current_bone + '-y'][0] - self.Prior_Volumes[self.current_bone + '-y'][1])*(1-relaxation)
+        self.upper_range_y = (self.Prior_Volumes[self.current_bone + '-y'][0] + self.Prior_Volumes[self.current_bone + '-y'][1])*(1+relaxation)
+
+        self.lower_range_z = (self.Prior_Volumes[self.current_bone + '-z'][0] - self.Prior_Volumes[self.current_bone + '-z'][1])*(1-relaxation)
+        self.upper_range_z = (self.Prior_Volumes[self.current_bone + '-z'][0] + self.Prior_Volumes[self.current_bone + '-z'][1])*(1+relaxation)
+
+        # Use the bounding box ranges to create a suitable search window for the current particular carpal bone 
+        self.searchWindow = np.rint(np.asarray([self.upper_range_z, self.upper_range_x, self.upper_range_y]))
+
+        # Make the search window larger since the seed location won't be exactly in the center of the bone
+        self.searchWindow = np.rint(2*self.searchWindow)
+
+        if self.verbose == True:
+            print('\033[93m'  + 'Estimated Search Window is ' + str(self.searchWindow))
+            print(' ')
+
+        return self
+
+
+    def LeakageCheck(self):
+        # Check the image type of self.segImg and image are the same (for Python 3.3 and 3.4)
+        # self.segImg = sitk.Cast(self.segImg, segmentation.GetPixelID()) #Can't be a 32 bit float
+        # self.segImg.CopyInformation(segmentation)
+
+        nda = sitk.GetArrayFromImage(self.segImg)
+        nda = np.asarray(nda)
+
+        pix_dims = np.asarray(self.original_image.GetSpacing())
+
+        BoundingBoxFilter = sitk.LabelStatisticsImageFilter()
+
+        BoundingBoxFilter.Execute(self.original_image, self.segImg)
+
+        label = 1
+
+        BoundingBox = BoundingBoxFilter.GetBoundingBox(label)
+        # Need to be consistent with how Crisco 2005 defines their bounding box
+        z_size = BoundingBox[1] - BoundingBox[0] 
+        x_size = BoundingBox[3] - BoundingBox[2]
+        y_size = BoundingBox[5] - BoundingBox[4]
+
+        # Convert to physical units (mm)
+        x_size = x_size*pix_dims[0]
+        y_size = y_size*pix_dims[1]
+        z_size = z_size*pix_dims[2]
+
+        volume = np.prod(pix_dims)*BoundingBoxFilter.GetCount(label)
+
+        # Round to the nearest integer
+        x_size = np.around(x_size,1)
+        y_size = np.around(y_size,1)
+        z_size = np.around(z_size,1)
+        volume = np.rint(volume)
+
+        if self.verbose == True:
+            print('x_size = ' + str(x_size))
+            print('y_size = ' + str(y_size))
+            print('z_size = ' + str(z_size))
+            print('volume = ' + str(volume))
+
+        if (volume > self.lower_range_volume) and (volume < self.upper_range_volume):
+            if self.verbose == True:
+                print('\033[97m' + "Passed with volume " + str(volume))
+        else:
+            if self.verbose == True:
+                print('\033[96m' + "Failed with volume " + str(volume))
+                print('Expected range ' + str(self.lower_range_volume) + ' to ' + str(self.upper_range_volume))
+      
+        if (x_size > self.lower_range_x) and (x_size < self.upper_range_x):             
+            if self.verbose == True:
+                print('\033[97m' + "Passed x-bounding box " + str(x_size))
+        else:
+            if self.verbose == True:
+             print('\033[96m' + "Failed x-bounding box " + str(x_size))
+
+        if (y_size > self.lower_range_y) and (y_size < self.upper_range_y):            
+            if self.verbose == True:
+                print('\033[97m' + "Passed y-bounding box " + str(y_size))
+        else:
+            if self.verbose == True:
+                print('\033[96m' + "Failed y-bounding box " + str(y_size))
+
+        if (z_size > self.lower_range_z) and (z_size < self.upper_range_z):
+            if self.verbose == True:
+                print('\033[97m' + "Passed z-bounding box " + str(z_size))
+        else:
+            if self.verbose == True:
+                print('\033[96m' + "Failed z-bounding box " + str(z_size))
+                print('Expected range ' + str(self.lower_range_z) + ' to ' + str(self.upper_range_z))
+
+        return self
+
 
 
     def RoundSeedPoint(self):
@@ -129,15 +271,14 @@ class BoneSeg(object):
 
         return self
 
-
-    def UnCropImage(self, original_image):
+    def UnCropImage(self):
         ' Indexing to put the segmentation of the cropped image back into the original MRI '
 
         # Need the original seed point to know where the cropped volume is in the original image
         cropNdxOne = np.asarray(self.original_seedPoint[0]) - self.searchWindow
         cropNdxTwo = np.asarray(self.original_seedPoint[0]) + self.searchWindow
 
-        original_image_nda = sitk.GetArrayFromImage(original_image)
+        original_image_nda = sitk.GetArrayFromImage(self.original_image)
         original_image_nda = np.asarray(original_image_nda)
 
         seg_img_nda = sitk.GetArrayFromImage(self.segImg)
@@ -151,28 +292,26 @@ class BoneSeg(object):
 
         # Convert back to SimpleITK image type
         self.segImg = sitk.Cast(sitk.GetImageFromArray(original_image_nda), sitk.sitkUInt16)
-        self.segImg.CopyInformation(original_image)
+        self.segImg.CopyInformation(self.original_image)
 
         return self
 
     def CropImage(self):
         ' Crop the input_image around the initial seed point to speed up computation '
         cropFilter = sitk.CropImageFilter()
-        addFilter = sitk.AddImageFilter()
+        addFilter  = sitk.AddImageFilter()
 
         im_size = np.asarray(self.image.GetSize())
 
         # Check to make sure the search window size won't go outside of the image dimensions
         for i in range(0,3):
-            print(self.searchWindow[i])
-            print(self.seedPoint[0])
             if self.searchWindow[i] > self.seedPoint[0][i]:
                 self.searchWindow[i] = self.seedPoint[0][i]
             if self.searchWindow[i] > im_size[i] - self.seedPoint[0][i]:
                 self.searchWindow[i] = im_size[i] - self.seedPoint[0][i]
 
-        cfLowerBound = np.asarray(np.asarray(self.seedPoint[0]) - self.searchWindow)
-        cfUpperBound = np.asarray(im_size - np.asarray(self.seedPoint[0]) - self.searchWindow)
+        cfLowerBound = np.asarray(np.asarray(self.seedPoint[0]) - self.searchWindow, dtype=np.uint32)
+        cfUpperBound = np.asarray(im_size - np.asarray(self.seedPoint[0]) - self.searchWindow, dtype=np.uint32)
         
         # These need to be changed to a list using numpy .tolist() for some reason
         cfLowerBound = cfLowerBound.tolist()
@@ -188,19 +327,12 @@ class BoneSeg(object):
 
         return self
 
-
     def SigmoidLevelSetIterations(self):
         ''' Pre-processing '''
         start_time = timeit.default_timer() 
 
-        # self.sigFilter.SetBeta(120)
-        # self.sigFilter.SetAlpha(0)
-
-        print('GetAlpha')
-        print(self.sigFilter.GetAlpha())
-
-        print('GetBeta')
-        print(self.sigFilter.GetBeta())
+        self.sigFilter.SetBeta(120)
+        self.sigFilter.SetAlpha(0)
 
         processedImage = self.sigFilter.Execute(self.image) 
         processedImage  = sitk.Cast(processedImage, sitk.sitkUInt16)
@@ -225,13 +357,7 @@ class BoneSeg(object):
         nda = sitk.GetArrayFromImage(self.image)
         nda = np.asarray(nda)
         nda = nda*0
-
-        # print('seedPoint = self.seedPoint[0]')
         seedPoint = self.seedPoint[0]
-        # print(seedPoint)
-        # print('Size of nda')
-        # print(nda.shape)
-        # print(' ')
 
         # In numpy an array is indexed in the opposite order (z,y,x)
         nda[seedPoint[2]][seedPoint[1]][seedPoint[0]] = 1
@@ -243,7 +369,6 @@ class BoneSeg(object):
 
 
         ''' Segmentation '''
-
         # Signed distance function using the initial seed point (segImg)
         init_ls = sitk.SignedMaurerDistanceMap(self.segImg, insideIsPositive=True, useImageSpacing=True)
         init_ls = sitk.Cast(init_ls, sitk.sitkFloat32)
@@ -261,6 +386,68 @@ class BoneSeg(object):
         
         return self
 
+    def SigmoidLevelSet(self):
+        ''' Pre-processing '''
+        processedImage = self.sigFilter.Execute(self.image)
+        processedImage  = sitk.Cast(processedImage, sitk.sitkUInt16)
+
+        edgePotentialFilter = sitk.EdgePotentialImageFilter()
+        gradientFilter = sitk.GradientImageFilter()
+
+        gradImage = gradientFilter.Execute(processedImage)
+
+        processedImage = edgePotentialFilter.Execute(gradImage)
+
+        #Want 0 for the background and 1 for the objects
+        nda = sitk.GetArrayFromImage(processedImage)
+        nda = np.asarray(nda)
+
+        nda[nda != 1] = 0
+
+        processedImage = sitk.Cast(sitk.GetImageFromArray(nda), self.image.GetPixelID())
+        processedImage.CopyInformation(self.image)
+
+        ''' Create Seed Image '''
+        nda = sitk.GetArrayFromImage(self.image)
+        nda = np.asarray(nda)
+        nda = nda*0
+
+        seedPoint = self.seedPoint[0]
+
+        # In numpy, an array is indexed in the opposite order (z,y,x)
+        nda[seedPoint[2]][seedPoint[1]][seedPoint[0]] = 1
+
+        self.segImg = sitk.Cast(sitk.GetImageFromArray(nda), sitk.sitkUInt16)
+        self.segImg.CopyInformation(self.image)
+
+        self.segImg = sitk.BinaryDilate(self.segImg, 3)
+
+
+        ''' Segmentation '''
+        # Signed distance function using the initial seed point (segImg)
+        init_ls = sitk.SignedMaurerDistanceMap(self.segImg, insideIsPositive=True, useImageSpacing=True)
+        init_ls = sitk.Cast(init_ls, sitk.sitkFloat32)
+
+        processedImage = sitk.Cast(processedImage, sitk.sitkFloat32)
+
+        if self.verbose == True:
+            print('Starting ShapeDetectionLevelSetImageFilter')
+        
+        start_time = timeit.default_timer()
+
+        self.segImage  = self.shapeDetectionFilter.Execute(init_ls, processedImage)
+
+        elapsed = timeit.default_timer() - start_time
+
+        if self.verbose == True:
+            print("Elapsed Time (secs):" + str(round(elapsed,3)))
+
+            print('Done with ShapeDetectionLevelSetImageFilter!')
+
+            print(self.shapeDetectionFilter)
+        
+
+        return self
 
     def __init__(self):
         self.ScalingFactor = []
@@ -408,7 +595,6 @@ class BoneSeg(object):
         #Distance = Intensity difference NOT location distance
         self.connectedComponentFilter.SetDistanceThreshold(distanceThreshold) 
    
-
     def EstimateSigmoid(self):
         ''' Estimate the upper threshold of the sigmoid based on the 
         mean and std of the image intensities '''
@@ -505,69 +691,6 @@ class BoneSeg(object):
         if self.verbose == True:
             print(self.shapeDetectionFilter)
     
-    def SigmoidLevelSet(self):
-        ''' Pre-processing '''
-        processedImage = self.sigFilter.Execute(self.image)
-        processedImage  = sitk.Cast(processedImage, sitk.sitkUInt16)
-
-        edgePotentialFilter = sitk.EdgePotentialImageFilter()
-        gradientFilter = sitk.GradientImageFilter()
-
-        gradImage = gradientFilter.Execute(processedImage)
-
-        processedImage = edgePotentialFilter.Execute(gradImage)
-
-        #Want 0 for the background and 1 for the objects
-        nda = sitk.GetArrayFromImage(processedImage)
-        nda = np.asarray(nda)
-
-        nda[nda != 1] = 0
-
-        processedImage = sitk.Cast(sitk.GetImageFromArray(nda), self.image.GetPixelID())
-        processedImage.CopyInformation(self.image)
-
-        ''' Create Seed Image '''
-        nda = sitk.GetArrayFromImage(self.image)
-        nda = np.asarray(nda)
-        nda = nda*0
-
-        seedPoint = self.seedPoint[0]
-
-        # In numpy, an array is indexed in the opposite order (z,y,x)
-        nda[seedPoint[2]][seedPoint[1]][seedPoint[0]] = 1
-
-        self.segImg = sitk.Cast(sitk.GetImageFromArray(nda), sitk.sitkUInt16)
-        self.segImg.CopyInformation(self.image)
-
-        self.segImg = sitk.BinaryDilate(self.segImg, 3)
-
-
-        ''' Segmentation '''
-        # Signed distance function using the initial seed point (segImg)
-        init_ls = sitk.SignedMaurerDistanceMap(self.segImg, insideIsPositive=True, useImageSpacing=True)
-        init_ls = sitk.Cast(init_ls, sitk.sitkFloat32)
-
-        processedImage = sitk.Cast(processedImage, sitk.sitkFloat32)
-
-        if self.verbose == True:
-            print('Starting ShapeDetectionLevelSetImageFilter')
-        
-        start_time = timeit.default_timer()
-
-        self.segImage  = self.shapeDetectionFilter.Execute(init_ls, processedImage)
-
-        elapsed = timeit.default_timer() - start_time
-
-        if self.verbose == True:
-            print("Elapsed Time (secs):" + str(round(elapsed,3)))
-
-            print('Done with ShapeDetectionLevelSetImageFilter!')
-
-            print(self.shapeDetectionFilter)
-        
-
-        return self
-
     def AddImages(self, imageOne, imageTwo, iteration_num):
 
         ndaOutput = sitk.GetArrayFromImage(imageOne)
@@ -664,31 +787,6 @@ class BoneSeg(object):
 
         return self
 
-    def LeakageCheck(self):
-
-        # Check the image type of self.segImg and image are the same (for Python 3.3 and 3.4)
-        # self.segImg = sitk.Cast(self.segImg, segmentation.GetPixelID()) #Can't be a 32 bit float
-        # self.segImg.CopyInformation(segmentation)
-
-        nda = sitk.GetArrayFromImage(self.segImg)
-        nda = np.asarray(nda)
-
-        volume = len(nda[nda == 1])
-        if volume > self.MaxVolume:
-            if self.verbose == True:
-                print('\033[97m' + "Failed check with volume "),
-                print(volume)
-                print("Skipping this label")
-            # Clearing the label is the same as ignoring it since they're added together later
-            nda = nda*0 
-            self.segImg = sitk.Cast(sitk.GetImageFromArray(nda), self.segImg.GetPixelID())
-            
-        else:
-            if self.verbose == True:
-                print('\033[96m' + "Passed with volume "),
-                print(volume)
-
-        return self
 
     def ThresholdLevelSet(self):
         # Create the seed image

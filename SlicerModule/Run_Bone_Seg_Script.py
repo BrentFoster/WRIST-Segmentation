@@ -53,7 +53,7 @@ def RunSegmentation(input_image, seedPoint, searchWindow):
 	segmentationClass.SetSearchWindowSize(searchWindow)
 
 	# seg_img = segmentationClass.Execute(cropped_img, [seedPoint], verbose=False, returnSitkImage=True, convertSeedPhyscial=False)
-	seg_img = segmentationClass.Execute(input_image, [seedPoint], verbose=False, 
+	seg_img = segmentationClass.Execute(input_image, [seedPoint], verbose=True, 
 										returnSitkImage=True, convertSeedPhyscialFlag=False)
 
 
@@ -89,12 +89,18 @@ if __name__ == "__main__":
 	' Load the MRI image to be segmented'
 	input_image = sitk.ReadImage('/Users/Brent/Google Drive/Research/MRI Wrist Images/MRI Ground Truth Brent/VOlunteer2_VIBE_we.nii')
 
+	# sitk.Show(input_image)
+	# asd
+
 	' Define the seed points '
 	seedPoints = []
 
 	for i in range(0,1):
 		new_point = np.array([200, 670, 100], dtype=int)
 		seedPoints.append(new_point)
+		
+		# new_point = np.array([290, 630, 160], dtype=int)
+		# seedPoints.append(new_point)
 
 	# new_point = np.array([370, 600, 120], dtype=int)
 	# seedPoints.append(new_point)
@@ -106,7 +112,7 @@ if __name__ == "__main__":
 
 
 	' Define other variables '
-	searchWindow = 200;
+	searchWindow = 70;
 	# Create objects of the needed classes
 	# Set the parameters for the segmentation class object
 	# segmentationClass = BoneSegmentation.BoneSeg()
