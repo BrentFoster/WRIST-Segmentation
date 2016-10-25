@@ -7,6 +7,9 @@ class BoneSeg(object):
     """Class of BoneSegmentation. REQUIRED: BoneSeg(MRI_Image,SeedPoint)"""
     def Execute(self, original_image, original_seedPoint, verbose=False, returnSitkImage=True, convertSeedPhyscialFlag=True):
 
+        self.SetShapeMaxIterations(600)
+        self.current_bone = 'Pisiform'
+
         start_time = timeit.default_timer() 
 
         self.verbose = verbose # Optional argument to output text to terminal
@@ -16,8 +19,10 @@ class BoneSeg(object):
         self.seedPoint = original_seedPoint
         self.original_seedPoint = original_seedPoint
         self.convertSeedPhyscialFlag = convertSeedPhyscialFlag
+        self.returnSitkImage = returnSitkImage        
 
-        self.current_bone = 'Pisiform'
+        # Relaxation term for the prior anatomical knowledge constraint
+        self.AnatomicalRelaxation = 0.10
 
         # Convert images to type float 32 first
         try:
@@ -44,7 +49,6 @@ class BoneSeg(object):
 
         # Estimate the threshold level by image intensity statistics
         LowerThreshold = self.EstimateSigmoid()
-        # LowerThreshold = 120
         
         self.SetLevelSetLowerThreshold(LowerThreshold)
 
@@ -52,11 +56,6 @@ class BoneSeg(object):
             print('\033[94m' + "Current Seed Point: "),
             print(self.seedPoint)
             print('\033[94m' + "Rounding and converting to voxel domain: "), 
-
-        # if self.verbose == True:
-        #     print(self.seedPoint)
-        #     print('\033[90m' + "Scaling image down...")
-        # self.scaleDownImage()
 
         if self.verbose == True:
             elapsed = timeit.default_timer() - start_time
@@ -66,22 +65,15 @@ class BoneSeg(object):
             print(' ')
             print('\033[90m' + "Sigmoid shape detection level set by iteration...")
         self.SigmoidLevelSetIterations()
-
-        # if self.verbose == True:
-        #     print('\033[90m' + "Scaling image back...")
-        # self.scaleUpImage()
         
-        if self.verbose == True:
-            print('\033[93m' + "Filling Segmentation Holes...")
-        self.HoleFilling()
-
         if self.verbose == True:
             print('\033[96m' + "Finished with seed point "),
             print(self.seedPoint)
 
-        if self.verbose == True:
-            print('\033[93m' + "Finding Connected Components...")
-        self.ConnectedComponent()
+        # if self.verbose == True:
+        #     print(' ')
+        #     print('\033[93m' + "Finding Connected Components...")
+        # self.ConnectedComponent()
 
         if self.verbose == True:
             print('\033[90m' + "Uncropping Image...")
@@ -91,7 +83,14 @@ class BoneSeg(object):
             print('\033[93m' + "Running Leakage Check...")
         self.LeakageCheck()
 
-        if returnSitkImage == True:
+        if self.verbose == True:
+            print(' ')
+            print('\033[93m' + "Filling Any Holes...")
+        self.HoleFilling()
+
+        if self.returnSitkImage == True:
+            # Check the image type first
+            self.segImg = sitk.Cast(self.segImg, original_image.GetPixelID())
             # Return a SimpleITK type image
             return  self.segImg 
         else:
@@ -101,8 +100,7 @@ class BoneSeg(object):
 
             return  npImg
 
-
-    def DefineAnatomicPrior(self, Group='Unknown', relaxation=0.3):
+    def DefineAnatomicPrior(self, Group='Unknown'):
         # The prior anatomical knowledge on the bone volume and dimensions is addeded
         # from Crisco et al. Carpal Bone Size and Scaling in Men Versus Women. J Hand Surgery 2005
 
@@ -146,27 +144,75 @@ class BoneSeg(object):
 
         # Allow some relaxation around the anatomical prior knowledge contraint
         # Calculate what the ranges should be for each measure using average and standard deviation and relaxation term
-        self.lower_range_volume = (self.Prior_Volumes[self.current_bone + '-vol'][0] - self.Prior_Volumes[self.current_bone + '-vol'][1])*(1-relaxation)
-        self.upper_range_volume = (self.Prior_Volumes[self.current_bone + '-vol'][0] + self.Prior_Volumes[self.current_bone + '-vol'][1])*(1+relaxation)
+        self.lower_range_volume = (self.Prior_Volumes[self.current_bone + '-vol'][0] - self.Prior_Volumes[self.current_bone + '-vol'][1])*(1-self.AnatomicalRelaxation)
+        self.upper_range_volume = (self.Prior_Volumes[self.current_bone + '-vol'][0] + self.Prior_Volumes[self.current_bone + '-vol'][1])*(1+self.AnatomicalRelaxation)
 
-        self.lower_range_x = (self.Prior_Volumes[self.current_bone + '-x'][0] - self.Prior_Volumes[self.current_bone + '-x'][1])*(1-relaxation)
-        self.upper_range_x = (self.Prior_Volumes[self.current_bone + '-x'][0] + self.Prior_Volumes[self.current_bone + '-x'][1])*(1+relaxation)
+        self.lower_range_x = (self.Prior_Volumes[self.current_bone + '-x'][0] - self.Prior_Volumes[self.current_bone + '-x'][1])*(1-self.AnatomicalRelaxation)
+        self.upper_range_x = (self.Prior_Volumes[self.current_bone + '-x'][0] + self.Prior_Volumes[self.current_bone + '-x'][1])*(1+self.AnatomicalRelaxation)
 
-        self.lower_range_y = (self.Prior_Volumes[self.current_bone + '-y'][0] - self.Prior_Volumes[self.current_bone + '-y'][1])*(1-relaxation)
-        self.upper_range_y = (self.Prior_Volumes[self.current_bone + '-y'][0] + self.Prior_Volumes[self.current_bone + '-y'][1])*(1+relaxation)
+        self.lower_range_y = (self.Prior_Volumes[self.current_bone + '-y'][0] - self.Prior_Volumes[self.current_bone + '-y'][1])*(1-self.AnatomicalRelaxation)
+        self.upper_range_y = (self.Prior_Volumes[self.current_bone + '-y'][0] + self.Prior_Volumes[self.current_bone + '-y'][1])*(1+self.AnatomicalRelaxation)
 
-        self.lower_range_z = (self.Prior_Volumes[self.current_bone + '-z'][0] - self.Prior_Volumes[self.current_bone + '-z'][1])*(1-relaxation)
-        self.upper_range_z = (self.Prior_Volumes[self.current_bone + '-z'][0] + self.Prior_Volumes[self.current_bone + '-z'][1])*(1+relaxation)
+        self.lower_range_z = (self.Prior_Volumes[self.current_bone + '-z'][0] - self.Prior_Volumes[self.current_bone + '-z'][1])*(1-self.AnatomicalRelaxation)
+        self.upper_range_z = (self.Prior_Volumes[self.current_bone + '-z'][0] + self.Prior_Volumes[self.current_bone + '-z'][1])*(1+self.AnatomicalRelaxation)
 
         # Use the bounding box ranges to create a suitable search window for the current particular carpal bone 
         self.searchWindow = np.rint(np.asarray([self.upper_range_z, self.upper_range_x, self.upper_range_y]))
 
         # Make the search window larger since the seed location won't be exactly in the center of the bone
-        self.searchWindow = np.rint(2*self.searchWindow)
+        self.searchWindow = np.rint(3*self.searchWindow)
 
         if self.verbose == True:
             print('\033[93m'  + 'Estimated Search Window is ' + str(self.searchWindow))
             print(' ')
+
+        return self
+
+    def ConnectedComponent(self):
+
+        self.segImg = sitk.Cast(self.segImg, 1) #Can't be a 32 bit float
+        # self.segImg.CopyInformation(segmentation)
+
+        # Try to remove leakage areas by first eroding the binary and
+        # get the labels that are still connected to the original seed location
+
+        # self.segImg = self.erodeFilter.Execute(self.segImg, 0, 1, False)
+
+        # self.segImg = self.connectedComponentFilter.Execute(self.segImg)
+
+        # nda = sitk.GetArrayFromImage(self.segImg)
+        # nda = np.asarray(nda)
+
+        # # In numpy an array is indexed in the opposite order (z,y,x)
+        # tempseedPoint = self.seedPoint[0]
+        # val = nda[tempseedPoint[2]][tempseedPoint[1]][tempseedPoint[0]]
+
+        # # Keep only the label that intersects with the seed point
+        # nda[nda != val] = 0 
+        # nda[nda != 0] = 1
+
+        # self.segImg = sitk.GetImageFromArray(nda)
+
+        # Undo the earlier erode filter by dilating by same radius
+        # self.dilateFilter.SetKernelRadius(3)
+        # self.segImg = self.dilateFilter.Execute(self.segImg, 0, 1, False)
+
+        self.segImg = self.fillFilter.Execute(self.segImg)
+
+        # self.segImg = self.erodeFilter.Execute(self.segImg, 0, 1, False)
+
+        
+
+        return self
+
+    def HoleFilling(self):
+        # Cast to 16 bit (needed for the fill filter to work)
+        self.segImg  = sitk.Cast(self.segImg, sitk.sitkUInt16)
+
+        # self.dilateFilter.SetKernelRadius(1)
+        # self.segImg = self.dilateFilter.Execute(self.segImg, 0, 1, False)
+        self.segImg = self.fillFilter.Execute(self.segImg)
+        # self.segImg = self.erodeFilter.Execute(self.segImg, 0, 1, False)
 
         return self
 
@@ -206,6 +252,10 @@ class BoneSeg(object):
         z_size = np.around(z_size,1)
         volume = np.rint(volume)
 
+        # Create a flag to determine whether the test failed
+        # convergence_flag = 0 (passed), 1 (too large), 2 (too small)
+        convergence_flag = 0
+
         if self.verbose == True:
             print('x_size = ' + str(x_size))
             print('y_size = ' + str(y_size))
@@ -216,6 +266,12 @@ class BoneSeg(object):
             if self.verbose == True:
                 print('\033[97m' + "Passed with volume " + str(volume))
         else:
+            # Determine whether the segmentation was too large or too small
+            if volume > self.upper_range_volume:
+                convergence_flag = 1
+            elif volume < self.lower_range_volume:
+                convergence_flag = 2
+
             if self.verbose == True:
                 print('\033[96m' + "Failed with volume " + str(volume))
                 print('Expected range ' + str(self.lower_range_volume) + ' to ' + str(self.upper_range_volume))
@@ -241,6 +297,51 @@ class BoneSeg(object):
             if self.verbose == True:
                 print('\033[96m' + "Failed z-bounding box " + str(z_size))
                 print('Expected range ' + str(self.lower_range_z) + ' to ' + str(self.upper_range_z))
+
+
+        if convergence_flag == 1:
+            # Segmentation was determined to be much too large. Lower number of iterations
+            print(' ')
+            print(' ')
+            print('REDOING SEGMENTATION')
+
+            # Shape Detection Filter
+            print('Current iterations = ' + str(self.GetShapeMaxIterations()))
+            
+            # Use 50% less iterations as currently used (since too large of a segmentation)
+            # Use a random percent less iterations (between 10% and 60%) 
+            # as are currently used (since too small of a segmentation)
+            
+            MaxIts = np.rint(self.GetShapeMaxIterations()*(1 - np.random.rand(1)/2+0.1))
+
+            print('Decreasing iterations to = ' + str(MaxIts))
+
+            self.SetShapeMaxIterations(MaxIts)
+
+
+            self.SigmoidLevelSetIterations()
+            self.UnCropImage()
+            self.LeakageCheck()
+
+        elif convergence_flag == 2:
+            # Segmentation was determined to be much too small. Increase number of iterations
+            print(' ')
+            print(' ')
+            print('REDOING SEGMENTATION')
+
+            # Use a random percent more iterations (between 20% and 200%) 
+            # as are currently used (since too small of a segmentation)
+            MaxIts = np.rint(self.GetShapeMaxIterations()*(1 + np.random.rand(1) + 0.20))
+
+            print('Increasing iterations to = ' + str(MaxIts[0]))
+
+            self.SetShapeMaxIterations(MaxIts)
+
+            # Don't need to redo the pre-processing steps
+            self.SigmoidLevelSetIterations()
+            self.UnCropImage()
+            self.LeakageCheck()
+
 
         return self
 
@@ -379,8 +480,7 @@ class BoneSeg(object):
      
         if self.verbose == True:
             print('Done with ShapeDetectionLevelSetImageFilter!')
-
-            print(self.shapeDetectionFilter)
+            # print(self.shapeDetectionFilter)
 
         self.segImg = self.SegToBinary(self.segImg)
         
@@ -513,6 +613,10 @@ class BoneSeg(object):
 
     def SetShapeMaxIterations(self, MaxIts):
         self.shapeDetectionFilter.SetNumberOfIterations(int(MaxIts))
+
+    def GetShapeMaxIterations(self):
+        MaxIts = self.shapeDetectionFilter.GetNumberOfIterations()
+        return MaxIts
 
     def SetSearchWindowSize(self, searchWindow):
         self.searchWindow = [searchWindow, searchWindow, searchWindow]
@@ -657,15 +761,6 @@ class BoneSeg(object):
             print("Saving to .txt failed...")
         return
 
-    def HoleFilling(self):
-        # Cast to 16 bit (needed for the fill filter to work)
-        self.segImg  = sitk.Cast(self.segImg, sitk.sitkUInt16)
-
-        # Apply the filters to the binary image
-        self.segImg = self.fillFilter.Execute(self.segImg)
-
-        return self
-
     def ShapeDetection(self):
         print('Shape Detection Level Set...')
 
@@ -719,7 +814,6 @@ class BoneSeg(object):
 
         return image
 
-
     def LaplacianLevelSet(self):
         # Check the image type of self.segImg and image are the same (for Python 3.3 and 3.4)
         self.segImg = sitk.Cast(self.segImg, self.image.GetPixelID()) #Can't be a 32 bit float
@@ -754,39 +848,6 @@ class BoneSeg(object):
         self.segImg.CopyInformation(self.image)
 
         return self
-
-
-    def ConnectedComponent(self):
-
-        self.segImg = sitk.Cast(self.segImg, 1) #Can't be a 32 bit float
-        # self.segImg.CopyInformation(segmentation)
-
-        # Try to remove leakage areas by first eroding the binary and
-        # get the labels that are still connected to the original seed location
-
-        self.segImg = self.erodeFilter.Execute(self.segImg, 0, 1, False)
-
-        self.segImg = self.connectedComponentFilter.Execute(self.segImg)
-
-        nda = sitk.GetArrayFromImage(self.segImg)
-        nda = np.asarray(nda)
-
-        # In numpy an array is indexed in the opposite order (z,y,x)
-        tempseedPoint = self.seedPoint[0]
-        val = nda[tempseedPoint[2]][tempseedPoint[1]][tempseedPoint[0]]
-
-        # Keep only the label that intersects with the seed point
-        nda[nda != val] = 0 
-        nda[nda != 0] = 1
-
-        self.segImg = sitk.GetImageFromArray(nda)
-
-        # Undo the earlier erode filter by dilating by same radius
-        self.dilateFilter.SetKernelRadius(3)
-        self.segImg = self.dilateFilter.Execute(self.segImg, 0, 1, False)
-
-        return self
-
 
     def ThresholdLevelSet(self):
         # Create the seed image

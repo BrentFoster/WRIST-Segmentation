@@ -56,7 +56,6 @@ def RunSegmentation(input_image, seedPoint, searchWindow):
 	seg_img = segmentationClass.Execute(input_image, [seedPoint], verbose=True, 
 										returnSitkImage=True, convertSeedPhyscialFlag=False)
 
-
 	return seg_img
 
 	# ' Indexing to put the segmentation of the cropped image back into the original MRI '
@@ -132,6 +131,10 @@ if __name__ == "__main__":
 
 	for i in range(0,len(seedPoints)):
 		outputImg_temp = RunSegmentation(input_image, seedPoints[i], searchWindow)
+
+		# Double check the pixel types
+		outputImg_temp = sitk.Cast(outputImg_temp, outputImg.GetPixelID())
+		
 		outputImg = AddImages(outputImg, outputImg_temp)
 
 
