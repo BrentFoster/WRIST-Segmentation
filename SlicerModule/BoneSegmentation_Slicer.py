@@ -177,7 +177,7 @@ class BoneSegmentation_SlicerWidget:
 
 
         #
-        # Flip Bone Selection Table 
+        # Flip Bone Selection Table Button
         #
         self.FlipTableFlag = 1 # Flag for remembering which orientation the table is currently in
         self.FlipTableButton = qt.QPushButton("Flip Table")
@@ -186,26 +186,19 @@ class BoneSegmentation_SlicerWidget:
         self.FlipTableButton.connect('clicked()', self.onFlipTableButton)
 
 
+        #
+        # Gender Selection Button
+        #
 
+        self.GenderSelectionList = qt.QListWidget()
+        self.GenderSelectionList.selectionMode = qt.QAbstractItemView.SingleSelection
 
-        # some_QIcon = qt.QIcon('/Users/Brent/Desktop/test.jpeg')
+        self.GenderSelectionList.addItem('Male')
+        self.GenderSelectionList.addItem('Female')
+        self.GenderSelectionList.addItem('Unknown')
 
-        # self.ModuleList = qt.QListWidget()
-        # self.ModuleList.selectionMode = qt.QAbstractItemView.MultiSelection
-        
-        # self.ModuleList.addItem('Scaphoid')
-        # self.ModuleList.addItem('Lunate')
-        # self.ModuleList.addItem('Triquetrum')
-        
-        # item = qt.QListWidgetItem()
-
-        # item.setIcon(some_QIcon)
-        # self.ModuleList.setIconSize(qt.QSize(240,240))
-
-        # self.ModuleList.addItem(item)
-
-        # frameLayout.addWidget(self.ModuleList)
-        # self.ModuleList.connect('itemSelectionChanged()', self.onModuleListChange)
+        frameLayout.addWidget(self.GenderSelectionList)
+        self.GenderSelectionList.connect('itemSelectionChanged()', self.onGenderSelectionListChange)
 
 
 
@@ -354,11 +347,18 @@ class BoneSegmentation_SlicerWidget:
         self.Reset_Table_Widget()
 
 
+    def onGenderSelectionListChange(self):
+        self.selected_gender = self.GenderSelectionList.currentItem().text()
+        print('self.selected_gender')
+        print(self.selected_gender)
+
+
     def onModuleListChange(self):
         # Reset the table first!
         self.Reset_Table_Widget()
 
         ndx = self.ModuleList.selectedIndexes()
+        self.BonesSelected = []
 
         for i in range(0,len(ndx)):
             item = qt.QTableWidgetItem()
@@ -371,18 +371,13 @@ class BoneSegmentation_SlicerWidget:
             item.setText(curr_bone + ' ' + str(i+1))
 
 
-
             self.ModuleList.setItem(row,column,item)
 
+            self.BonesSelected.append(curr_bone)
 
-
-
-
-
-
-
-
-        # self.BonesSelected = newValue
+        print('BonesSelected')
+        print(self.BonesSelected)
+        print(' ')
 
     def onNumScalingSliderChange(self, newValue):
         self.NumScaling = newValue
@@ -434,72 +429,6 @@ class BoneSegmentation_SlicerWidget:
 
     def onCompute(self):
         slicer.app.processEvents()
-
-
-
-        # TEST TEST TEST 
-        # Find the input image in Slicer and convert to a SimpleITK image type
-        # imageID = self.inputSelector.currentNode()
-        # image = sitkUtils.PullFromSlicer(imageID.GetName())
-
-        # import subprocess
-        # import numpy as np
-        # import json
-        # x = np.random.rand(2,2)
-
-        # from subprocess import Popen, PIPE
-
-
-        # import sys
-        # sys.path.insert(0, 'C:\Users\Brent\GitRepositories\BoneSegmentation\SlicerModule')
-        # import joblib_test
-        # reload(joblib_test)
-        # joblib_test.main(5)
-
-        # import os
-        # print(os.path.dirname(os.path.abspath(__file__)))
-        # print(os.getcwd())
-
-
-        # fullCmd ="python " + "C:\Users\Brent\GitRepositories\BoneSegmentation\SlicerModule\joblib_test.py " + json.dumps(x.tolist())
-        # proc = Popen(fullCmd, stdout=PIPE, shell=False)
-
-        # output = proc.communicate()[0]
-        # print('output')
-        # print(output)
-        # print(subprocess.check_output(
-        #     fullCmd, 
-        #     shell = True, 
-        #     stdin = subprocess.PIPE, 
-        #     # stdout = subprocess.PIPE, 
-        #     # stderr = subprocess.STDOUT,
-        #     bufsize = 0
-        # ))
-
-
-        # print('done!')
-
-
-
-
-
-
-        # "python joblib_test.py json.dumps(x.tolist())"
-
-
-        # return 0
-
-        # END TEST TEST TEST 
-
-
-
-
-
-
-
-
-
-
 
         # TODO: Consider adding a QProgressBar() if not too difficult
         # Make a list of all the seed point locations
