@@ -43,6 +43,7 @@ class BoneSegmentation_SlicerWidget:
         frame.setLayout(frameLayout)
         self.parent.layout().addWidget(frame)
 
+
         #
         # Input Volume Selector
         #
@@ -76,11 +77,6 @@ class BoneSegmentation_SlicerWidget:
         frameLayout.addRow(
             self.outputVolumeSelectorLabel, self.outputSelector)
         # self.outputSelector.connect('currentNodeChanged(vtkMRMLNode*)', self.onInputSelect)
-
-
-
-
-
 
 
         #
@@ -151,11 +147,63 @@ class BoneSegmentation_SlicerWidget:
         # self.MaxRMSError = self.MaxRMSErrorInputSlider.value
 
 
+
+        #
+        # Select Which Bones
+        # 
+
+        
+
+        some_QIcon = qt.QIcon('/Users/Brent/Desktop/test.jpeg')
+
+        # self.ModuleList = qt.QTreeWidget()
+
+        self.ModuleList = qt.QTableWidget()
+        self.ModuleList.verticalHeader().setVisible(False)
+        self.ModuleList.horizontalHeader().setVisible(False)
+        self.ModuleList.setRowCount(2)
+        self.ModuleList.setColumnCount(4)
+        self.ModuleList.selectionMode = qt.QAbstractItemView.MultiSelection
+
+
+        self.bone_list = [['Trapezium', 'Trapezoid', 'Scaphoid', 'Capitate'],['Lunate', 'Hamate', 'Triquetrum', 'Pisiform']]
+
+
+        self.Reset_Table_Widget()
+
+        frameLayout.addWidget(self.ModuleList)
+
+
+        self.ModuleList.connect('itemSelectionChanged()', self.onModuleListChange)
+
+
+
+        # some_QIcon = qt.QIcon('/Users/Brent/Desktop/test.jpeg')
+
+        # self.ModuleList = qt.QListWidget()
+        # self.ModuleList.selectionMode = qt.QAbstractItemView.MultiSelection
+        
+        # self.ModuleList.addItem('Scaphoid')
+        # self.ModuleList.addItem('Lunate')
+        # self.ModuleList.addItem('Triquetrum')
+        
+        # item = qt.QListWidgetItem()
+
+        # item.setIcon(some_QIcon)
+        # self.ModuleList.setIconSize(qt.QSize(240,240))
+
+        # self.ModuleList.addItem(item)
+
+        # frameLayout.addWidget(self.ModuleList)
+        # self.ModuleList.connect('itemSelectionChanged()', self.onModuleListChange)
+
+
+
         #
         # Shape Detection Level set maximum Iterations
         #        
         self.label = qt.QLabel()
-        self.label.setText("Shape Detection Level Set Maximum Iterations: ")
+        self.label.setText("Maximum Iterations: ")
         self.label.setToolTip(
             "Select the maximum number of iterations for the shape detection level set convergence")
         self.ShapeMaxItsInputSlider = ctk.ctkSliderWidget()
@@ -172,7 +220,7 @@ class BoneSegmentation_SlicerWidget:
         # Shape Detection Level set maximum RMS error slider
         #        
         self.label = qt.QLabel()
-        self.label.setText("Shape Detection Level Set Maximum RMS Error: ")
+        self.label.setText("Maximum RMS Error: ")
         self.label.setToolTip(
             "Select the maximum root mean square error to determine convergence of the shape detection level set filter")
         self.ShapeMaxRMSErrorInputSlider = ctk.ctkSliderWidget()
@@ -194,7 +242,7 @@ class BoneSegmentation_SlicerWidget:
         # Shape Detection Level set curvatuve scale
         #        
         self.label = qt.QLabel()
-        self.label.setText("Shape Detection Level Set Curvature Scale: ")
+        self.label.setText("Curvature Scale: ")
         self.label.setToolTip(
             "Select the shape curvature scale (higher number causes more smoothing)")
         self.ShapeCurvatureScaleInputSlider = ctk.ctkSliderWidget()
@@ -214,7 +262,7 @@ class BoneSegmentation_SlicerWidget:
         # Shape Detection Level set propagation scale
         #        
         self.label = qt.QLabel()
-        self.label.setText("Shape Detection Level Set Propagation Scale: ")
+        self.label.setText("Propagation Scale: ")
         self.label.setToolTip(
             "Select the shape curvature scale (higher number causes more smoothing)")
         self.ShapePropagationScaleInputSlider = ctk.ctkSliderWidget()
@@ -229,37 +277,37 @@ class BoneSegmentation_SlicerWidget:
         #Set default value
         self.ShapePropagationScale = self.ShapePropagationScaleInputSlider.value
 
-        #
-        # Image Downsample Scale
-        # 
-        self.label = qt.QLabel()
-        self.label.setText("Image Downsampling: ")
-        self.label.setToolTip(
-            "Select the amount of downsampling (larger downsampling will compute faster, but the accuracy may be slightly reduced)")
-        self.NumScalingSlider = ctk.ctkSliderWidget()
-        self.NumScalingSlider.minimum = 1
-        self.NumScalingSlider.maximum = 5
-        self.NumScalingSlider.value = 1
-        self.NumScalingSlider.connect('valueChanged(double)', self.onNumScalingSliderChange)
-        frameLayout.addRow(self.label, self.NumScalingSlider)
-        #Set default value
-        self.NumScaling = self.NumScalingSlider.value
+        # #
+        # # Image Downsample Scale
+        # # 
+        # self.label = qt.QLabel()
+        # self.label.setText("Image Downsampling: ")
+        # self.label.setToolTip(
+        #     "Select the amount of downsampling (larger downsampling will compute faster, but the accuracy may be slightly reduced)")
+        # self.NumScalingSlider = ctk.ctkSliderWidget()
+        # self.NumScalingSlider.minimum = 1
+        # self.NumScalingSlider.maximum = 5
+        # self.NumScalingSlider.value = 1
+        # self.NumScalingSlider.connect('valueChanged(double)', self.onNumScalingSliderChange)
+        # frameLayout.addRow(self.label, self.NumScalingSlider)
+        # #Set default value
+        # self.NumScaling = self.NumScalingSlider.value
 
-        #
-        # Search Space Window Size 
-        # 
-        self.label = qt.QLabel()
-        self.label.setText("Search Space Size: ")
-        self.label.setToolTip(
-            "Select the size of the cube to use for defining the search space around the initial seed location.")
-        self.WindowScalingSlider = ctk.ctkSliderWidget()
-        self.WindowScalingSlider.minimum = 5
-        self.WindowScalingSlider.maximum = 200
-        self.WindowScalingSlider.value = 40
-        self.WindowScalingSlider.connect('valueChanged(double)', self.onWindowScalingSliderChange)
-        frameLayout.addRow(self.label, self.WindowScalingSlider)
-        #Set default value
-        self.WindowScaling = self.WindowScalingSlider.value
+        # #
+        # # Search Space Window Size 
+        # # 
+        # self.label = qt.QLabel()
+        # self.label.setText("Search Space Size: ")
+        # self.label.setToolTip(
+        #     "Select the size of the cube to use for defining the search space around the initial seed location.")
+        # self.WindowScalingSlider = ctk.ctkSliderWidget()
+        # self.WindowScalingSlider.minimum = 5
+        # self.WindowScalingSlider.maximum = 200
+        # self.WindowScalingSlider.value = 40
+        # self.WindowScalingSlider.connect('valueChanged(double)', self.onWindowScalingSliderChange)
+        # frameLayout.addRow(self.label, self.WindowScalingSlider)
+        # #Set default value
+        # self.WindowScaling = self.WindowScalingSlider.value
        
         #
         # Compute button
@@ -270,6 +318,57 @@ class BoneSegmentation_SlicerWidget:
         self.UpdatecomputeButtonState()
         self.computeButton.connect('clicked()', self.onCompute)
 
+
+    def Reset_Table_Widget(self):
+        # Reset the bone labels in the table widget
+        # self.bone_list = [['Trapezium', 'Trapezoid', 'Scaphoid', 'Capitate'],['Lunate', 'Hamate', 'Triquetrum', 'Pisiform']]
+
+        for i in range(0,2):
+            for j in range(0,4):
+                item = qt.QTableWidgetItem()
+                item.setText(self.bone_list[i][j])
+                self.ModuleList.setItem(i,j,item)
+
+
+    def onModuleListChange(self):
+
+        self.Reset_Table_Widget()
+
+
+        ndx = self.ModuleList.selectedIndexes()
+
+        print(' ')
+        print('selected items')
+
+        print(ndx)
+        print(' ')
+        print(ndx[0])
+        print(ndx[0].row())
+        print(ndx[0].column())
+
+        for i in range(0,len(ndx)):
+            item = qt.QTableWidgetItem()
+            
+            row = ndx[i].row()
+            column = ndx[i].column()
+
+            # Add one here to make it more intuitive then starting at 0
+            curr_bone = self.bone_list[row][column]
+            item.setText(curr_bone + ' ' + str(i+1))
+
+
+
+            self.ModuleList.setItem(row,column,item)
+
+
+
+
+
+
+
+
+
+        # self.BonesSelected = newValue
 
     def onNumScalingSliderChange(self, newValue):
         self.NumScaling = newValue
