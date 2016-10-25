@@ -149,9 +149,8 @@ class BoneSegmentation_SlicerWidget:
 
 
         #
-        # Select Which Bones
-        # 
-
+        # Bone Selection Table 
+        #
         
 
         some_QIcon = qt.QIcon('/Users/Brent/Desktop/test.jpeg')
@@ -175,6 +174,17 @@ class BoneSegmentation_SlicerWidget:
 
 
         self.ModuleList.connect('itemSelectionChanged()', self.onModuleListChange)
+
+
+        #
+        # Flip Bone Selection Table 
+        #
+        self.FlipTableFlag = 1 # Flag for remembering which orientation the table is currently in
+        self.FlipTableButton = qt.QPushButton("Flip Table")
+        self.FlipTableButton.toolTip = "Flip table left or right (for right or left hands)"
+        frameLayout.addWidget(self.FlipTableButton)
+        self.FlipTableButton.connect('clicked()', self.onFlipTableButton)
+
 
 
 
@@ -329,22 +339,26 @@ class BoneSegmentation_SlicerWidget:
                 item.setText(self.bone_list[i][j])
                 self.ModuleList.setItem(i,j,item)
 
+    def onFlipTableButton(self):
+        # Flip the table which is uesd to select which bones and in which order the initial seed locations
+        # were chosen in. This is needed in left vs. right hands for example (mirror images of each other)
 
-    def onModuleListChange(self):
+        if self.FlipTableFlag == 0:
+            self.bone_list = [['Trapezium', 'Trapezoid', 'Capitate', 'Hamate'],['Scaphoid', 'Lunate', 'Triquetrum', 'Pisiform']]
+            self.FlipTableFlag = 1
+        elif self.FlipTableFlag == 1:
+            self.bone_list = [['Hamate', 'Capitate', 'Trapezoid', 'Trapezium'],['Pisiform', 'Triquetrum', 'Lunate', 'Scaphoid']]
+            self.FlipTableFlag = 0
 
+        # Reset the table now that the bone list has flipped
         self.Reset_Table_Widget()
 
 
+    def onModuleListChange(self):
+        # Reset the table first!
+        self.Reset_Table_Widget()
+
         ndx = self.ModuleList.selectedIndexes()
-
-        print(' ')
-        print('selected items')
-
-        print(ndx)
-        print(' ')
-        print(ndx[0])
-        print(ndx[0].row())
-        print(ndx[0].column())
 
         for i in range(0,len(ndx)):
             item = qt.QTableWidgetItem()
