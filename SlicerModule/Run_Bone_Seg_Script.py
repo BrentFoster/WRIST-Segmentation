@@ -37,7 +37,6 @@ def RunSegmentation(input_image, seedPoint, CurrBoneName):
 										returnSitkImage=True, convertSeedPhyscialFlag=False)
 
 	overlaidImg = BrentPython.OverlayImages(input_image, seg_img, opacity=0.9, backgroundValue=0)
-	# overlaidImg.CopyInformation(input_image)
 
 	return overlaidImg
 
@@ -75,7 +74,6 @@ if __name__ == "__main__":
 
 		# Double check the pixel types
 		outputImg_temp = sitk.Cast(outputImg_temp, outputImg.GetPixelID())
-
 		outputImg = AddImages(outputImg, outputImg_temp)
 
 

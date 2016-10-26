@@ -7,7 +7,8 @@ class BoneSeg(object):
     """Class of BoneSegmentation. REQUIRED: BoneSeg(MRI_Image,SeedPoint)"""
     def Execute(self, original_image, original_seedPoint, verbose=False, returnSitkImage=True, convertSeedPhyscialFlag=True):
 
-        self.SetShapeMaxIterations(150)
+        self.SetShapeMaxIterations(1000)
+        self.SetAnatomicalRelaxation(0.15)
        
         start_time = timeit.default_timer() 
 
@@ -31,33 +32,47 @@ class BoneSeg(object):
         # Define what the anatimical prior volume and bounding box is for each carpal bone
         self.DefineAnatomicPrior()
 
+        if self.verbose == True:
+            print(' ')
+            print('\033[94m' + "Current Seed Point: "),
+            print(self.seedPoint)
+            print(' ')
+            print('\033[94m' + "Rounding and converting to voxel domain: "), 
+
         # Convert the seed point to image coordinates (from physical) if needed and round
         self.RoundSeedPoint()
 
-        # Crop the image so that it considers only a search space around the seed point
-        # to speed up computation significantly!
         if self.verbose == True:
-            print('\033[94m' + 'Cropping image')
-        self.CropImage()
-
-        if self.verbose == True:
+            print(' ')
             print('\033[94m' + 'Estimating upper sigmoid threshold level')
 
         # Estimate the threshold level by image intensity statistics
         LowerThreshold = self.EstimateSigmoid()
-        
         self.SetLevelSetLowerThreshold(LowerThreshold)
 
+        # Crop the image so that it considers only a search space around the seed point
+        # to speed up computation significantly!
         if self.verbose == True:
-            print('\033[94m' + "Current Seed Point: "),
-            print(self.seedPoint)
-            print('\033[94m' + "Rounding and converting to voxel domain: "), 
+            print(' ')
+            print('\033[94m' + 'Cropping image')
+        self.CropImage()
+
+        if self.verbose == True:
+            print(' ')
+            print('\033[94m' + 'Applying Anisotropic Filter')
+        self.apply_AnisotropicFilter()
+        # sitk.Show(self.image, 'post_diffusion')
 
         if self.verbose == True:
             elapsed = timeit.default_timer() - start_time
+            print(' ')
             print("Elapsed Time (Preprocessing ):" + str(round(elapsed,3)))
 
+        
         # Initilize the level set first (only need to do this once)
+        if self.verbose == True:
+            print(' ')
+            print('\033[94m' + 'Initilizing Level Set')
         self.InitilizeLevelSet()
 
         if self.verbose == True:
@@ -66,13 +81,14 @@ class BoneSeg(object):
         self.SigmoidLevelSetIterations()
         
         if self.verbose == True:
+            print(' ')
             print('\033[96m' + "Finished with seed point "),
             print(self.seedPoint)
 
         if self.verbose == True:
+            print(' ')
             print('\033[93m' + "Running Leakage Check...")
         self.LeakageCheck()
-
 
         if self.verbose == True:
             print(' ')
@@ -81,6 +97,7 @@ class BoneSeg(object):
         self.HoleFilling()
 
         if self.verbose == True:
+            print(' ')
             print('\033[90m' + "Uncropping Image...")
         self.UnCropImage()
 
@@ -210,7 +227,7 @@ class BoneSeg(object):
         # Cast to 16 bit (needed for the fill filter to work)
         self.segImg  = sitk.Cast(self.segImg, sitk.sitkUInt16)
 
-        self.dilateFilter.SetKernelRadius(3)
+        self.dilateFilter.SetKernelRadius(1)
         self.segImg = self.dilateFilter.Execute(self.segImg, 0, 1, False)
         self.segImg = self.fillFilter.Execute(self.segImg)
         self.segImg = self.erodeFilter.Execute(self.segImg, 0, 1, False)
@@ -226,9 +243,11 @@ class BoneSeg(object):
         start_time = timeit.default_timer() 
         self.HoleFilling()
         elapsed = timeit.default_timer() - start_time
-        print(' ')
-        print('FILLING elapsed : ' + str(elapsed))
-        print(' ')
+
+        if self.verbose == True:
+            print(' ')
+            print('FILLING elapsed : ' + str(round(elapsed,3)))
+            print(' ')
                
 
         nda = sitk.GetArrayFromImage(self.segImg)
@@ -323,9 +342,14 @@ class BoneSeg(object):
             # Use a random percent less iterations (between 10% and 60%) 
             # as are currently used (since too small of a segmentation)
             
-            MaxIts = np.rint(self.GetShapeMaxIterations()*(1 - np.random.rand(1)/2+0.1))
+            MaxIts = np.rint(self.GetShapeMaxIterations()*(1 - (np.random.rand(1)+0.10)/2))
             print('Decreasing iterations to = ' + str(MaxIts))
             self.SetShapeMaxIterations(MaxIts)
+
+            if MaxIts < 10:
+                raise ValueError('Max Iterations of ' + str(MaxIts) + ' is too low! Stopping now.')
+
+
 
             # Don't need to redo the pre-processing steps
             start_time = timeit.default_timer() 
@@ -347,10 +371,13 @@ class BoneSeg(object):
 
             # Use a random percent more iterations (between 20% and 200%) 
             # as are currently used (since too small of a segmentation)
-            MaxIts = np.rint(self.GetShapeMaxIterations()*(1 + np.random.rand(1) + 0.20))
+            MaxIts = np.rint(self.GetShapeMaxIterations()*(1 + (np.random.rand(1)+0.10)/2))
 
             print('Increasing iterations to = ' + str(MaxIts[0]))
             self.SetShapeMaxIterations(MaxIts)
+
+            if MaxIts > 3000:
+                raise ValueError('Max Iterations of ' + str(MaxIts) + ' is too high! Stopping now.')
 
             # Don't need to redo the pre-processing steps
             start_time = timeit.default_timer() 
@@ -519,6 +546,10 @@ class BoneSeg(object):
         # Filters to down/up sample the image for faster computation
         self.shrinkFilter = sitk.ShrinkImageFilter()
         self.expandFilter = sitk.ExpandImageFilter()
+
+        # Bias field correction
+        self.BiasFilter = sitk.N4BiasFieldCorrectionImageFilter()
+
         # Filter to reduce noise while preserving edgdes
         self.anisotropicFilter = sitk.CurvatureAnisotropicDiffusionImageFilter()
         # Post-processing filters for fillinging holes and to attempt to remove any leakage areas
@@ -545,16 +576,21 @@ class BoneSeg(object):
         self.SeedListFilename = "PointList.txt"
         self.SetMaxVolume(300000) #Pixel counts (TODO change to mm^3) 
 
+        # Anisotropic Diffusion Filter
+        self.SetAnisotropicIts(5)
+        self.SetAnisotropicTimeStep(0.01)
+        self.SetAnisotropicConductance(4)
+
         # Morphological Operators
         self.fillFilter.SetForegroundValue(1) 
         self.fillFilter.FullyConnectedOff() 
         self.SetBinaryMorphologicalRadius(1)
 
         # Shape Detection Filter
-        self.SetShapeMaxRMSError(0.001)
+        self.SetShapeMaxRMSError(0.004)
         self.SetShapeMaxIterations(1000)
         self.SetShapePropagationScale(4)
-        self.SetShapeCurvatureScale(1.1)
+        self.SetShapeCurvatureScale(1)
 
         # Sigmoid Filter
         self.sigFilter.SetAlpha(0)
@@ -759,3 +795,28 @@ class BoneSeg(object):
         return image
 
 
+    def BiasFieldCorrection(self): 
+        if self.verbose == True:
+            print('\033[94m' + 'Bias Field Correction')
+
+        #   Correct for the MRI bias field 
+        self.image  = sitk.Cast(self.image, sitk.sitkFloat32)
+
+        input_image_nda = sitk.GetArrayFromImage(self.image)
+        input_image_nda = np.asarray(input_image_nda)
+        input_image_nda = input_image_nda*0
+
+        mask_img = sitk.Cast(sitk.GetImageFromArray(input_image_nda), sitk.sitkFloat32)
+        mask_img.CopyInformation(self.image)
+
+        # test = sitk.OtsuThreshold( self.image, 0, 1, 200 )
+
+        mask_img = sitk.Cast(mask_img, 1) #Can't be a 32 bit float
+
+        print(mask_img.GetPixelID())
+
+
+        self.image = self.BiasFilter.Execute(self.image, mask_img)
+        sitk.Show(self.image, 'post_bias')
+
+        
