@@ -205,7 +205,7 @@ class BoneSegmentation_SlicerWidget:
         # Relaxation on Anatomical Prior Information
         #        
         self.label = qt.QLabel()
-        self.label.setText("Contraint Relaxation: ")
+        self.label.setText("Anatomical Relaxation: ")
         self.label.setToolTip(
             "Select the relaxation on the prior anatomical knowledge contraint (e.g. 0.10 is 10 percent relaxation)")
         self.RelaxationSlider = ctk.ctkSliderWidget()

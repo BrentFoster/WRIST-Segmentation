@@ -7,9 +7,6 @@ class BoneSeg(object):
     """Class of BoneSegmentation. REQUIRED: BoneSeg(MRI_Image,SeedPoint)"""
     def Execute(self, original_image, original_seedPoint, verbose=False, returnSitkImage=True, convertSeedPhyscialFlag=True):
 
-        self.SetShapeMaxIterations(1000)
-        self.SetAnatomicalRelaxation(0.15)
-       
         start_time = timeit.default_timer() 
 
         self.verbose = verbose # Optional argument to output text to terminal
@@ -67,8 +64,7 @@ class BoneSeg(object):
             elapsed = timeit.default_timer() - start_time
             print(' ')
             print("Elapsed Time (Preprocessing ):" + str(round(elapsed,3)))
-
-        
+    
         # Initilize the level set first (only need to do this once)
         if self.verbose == True:
             print(' ')
@@ -249,7 +245,6 @@ class BoneSeg(object):
             print('FILLING elapsed : ' + str(round(elapsed,3)))
             print(' ')
                
-
         nda = sitk.GetArrayFromImage(self.segImg)
         nda = np.asarray(nda)
 

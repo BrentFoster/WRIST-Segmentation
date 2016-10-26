@@ -55,9 +55,9 @@ if __name__ == "__main__":
 		seedPoints.append(new_point)
 		CurrBoneName.append('Pisiform')
 		
-		# new_point = np.array([290, 630, 160], dtype=int)
-		# seedPoints.append(new_point)
-		# CurrBoneName.append('Capitate')
+		new_point = np.array([290, 630, 160], dtype=int)
+		seedPoints.append(new_point)
+		CurrBoneName.append('Capitate')
 
 	' Run the Segmentation '	
 	# Create a output image of all zeros to hold the segmentation results
