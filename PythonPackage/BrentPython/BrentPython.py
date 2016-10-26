@@ -51,6 +51,7 @@ def OverlayImages(sitkImage, labelImage, opacity=0.9, backgroundValue=0):
 	ndaOverlay = ndaLabel + ndaImage
 
 	overlaidImg = sitk.Cast(sitk.GetImageFromArray(ndaOverlay), labelImage.GetPixelID())
+	overlaidImg.CopyInformation(sitkImage)
 
 
 	# overlaidImg = sitk.LabelOverlay(sitkImage, labelImage)
@@ -649,6 +650,8 @@ class BoneSeg(object):
 	def HoleFilling(self):
 		self.segImg  = sitk.Cast(self.segImg, sitk.sitkUInt16)
 		#Apply the filters to the binary image
+		self.dilateFilter.SetKernelRadius(3)
+		
 		self.segImg = self.fillFilter.Execute(self.segImg, True, 1)
 		self.segImg = self.dilateFilter.Execute(self.segImg, 0, 1, False)
 		self.segImg = self.fillFilter.Execute(self.segImg, True, 1)

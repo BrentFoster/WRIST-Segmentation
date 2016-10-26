@@ -1,11 +1,10 @@
-
 import SimpleITK as sitk
 import BoneSegmentation
 import numpy as np
 
 import MultiprocessorHelper
-
 import timeit
+import BrentPython
 
 def SaveSegmentation(image, filename, verbose = False):
 	""" Take a SimpleITK type image and save to a filename (in analyze format) """
@@ -18,69 +17,29 @@ def SaveSegmentation(image, filename, verbose = False):
 		print("Segmentation saved")
 
 def AddImages(image_one, image_two):
+	image_one.CopyInformation(image_two)
+
 	addFilter = sitk.AddImageFilter()
 	combined_img = addFilter.Execute(image_one, image_two)
 
 	return combined_img
 
-def RunSegmentation(input_image, seedPoint, searchWindow):
+def RunSegmentation(input_image, seedPoint, CurrBoneName):
 
 	seedPoint = np.array(seedPoint).astype(int)
 
-	# im_size = np.asarray(input_image.GetSize())
-
-	# ' Crop the input_image around the initial seed point to speed up computation '
-	# cropFilter = sitk.CropImageFilter()
-	# addFilter = sitk.AddImageFilter()
-
-	# cropFilter.SetLowerBoundaryCropSize(seedPoint - searchWindow)
-	# cropFilter.SetUpperBoundaryCropSize(im_size - seedPoint - searchWindow)
-
-	# print(im_size - seedPoint - searchWindow)
-	# asdf
-
-
-	# cropNdxOne = seedPoint - searchWindow
-	# cropNdxTwo = seedPoint + searchWindow
-	
-	# cropped_img = cropFilter.Execute(input_image)
-
-	# # The seed point is now in the middle of the search window
-	# seedPoint = np.asarray(searchWindow)
-
 	' Run the Segmentation '
 	segmentationClass = BoneSegmentation.BoneSeg()
-	segmentationClass.SetSearchWindowSize(searchWindow)
+	segmentationClass.SetCurrentBone(CurrBoneName)
+	segmentationClass.SetPatientGender('Male')
 
-	# seg_img = segmentationClass.Execute(cropped_img, [seedPoint], verbose=False, returnSitkImage=True, convertSeedPhyscial=False)
 	seg_img = segmentationClass.Execute(input_image, [seedPoint], verbose=True, 
 										returnSitkImage=True, convertSeedPhyscialFlag=False)
 
-	return seg_img
+	overlaidImg = BrentPython.OverlayImages(input_image, seg_img, opacity=0.9, backgroundValue=0)
+	# overlaidImg.CopyInformation(input_image)
 
-	# ' Indexing to put the segmentation of the cropped image back into the original MRI '
-	# input_image_nda = sitk.GetArrayFromImage(input_image)
-	# input_image_nda = np.asarray(input_image_nda)
-
-	# seg_img_nda = sitk.GetArrayFromImage(seg_img)
-	# seg_img_nda = np.asarray(seg_img_nda)
-
-	# cropped_img_nda = sitk.GetArrayFromImage(cropped_img)
-	# cropped_img_nda = np.asarray(cropped_img_nda)
-
-	# cropped_img_nda[seg_img_nda == 1] = cropped_img_nda[seg_img_nda == 1] + 500;
-	# seg_img_nda = cropped_img_nda;
-
-	# input_image_nda[cropNdxOne[2]:cropNdxTwo[2],
-	# 				cropNdxOne[1]:cropNdxTwo[1],
-	# 				cropNdxOne[0]:cropNdxTwo[0]] = seg_img_nda
-
-
-	# ' Return the final image '
-	# outputImg = sitk.Cast(sitk.GetImageFromArray(input_image_nda), sitk.sitkUInt16)
-	# outputImg.CopyInformation(input_image)
-
-	# return outputImg
+	return overlaidImg
 
 if __name__ == "__main__":
 	start_time = timeit.default_timer()
@@ -88,40 +47,21 @@ if __name__ == "__main__":
 	' Load the MRI image to be segmented'
 	input_image = sitk.ReadImage('/Users/Brent/Google Drive/Research/MRI Wrist Images/MRI Ground Truth Brent/VOlunteer2_VIBE_we.nii')
 
-	# sitk.Show(input_image)
-	# asd
-
 	' Define the seed points '
 	seedPoints = []
+	CurrBoneName = []
 
 	for i in range(0,1):
 		new_point = np.array([200, 670, 100], dtype=int)
 		seedPoints.append(new_point)
+		CurrBoneName.append('Pisiform')
 		
 		# new_point = np.array([290, 630, 160], dtype=int)
 		# seedPoints.append(new_point)
+		# CurrBoneName.append('Capitate')
 
-	# new_point = np.array([370, 600, 120], dtype=int)
-	# seedPoints.append(new_point)
-	# new_point = np.array([350, 660, 120], dtype=int)
-	# seedPoints.append(new_point)
-	# new_point = np.array([210, 670, 140], dtype=int)
-	# seedPoints.append(new_point)
-	# print('seedPoints' + str(seedPoints))
-
-
-	' Define other variables '
-	searchWindow = 70;
-	# Create objects of the needed classes
-	# Set the parameters for the segmentation class object
-	# segmentationClass = BoneSegmentation.BoneSeg()
-	multiHelper = MultiprocessorHelper.Multiprocessor()
-
-	' Run the Segmentation '
-	# outputImg = multiHelper.Execute(seedPoints, input_image, searchWindow=searchWindow, parameter=[1,2,3], verbose=True)
-	# outputImg.CopyInformation(input_image)
-	
-	# Create a zero output image to hold the segmentations
+	' Run the Segmentation '	
+	# Create a output image of all zeros to hold the segmentation results
 	outputImg_nda = sitk.GetArrayFromImage(input_image)
 	outputImg_nda = np.asarray(outputImg_nda)
 	outputImg_nda = outputImg_nda*0
@@ -129,25 +69,18 @@ if __name__ == "__main__":
 	outputImg = sitk.Cast(sitk.GetImageFromArray(outputImg_nda), sitk.sitkUInt16)
 	outputImg.CopyInformation(input_image)
 
+
 	for i in range(0,len(seedPoints)):
-		outputImg_temp = RunSegmentation(input_image, seedPoints[i], searchWindow)
+		outputImg_temp = RunSegmentation(input_image, seedPoints[i], CurrBoneName[i])
 
 		# Double check the pixel types
 		outputImg_temp = sitk.Cast(outputImg_temp, outputImg.GetPixelID())
-		
+
 		outputImg = AddImages(outputImg, outputImg_temp)
 
 
 	' Show the final output image '
 	sitk.Show(outputImg)
-
-
-	# for i in range(0, len(seedPoint)):
-	# 	print(seedPoint[i])
-	# seedPoint = np.zeros(shape=(3,3))
-	# seedPoint[0] = np.array([200, 670, 100]).astype(int);
-	# seedPoint[1] = np.array([200, 670, 80]).astype(int);
-
 
 
 	elapsed = timeit.default_timer() - start_time

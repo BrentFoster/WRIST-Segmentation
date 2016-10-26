@@ -201,6 +201,28 @@ class BoneSegmentation_SlicerWidget:
         self.GenderSelectionList.connect('itemSelectionChanged()', self.onGenderSelectionListChange)
 
 
+        #
+        # Relaxation on Anatomical Prior Information
+        #        
+        self.label = qt.QLabel()
+        self.label.setText("Contraint Relaxation: ")
+        self.label.setToolTip(
+            "Select the relaxation on the prior anatomical knowledge contraint (e.g. 0.10 is 10 percent relaxation)")
+        self.RelaxationSlider = ctk.ctkSliderWidget()
+        self.RelaxationSlider.minimum = 0
+        self.RelaxationSlider.maximum = 0.5
+        self.RelaxationSlider.value = 0.10
+
+        self.RelaxationSlider.singleStep = 0.05
+        self.RelaxationSlider.tickInterval = 0.01
+        self.RelaxationSlider.decimals = 2
+
+
+        self.RelaxationSlider.connect('valueChanged(double)', self.onRelaxationSliderChange)
+        frameLayout.addRow(self.label, self.RelaxationSlider)
+        #Set default value
+        self.RelaxationAmount = self.RelaxationSlider.value
+
 
         #
         # Shape Detection Level set maximum Iterations
@@ -379,6 +401,11 @@ class BoneSegmentation_SlicerWidget:
         print(self.BonesSelected)
         print(' ')
 
+        
+
+    def onRelaxationSliderChange(self, newValue):
+        self.RelaxationAmount = newValue
+
     def onNumScalingSliderChange(self, newValue):
         self.NumScaling = newValue
 
@@ -455,9 +482,9 @@ class BoneSegmentation_SlicerWidget:
         import BoneSegmentation
         segmentationClass = BoneSegmentation.BoneSeg()
         multiHelper = Multiprocessor()
-        #Parameters = [LevelSet Thresholds, LevelSet Iterations, Level Set Error, Shape Level Set Curvature, Shape Level Set Max Error, Shape Level Set Max Its, Shape LS Propagation Scale]
-        # parameters = [self.LevelSetThresholds, self.MaxIts, self.MaxRMSError,self.ShapeCurvatureScale, self.ShapeMaxRMSError, self.ShapeMaxIts, self.ShapePropagationScale] #From the sliders above
-        parameters = [self.ShapeCurvatureScale, self.ShapeMaxRMSError, self.ShapeMaxIts, self.ShapePropagationScale, self.NumScaling, self.WindowScaling] #From the sliders above
+
+        parameters = [self.ShapeCurvatureScale, self.ShapeMaxRMSError, self.ShapeMaxIts, 
+                        self.ShapePropagationScale, self.selected_gender, self.BonesSelected, self.RelaxationAmount] 
        
         NumCPUs = 1
         Segmentation = multiHelper.Execute(seedPoints, image, parameters, NumCPUs, True)
@@ -531,7 +558,7 @@ class Multiprocessor(object):
         segmentationLabel.CopyInformation(self.MRI_Image)
       
         for x in range(len(seedList)):
-            tempOutput = self.RunSegmentation(seedList[x])
+            tempOutput = self.RunSegmentation(seedList[x], x)
             tempOutput = sitk.Cast(sitk.GetImageFromArray(tempOutput), self.MRI_Image.GetPixelID())
             tempOutput.CopyInformation(self.MRI_Image)
 
@@ -544,7 +571,7 @@ class Multiprocessor(object):
 
         return segmentationLabel
 
-    def RunSegmentation(self, SeedPoint):
+    def RunSegmentation(self, SeedPoint, ndx):
         """ Function to be used with the Multiprocessor class (needs to be its own function 
             and not part of the same class to avoid the 'Pickle' type errors. """
         segmentationClass = BoneSegmentation.BoneSeg()
@@ -555,12 +582,19 @@ class Multiprocessor(object):
         # segmentationClass.SetLevelSetLowerThreshold(self.parameters[0][0])
         # segmentationClass.SetLevelSetUpperThreshold(self.parameters[0][1])
 
+
+        # parameters = [self.ShapeCurvatureScale, self.ShapeMaxRMSError, self.ShapeMaxIts, 
+        #                 self.ShapePropagationScale, self.selected_gender, self.BonesSelected, self.RelaxationAmount] 
+
+
         # Shape Detection Filter
         segmentationClass.SetShapeCurvatureScale(self.parameters[0])
         segmentationClass.SetShapeMaxRMSError(self.parameters[1])
         segmentationClass.SetShapeMaxIterations(self.parameters[2])
         segmentationClass.SetShapePropagationScale(self.parameters[3])
-        segmentationClass.SetScalingFactor(self.parameters[4])
+        segmentationClass.SetPatientGender(self.parameters[4])
+        segmentationClass.SetCurrentBone(self.parameters[5][ndx])
+        segmentationClass.SetAnatomicalRelaxation(self.parameters[6])
 
         # Search Window Size
         segmentationClass.SetSearchWindowSize(self.parameters[5])
