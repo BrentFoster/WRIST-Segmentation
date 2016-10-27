@@ -31,26 +31,18 @@ def RunSegmentation(input_image, seedPoint, CurrBoneName):
 	' Run the Segmentation '
 	segmentationClass = BoneSegmentation.BoneSeg()
 	segmentationClass.SetCurrentBone(CurrBoneName)
-	segmentationClass.SetPatientGender('Male')
+	segmentationClass.SetPatientGender('Female')
 
 	seg_img = segmentationClass.Execute(input_image, [seedPoint], verbose=True, 
 										returnSitkImage=True, convertSeedPhyscialFlag=False)
 
 
+	# seg_img_label = sitk.Cast(seg_img, sitk.sitkUInt16)
+	# print(seg_img_label)
 
-# outputSegmentation  = sitk.Cast(outputSegmentation, sitk.sitkUInt16)
-# 63	
-# 64	overlaidSegImage = sitk.LabelOverlay(MRI_Image, outputSegmentation)
-# 65	sitk.Show(overlaidSegImage)
+	# sitk.Show(sitk.LabelOverlay(input_image, seg_img_label))
 
-
-	seg_img_label = sitk.Cast(seg_img, sitk.sitkUInt16)
-	print(seg_img_label)
-
-	sitk.Show(sitk.LabelOverlay(input_image, seg_img_label))
-
-	asd
-
+	
 	overlaidImg = BrentPython.OverlayImages(input_image, seg_img, opacity=0.9, backgroundValue=0)
 
 	return overlaidImg

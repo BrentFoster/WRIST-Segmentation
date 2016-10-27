@@ -59,15 +59,14 @@ class BoneSeg(object):
             print('\033[94m' + 'Applying Anisotropic Filter')
         self.apply_AnisotropicFilter()
 
-        sitk.Show(self.image)
-        asd
-
+        # sitk.Show(self.image)
+        
         if self.verbose == True:
             elapsed = timeit.default_timer() - start_time
             print(' ')
             print("Elapsed Time (Preprocessing ):" + str(round(elapsed,3)))
     
-        # Initilize the level set first (only need to do this once)
+        # Initilize the level set (only need to do this once)
         if self.verbose == True:
             print(' ')
             print('\033[94m' + 'Initilizing Level Set')
@@ -576,7 +575,7 @@ class BoneSeg(object):
         self.SetMaxVolume(300000) #Pixel counts (TODO change to mm^3) 
 
         # Anisotropic Diffusion Filter
-        self.SetAnisotropicIts(4)
+        self.SetAnisotropicIts(10)
         self.SetAnisotropicTimeStep(0.01)
         self.SetAnisotropicConductance(2)
 
@@ -605,7 +604,7 @@ class BoneSeg(object):
         self.SetPatientGender('Unknown')
 
         # Set the relaxation on the prior anatomical knowledge contraint
-        self.SetAnatomicalRelaxation(0.05)
+        self.SetAnatomicalRelaxation(0.15)
 
     def SetAnatomicalRelaxation(self, newRelaxation):
         self.AnatomicalRelaxation = newRelaxation
