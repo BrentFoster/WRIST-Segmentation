@@ -58,7 +58,9 @@ class BoneSeg(object):
             print(' ')
             print('\033[94m' + 'Applying Anisotropic Filter')
         self.apply_AnisotropicFilter()
-        # sitk.Show(self.image, 'post_diffusion')
+
+        sitk.Show(self.image)
+        asd
 
         if self.verbose == True:
             elapsed = timeit.default_timer() - start_time
@@ -342,7 +344,8 @@ class BoneSeg(object):
             self.SetShapeMaxIterations(MaxIts)
 
             if MaxIts < 10:
-                raise ValueError('Max Iterations of ' + str(MaxIts) + ' is too low! Stopping now.')
+                raise Warning('Max Iterations of ' + str(MaxIts) + ' is too low! Stopping now.')
+                return self
 
 
 
@@ -372,7 +375,8 @@ class BoneSeg(object):
             self.SetShapeMaxIterations(MaxIts)
 
             if MaxIts > 3000:
-                raise ValueError('Max Iterations of ' + str(MaxIts) + ' is too high! Stopping now.')
+                raise Warning('Max Iterations of ' + str(MaxIts) + ' is too high! Stopping now.')
+                return self
 
             # Don't need to redo the pre-processing steps
             start_time = timeit.default_timer() 
@@ -572,9 +576,9 @@ class BoneSeg(object):
         self.SetMaxVolume(300000) #Pixel counts (TODO change to mm^3) 
 
         # Anisotropic Diffusion Filter
-        self.SetAnisotropicIts(5)
+        self.SetAnisotropicIts(4)
         self.SetAnisotropicTimeStep(0.01)
-        self.SetAnisotropicConductance(4)
+        self.SetAnisotropicConductance(2)
 
         # Morphological Operators
         self.fillFilter.SetForegroundValue(1) 
