@@ -51,15 +51,25 @@ if __name__ == "__main__":
 	start_time = timeit.default_timer()
 
 	' Load the MRI image to be segmented'
-	# input_image = sitk.ReadImage('/Users/Brent/Google Drive/Research/MRI Wrist Images/MRI Ground Truth Brent/VOlunteer2_VIBE_we.nii')
 	input_image = sitk.ReadImage('/Users/Brent/Google Drive/Research/MRI Wrist Images/MRI Ground Truth Brent/Volunteer4_VIBE_we.nii')
+
+	# sitk.Show(input_image, 'input_image')
+	
+	# TEST
+	# bias_corrected_image = sitk.ReadImage('/Users/Brent/Google Drive/Research/MRI Wrist Images/MRI Ground Truth Brent/Volunteer4_VIBE_we_Bias_Corrected.nii')
+	# bias_field_image     = sitk.ReadImage('/Users/Brent/Google Drive/Research/MRI Wrist Images/MRI Ground Truth Brent/Volunteer4_VIBE_we_Bias_Field.nii')
+	# sitk.Show(input_image, 'Original Image')
+	# sitk.Show(bias_corrected_image, 'bias_corrected_image')
+	# sitk.Show(bias_field_image, 'bias_field_image')
+
+	# END TEST
 
 	' Define the seed points '
 	seedPoints = []
 	CurrBoneName = []
 
 	for i in range(0,1):
-		new_point = np.array([220, 560, 127], dtype=int)
+		new_point = np.array([220, 565, 127], dtype=int)
 		seedPoints.append(new_point)
 		CurrBoneName.append('Hamate')
 

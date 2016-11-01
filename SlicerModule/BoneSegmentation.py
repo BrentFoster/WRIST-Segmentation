@@ -53,13 +53,14 @@ class BoneSeg(object):
             print(' ')
             print('\033[94m' + 'Cropping image')
         self.CropImage()
+        # sitk.Show(self.image, 'Post-cropping')
 
         if self.verbose == True:
             print(' ')
             print('\033[94m' + 'Applying Anisotropic Filter')
         self.apply_AnisotropicFilter()
+        # sitk.Show(self.image, 'Post-Anisotropic')
 
-        # sitk.Show(self.image)
         
         if self.verbose == True:
             elapsed = timeit.default_timer() - start_time
@@ -71,6 +72,7 @@ class BoneSeg(object):
             print(' ')
             print('\033[94m' + 'Initilizing Level Set')
         self.InitilizeLevelSet()
+        # sitk.Show(self.EdgePotentialMap, 'Edge Potential Map')
 
         if self.verbose == True:
             print(' ')
@@ -93,6 +95,9 @@ class BoneSeg(object):
         # Fill holes prior to uncropping image for much faster computation
         self.HoleFilling()
 
+        sitk.Show(self.segImg, 'SegImg')
+        asdf
+
         if self.verbose == True:
             print(' ')
             print('\033[90m' + "Uncropping Image...")
@@ -114,6 +119,46 @@ class BoneSeg(object):
             npImg = sitk.GetArrayFromImage(self.segImg)
 
             return  npImg
+
+    def SetDefaultValues(self):
+        # Set the default values of all the parameters here
+        self.SetScalingFactor(1) #X,Y,Z
+       
+        self.SeedListFilename = "PointList.txt"
+        self.SetMaxVolume(300000) #Pixel counts (TODO change to mm^3) 
+
+        # Anisotropic Diffusion Filter
+        self.SetAnisotropicIts(5)
+        self.SetAnisotropicTimeStep(0.01)
+        self.SetAnisotropicConductance(2)
+
+        # Morphological Operators
+        self.fillFilter.SetForegroundValue(1) 
+        self.fillFilter.FullyConnectedOff() 
+        self.SetBinaryMorphologicalRadius(1)
+
+        # Shape Detection Filter
+        self.SetShapeMaxRMSError(0.004)
+        self.SetShapeMaxIterations(400)
+        self.SetShapePropagationScale(4)
+        self.SetShapeCurvatureScale(1)
+
+        # Sigmoid Filter
+        self.sigFilter.SetAlpha(0)
+        self.sigFilter.SetBeta(120)
+        self.sigFilter.SetOutputMinimum(0)
+        self.sigFilter.SetOutputMaximum(255)
+
+        # Search Space Window
+        # self.SetSearchWindowSize(50)
+
+        # Set current bone and patient gender group
+        self.SetCurrentBone('Capitate')
+        self.SetPatientGender('Unknown')
+
+        # Set the relaxation on the prior anatomical knowledge contraint
+        self.SetAnatomicalRelaxation(0.15)
+
 
     def DefineAnatomicPrior(self):
         # The prior anatomical knowledge on the bone volume and dimensions is addeded
@@ -172,10 +217,10 @@ class BoneSeg(object):
         self.upper_range_z = (self.Prior_Volumes[self.current_bone + '-z'][0] + self.Prior_Volumes[self.current_bone + '-z'][1])*(1+self.AnatomicalRelaxation)
 
         # Use the bounding box ranges to create a suitable search window for the current particular carpal bone 
-        self.searchWindow = np.rint(np.asarray([self.upper_range_z, self.upper_range_x, self.upper_range_y]))
+        self.searchWindow = np.rint(np.asarray([self.upper_range_x, self.upper_range_y, self.upper_range_z]))
 
         # Make the search window larger since the seed location won't be exactly in the center of the bone
-        self.searchWindow = np.rint(3*self.searchWindow)
+        self.searchWindow = np.rint(2*self.searchWindow)
 
         if self.verbose == True:
             print('\033[93m'  + 'Estimated Search Window is ' + str(self.searchWindow))
@@ -511,15 +556,15 @@ class BoneSeg(object):
         init_ls = sitk.SignedMaurerDistanceMap(self.segImg, insideIsPositive=True, useImageSpacing=True)
         self.init_ls = sitk.Cast(init_ls, sitk.sitkFloat32)
 
-        self.processedImage = sitk.Cast(processedImage, sitk.sitkFloat32)
+        self.EdgePotentialMap = sitk.Cast(processedImage, sitk.sitkFloat32)
 
     def SigmoidLevelSetIterations(self):
         ' Run the Shape Detection Level Set Segmentation Method'
 
         # sitk.Show(self.init_ls, 'self.init_ls')
-        # sitk.Show(self.processedImage, 'self.processedImage')
+        # sitk.Show(self.EdgePotentialMap, 'self.EdgePotentialMap')
 
-        self.segImg = self.shapeDetectionFilter.Execute(self.init_ls, self.processedImage)
+        self.segImg = self.shapeDetectionFilter.Execute(self.init_ls, self.EdgePotentialMap)
      
         if self.verbose == True:
             print('Done with ShapeDetectionLevelSetImageFilter!')
@@ -567,45 +612,6 @@ class BoneSeg(object):
         # Set the deafult values 
         self.SetDefaultValues()
 
-    def SetDefaultValues(self):
-        # Set the default values of all the parameters here
-        self.SetScalingFactor(1) #X,Y,Z
-       
-        self.SeedListFilename = "PointList.txt"
-        self.SetMaxVolume(300000) #Pixel counts (TODO change to mm^3) 
-
-        # Anisotropic Diffusion Filter
-        self.SetAnisotropicIts(10)
-        self.SetAnisotropicTimeStep(0.01)
-        self.SetAnisotropicConductance(2)
-
-        # Morphological Operators
-        self.fillFilter.SetForegroundValue(1) 
-        self.fillFilter.FullyConnectedOff() 
-        self.SetBinaryMorphologicalRadius(1)
-
-        # Shape Detection Filter
-        self.SetShapeMaxRMSError(0.004)
-        self.SetShapeMaxIterations(1000)
-        self.SetShapePropagationScale(4)
-        self.SetShapeCurvatureScale(1)
-
-        # Sigmoid Filter
-        self.sigFilter.SetAlpha(0)
-        self.sigFilter.SetBeta(120)
-        self.sigFilter.SetOutputMinimum(0)
-        self.sigFilter.SetOutputMaximum(255)
-
-        # Search Space Window
-        self.SetSearchWindowSize(50)
-
-        # Set current bone and patient gender group
-        self.SetCurrentBone('Capitate')
-        self.SetPatientGender('Unknown')
-
-        # Set the relaxation on the prior anatomical knowledge contraint
-        self.SetAnatomicalRelaxation(0.15)
-
     def SetAnatomicalRelaxation(self, newRelaxation):
         self.AnatomicalRelaxation = newRelaxation
     def SetCurrentBone(self, newBone):
@@ -621,8 +627,8 @@ class BoneSeg(object):
         MaxIts = self.shapeDetectionFilter.GetNumberOfIterations()
         return MaxIts
 
-    def SetSearchWindowSize(self, searchWindow):
-        self.searchWindow = [searchWindow, searchWindow, searchWindow]
+    # def SetSearchWindowSize(self, searchWindow):
+    #     self.searchWindow = [searchWindow, searchWindow, searchWindow]
 
     def SetShapePropagationScale(self, propagationScale):
         self.shapeDetectionFilter.SetPropagationScaling(-1*propagationScale)
