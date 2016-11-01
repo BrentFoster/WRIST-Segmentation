@@ -94,6 +94,11 @@ class BoneSeg(object):
 
         if self.verbose == True:
             print(' ')
+            print('\033[93m' + "Smoothing Label...")
+        self.SmoothLabel()
+
+        if self.verbose == True:
+            print(' ')
             print('\033[90m' + "Uncropping Image...")
         self.UnCropImage()
 
@@ -113,6 +118,15 @@ class BoneSeg(object):
             npImg = sitk.GetArrayFromImage(self.segImg)
 
             return  npImg
+    def SmoothLabel(self):
+        # Smooth the segmentation label image to reduce high frequency artifacts on the boundary
+        SmoothFilter = sitk.DiscreteGaussianImageFilter()
+
+        SmoothFilter.SetVariance(0.01)
+
+        self.segImg = SmoothFilter.Execute(self.segImg)
+
+        return self
 
     def DefineAnatomicPrior(self):
         # The prior anatomical knowledge on the bone volume and dimensions is addeded
@@ -235,6 +249,9 @@ class BoneSeg(object):
         # self.segImg = sitk.Cast(self.segImg, segmentation.GetPixelID()) #Can't be a 32 bit float
         # self.segImg.CopyInformation(segmentation)
 
+        # Label Statistics Image Filter can't be 64-bit float
+        self.segImg = sitk.Cast(self.segImg, sitk.sitkUInt16)
+
         # Fill any segmentation holes first
         start_time = timeit.default_timer() 
         self.HoleFilling()
@@ -342,7 +359,8 @@ class BoneSeg(object):
             self.SetShapeMaxIterations(MaxIts)
 
             if MaxIts < 10:
-                raise ValueError('Max Iterations of ' + str(MaxIts) + ' is too low! Stopping now.')
+                print('Max Iterations of ' + str(MaxIts) + ' is too low! Stopping now.')
+                return self
 
 
 
@@ -372,7 +390,8 @@ class BoneSeg(object):
             self.SetShapeMaxIterations(MaxIts)
 
             if MaxIts > 3000:
-                raise ValueError('Max Iterations of ' + str(MaxIts) + ' is too high! Stopping now.')
+                print('Max Iterations of ' + str(MaxIts) + ' is too high! Stopping now.')
+                return self
 
             # Don't need to redo the pre-processing steps
             start_time = timeit.default_timer() 
