@@ -213,7 +213,7 @@ class BoneSegmentation_SlicerWidget:
         self.RelaxationSlider.maximum = 0.5
         self.RelaxationSlider.value = 0.10
 
-        self.RelaxationSlider.singleStep = 0.05
+        self.RelaxationSlider.singleStep = 0.01
         self.RelaxationSlider.tickInterval = 0.01
         self.RelaxationSlider.decimals = 2
 
@@ -228,7 +228,7 @@ class BoneSegmentation_SlicerWidget:
         # Shape Detection Level set maximum Iterations
         #        
         self.label = qt.QLabel()
-        self.label.setText("Maximum Iterations: ")
+        self.label.setText("Initial Maximum Iterations: ")
         self.label.setToolTip(
             "Select the maximum number of iterations for the shape detection level set convergence")
         self.ShapeMaxItsInputSlider = ctk.ctkSliderWidget()
@@ -496,12 +496,13 @@ class BoneSegmentation_SlicerWidget:
 
 
 
-        # BinaryToLabelFilter = sitk.BinaryImageToLabelMapFilter()
-        # BinaryToLabelFilter.SetInputForegroundValue(1)
-        # LabelMapToLabelImageFilter = sitk.LabelMapToLabelImageFilter()
+        BinaryToLabelFilter = sitk.BinaryImageToLabelMapFilter()
+        BinaryToLabelFilter.SetInputForegroundValue(1)
+        BinaryToLabelFilter.SetOutputBackgroundValue(0)
+        LabelMapToLabelImageFilter = sitk.LabelMapToLabelImageFilter()
 
-        # Segmentation = BinaryToLabelFilter.Execute(Segmentation)
-        # Segmentation = LabelMapToLabelImageFilter.Execute(Segmentation)
+        Segmentation = BinaryToLabelFilter.Execute(Segmentation)
+        Segmentation = LabelMapToLabelImageFilter.Execute(Segmentation)
 
 
         # print('done with LabelMapToLabelImageFilter')
@@ -512,8 +513,21 @@ class BoneSegmentation_SlicerWidget:
 
         # Output options in Slicer = {0:'background', 1:'foreground', 2:'label'}
         imageID = self.outputSelector.currentNode()
-        # sitkUtils.PushLabel(Segmentation, imageID.GetName(), overwrite=True)     
-        sitkUtils.PushToSlicer(Segmentation, 'Segmentation', 1, overwrite=True) 
+        # sitkUtils.PushLabel(Segmentation, imageID.GetName(), overwrite=True)  
+
+        # TEST
+        # Segmentation = sitk.Cast(Segmentation, sitk.sitkUInt16)
+        # END TEST   
+
+        sitkUtils.PushToSlicer(Segmentation, 'Segmentation', 2, overwrite=True) 
+        
+        volumeNode = slicer.util.getNode('Segmentation')
+        displayNode = volumeNode.GetDisplayNode()
+        displayNode.AutoWindowLevelOff()
+        displayNode.SetWindow(3) # 2.5
+        displayNode.SetLevel(2)    # 2
+
+        displayNode.SetAndObserveColorNodeID('vtkMRMLColorTableNodeLabels')
 
         # Find the output image in Slicer to save the segmentation to
         # imageID = self.outputSelector.currentNode()
