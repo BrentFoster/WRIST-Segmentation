@@ -112,7 +112,7 @@ def SaveSegmentation(image, filename, verbose = False):
 		print("Saving segmentation to "),
 		print(filename)
 	imageWriter = sitk.ImageFileWriter()
-	imageWriter.Execute(image, filename, True)
+	imageWriter.Execute(image, filename, False)
 	if verbose == True:
 		print("Segmentation saved")
 
