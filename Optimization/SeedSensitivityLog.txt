@@ -1,20 +1,15 @@
-0.0,1,110.675641413,[120 155  62],E:\Google Drive\Research\Projects\Carpal Bone Segmentation\MRI Images\Training Dataset\VIBE Images\Volunteer10_VIBE_Position_1.hdr
-0.0,1,174.113795854,[137 153  59],E:\Google Drive\Research\Projects\Carpal Bone Segmentation\MRI Images\Training Dataset\VIBE Images\Volunteer10_VIBE_Position_1.hdr
-0.0,1,100.070257794,[144 183  60],E:\Google Drive\Research\Projects\Carpal Bone Segmentation\MRI Images\Training Dataset\VIBE Images\Volunteer7_VIBE_Position_1.hdr
-0.0,2,238.791837795,[147 177  96],E:\Google Drive\Research\Projects\Carpal Bone Segmentation\MRI Images\Training Dataset\VIBE Images\Volunteer7_VIBE_Position_1.hdr
-0.0,3,280.314755304,[135 189  71],E:\Google Drive\Research\Projects\Carpal Bone Segmentation\MRI Images\Training Dataset\VIBE Images\Volunteer7_VIBE_Position_1.hdr
-0.0,4,380.737388378,[132 169 118],E:\Google Drive\Research\Projects\Carpal Bone Segmentation\MRI Images\Training Dataset\VIBE Images\Volunteer7_VIBE_Position_1.hdr
-0.0,5,409.313402465,[120 221 107],E:\Google Drive\Research\Projects\Carpal Bone Segmentation\MRI Images\Training Dataset\VIBE Images\Volunteer7_VIBE_Position_1.hdr
-0.0,6,572.333792179,[102 169 129],E:\Google Drive\Research\Projects\Carpal Bone Segmentation\MRI Images\Training Dataset\VIBE Images\Volunteer7_VIBE_Position_1.hdr
-0.0,7,639.425217335,[102 203 124],E:\Google Drive\Research\Projects\Carpal Bone Segmentation\MRI Images\Training Dataset\VIBE Images\Volunteer7_VIBE_Position_1.hdr
-0.0,8,672.088922521,[ 71 195 105],E:\Google Drive\Research\Projects\Carpal Bone Segmentation\MRI Images\Training Dataset\VIBE Images\Volunteer7_VIBE_Position_1.hdr
-0.0,1,8.5905015158,[150 161  55],E:\Google Drive\Research\Projects\Carpal Bone Segmentation\MRI Images\Training Dataset\VIBE Images\Volunteer7_VIBE_Position_1.hdr
-0.0,2,16.0749432855,[159 179  92],E:\Google Drive\Research\Projects\Carpal Bone Segmentation\MRI Images\Training Dataset\VIBE Images\Volunteer7_VIBE_Position_1.hdr
-0.0,1,9.56561560305,[152 161  53],E:\Google Drive\Research\Projects\Carpal Bone Segmentation\MRI Images\Training Dataset\VIBE Images\Volunteer7_VIBE_Position_1.hdr
-0.0,2,17.0403607609,[157 169  84],E:\Google Drive\Research\Projects\Carpal Bone Segmentation\MRI Images\Training Dataset\VIBE Images\Volunteer7_VIBE_Position_1.hdr
-0.0,3,26.3073152764,[138 215  99],E:\Google Drive\Research\Projects\Carpal Bone Segmentation\MRI Images\Training Dataset\VIBE Images\Volunteer7_VIBE_Position_1.hdr
-0.0,4,41.317375844,[127 196  93],E:\Google Drive\Research\Projects\Carpal Bone Segmentation\MRI Images\Training Dataset\VIBE Images\Volunteer7_VIBE_Position_1.hdr
-0.0,5,46.4954558195,[110 224 118],E:\Google Drive\Research\Projects\Carpal Bone Segmentation\MRI Images\Training Dataset\VIBE Images\Volunteer7_VIBE_Position_1.hdr
-0.0,6,52.9128334774,[100 173 114],E:\Google Drive\Research\Projects\Carpal Bone Segmentation\MRI Images\Training Dataset\VIBE Images\Volunteer7_VIBE_Position_1.hdr
-0.0,7,58.110522885,[102 197 127],E:\Google Drive\Research\Projects\Carpal Bone Segmentation\MRI Images\Training Dataset\VIBE Images\Volunteer7_VIBE_Position_1.hdr
-0.0,8,62.4878013387,[ 78 198 122],E:\Google Drive\Research\Projects\Carpal Bone Segmentation\MRI Images\Training Dataset\VIBE Images\Volunteer7_VIBE_Position_1.hdr
+0.86,1,9.527,[138 196 117],E:\Google Drive\Research\Projects\Carpal Bone Segmentation\MRI Images\Training Dataset\VIBE Images\Volunteer11_VIBE_Neutral.hdr
+0.82,2,17.902,[134 185 102],E:\Google Drive\Research\Projects\Carpal Bone Segmentation\MRI Images\Training Dataset\VIBE Images\Volunteer11_VIBE_Neutral.hdr
+0.85,3,26.712,[127 210  84],E:\Google Drive\Research\Projects\Carpal Bone Segmentation\MRI Images\Training Dataset\VIBE Images\Volunteer11_VIBE_Neutral.hdr
+0.87,4,38.907,[112 199  97],E:\Google Drive\Research\Projects\Carpal Bone Segmentation\MRI Images\Training Dataset\VIBE Images\Volunteer11_VIBE_Neutral.hdr
+0.86,1,11.822,[134 201 124],E:\Google Drive\Research\Projects\Carpal Bone Segmentation\MRI Images\Training Dataset\VIBE Images\Volunteer11_VIBE_Neutral.hdr
+0.83,2,24.346,[124 192 100],E:\Google Drive\Research\Projects\Carpal Bone Segmentation\MRI Images\Training Dataset\VIBE Images\Volunteer11_VIBE_Neutral.hdr
+0.85,3,35.926,[127 226  98],E:\Google Drive\Research\Projects\Carpal Bone Segmentation\MRI Images\Training Dataset\VIBE Images\Volunteer11_VIBE_Neutral.hdr
+0.81,1,5.98,[137 187 111],E:\Google Drive\Research\Projects\Carpal Bone Segmentation\MRI Images\Training Dataset\VIBE Images\Volunteer11_VIBE_Neutral.hdr
+0.77,2,14.421,[128 192  85],E:\Google Drive\Research\Projects\Carpal Bone Segmentation\MRI Images\Training Dataset\VIBE Images\Volunteer11_VIBE_Neutral.hdr
+0.86,1,16.1,[146 188 114],E:\Google Drive\Research\Projects\Carpal Bone Segmentation\MRI Images\Training Dataset\VIBE Images\Volunteer11_VIBE_Neutral.hdr
+0.82,2,28.877,[140 188  89],E:\Google Drive\Research\Projects\Carpal Bone Segmentation\MRI Images\Training Dataset\VIBE Images\Volunteer11_VIBE_Neutral.hdr
+0.86,3,45.973,[135 213 113],E:\Google Drive\Research\Projects\Carpal Bone Segmentation\MRI Images\Training Dataset\VIBE Images\Volunteer11_VIBE_Neutral.hdr
+0.86,1,12.85,[144 194 123],E:\Google Drive\Research\Projects\Carpal Bone Segmentation\MRI Images\Training Dataset\VIBE Images\Volunteer11_VIBE_Neutral.hdr
+0.83,2,23.347,[130 187  93],E:\Google Drive\Research\Projects\Carpal Bone Segmentation\MRI Images\Training Dataset\VIBE Images\Volunteer11_VIBE_Neutral.hdr
+0.59,3,60.648,[136 213 114],E:\Google Drive\Research\Projects\Carpal Bone Segmentation\MRI Images\Training Dataset\VIBE Images\Volunteer11_VIBE_Neutral.hdr

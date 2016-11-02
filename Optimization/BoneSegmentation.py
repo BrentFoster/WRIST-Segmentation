@@ -16,7 +16,9 @@ class BoneSeg(object):
         self.seedPoint = original_seedPoint
         self.original_seedPoint = original_seedPoint
         self.convertSeedPhyscialFlag = convertSeedPhyscialFlag
-        self.returnSitkImage = returnSitkImage        
+        self.returnSitkImage = returnSitkImage   
+
+        self.WindowRelaxationFactor = 4     
 
         # Convert images to type float 32 first
         try:
@@ -53,23 +55,25 @@ class BoneSeg(object):
             print(' ')
             print('\033[94m' + 'Cropping image')
         self.CropImage()
+        # sitk.Show(self.image, 'Post-cropping')
 
         if self.verbose == True:
             print(' ')
             print('\033[94m' + 'Applying Anisotropic Filter')
         self.apply_AnisotropicFilter()
-        # sitk.Show(self.image, 'post_diffusion')
-
+        # sitk.Show(self.image, 'Post-Anisotropic')
+        
         if self.verbose == True:
             elapsed = timeit.default_timer() - start_time
             print(' ')
             print("Elapsed Time (Preprocessing ):" + str(round(elapsed,3)))
     
-        # Initilize the level set first (only need to do this once)
+        # Initilize the level set (only need to do this once)
         if self.verbose == True:
             print(' ')
             print('\033[94m' + 'Initilizing Level Set')
         self.InitilizeLevelSet()
+        # sitk.Show(self.EdgePotentialMap, 'Edge Potential Map')
 
         if self.verbose == True:
             print(' ')
@@ -86,11 +90,11 @@ class BoneSeg(object):
             print('\033[93m' + "Running Leakage Check...")
         self.LeakageCheck()
 
-        # if self.verbose == True:
-        #     print(' ')
-        #     print('\033[93m' + "Filling Any Holes...")
-        # # Fill holes prior to uncropping image for much faster computation
-        # self.HoleFilling()
+        if self.verbose == True:
+            print(' ')
+            print('\033[93m' + "Filling Any Holes...")
+        # Fill holes prior to uncropping image for much faster computation
+        self.HoleFilling()
 
         # if self.verbose == True:
         #     print(' ')
@@ -109,7 +113,7 @@ class BoneSeg(object):
 
         if self.returnSitkImage == True:
             # Check the image type first
-            self.segImg = sitk.Cast(self.segImg, original_image.GetPixelID())
+            # self.segImg = sitk.Cast(self.segImg, original_image.GetPixelID())
             # Return a SimpleITK type image
             return  self.segImg 
         else:
@@ -118,132 +122,6 @@ class BoneSeg(object):
             npImg = sitk.GetArrayFromImage(self.segImg)
 
             return  npImg
-    def SmoothLabel(self):
-        # Smooth the segmentation label image to reduce high frequency artifacts on the boundary
-        SmoothFilter = sitk.DiscreteGaussianImageFilter()
-
-        SmoothFilter.SetVariance(0.01)
-
-        self.segImg = SmoothFilter.Execute(self.segImg)
-
-        return self
-
-    def DefineAnatomicPrior(self):
-        # The prior anatomical knowledge on the bone volume and dimensions is addeded
-        # from Crisco et al. Carpal Bone Size and Scaling in Men Versus Women. J Hand Surgery 2005
-
-        if self.PatientGender == 'Unknown':
-            self.Prior_Volumes = {
-            'Scaphoid-vol':[2390,673], 'Scaphoid-x':[27, 3.1], 'Scaphoid-y':[16.5,1.8], 'Scaphoid-z':[13.1,1.2], 
-            'Lunate-vol':[1810,578], 'Lunate-x':[19.4, 2.3], 'Lunate-y':[18.5,2.2], 'Lunate-z':[13.2,1.7], 
-            'Triquetrum-vol':[1341,331], 'Triquetrum-x':[19.7,2], 'Triquetrum-y':[18.5,2.2], 'Triquetrum-z':[13.2,1.7], 
-            'Pisiform-vol':[712,219], 'Pisiform-x':[14.7,1.7], 'Pisiform-y':[11.5,1.4], 'Pisiform-z':[9.5,1.1], 
-            'Trapezium-vol':[1970,576], 'Trapezium-x':[23.6,2.5], 'Trapezium-y':[16.6,1.8], 'Trapezium-z':[14.6,2.2], 
-            'Trapezoid-vol':[1258,321], 'Trapezoid-x':[19.3,1.8], 'Trapezoid-y':[114.4,1.5], 'Trapezoid-z':[11.7,1.0], 
-            'Capitate-vol':[3123,743], 'Capitate-x':[26.3,2.3], 'Capitate-y':[19.5,1.9], 'Capitate-z':[15,1.6],  
-            'Hamate-vol':[2492,555], 'Hamate-x':[26.1,2.2], 'Hamate-y':[21.6,2], 'Hamate-z':[16,1.4]
-            }
-        elif self.PatientGender == 'Male':
-            self.Prior_Volumes = {
-            'Scaphoid-vol':[2903,461], 'Scaphoid-x':[29.3, 2.7], 'Scaphoid-y':[17.8,1.2], 'Scaphoid-z':[14.1,0.9], 
-            'Lunate-vol':[2252,499], 'Lunate-x':[20.9,2.2], 'Lunate-y':[20.1,1.8], 'Lunate-z':[14.4,1.3], 
-            'Triquetrum-vol':[1579,261], 'Triquetrum-x':[20.9,1.8], 'Triquetrum-y':[14.9,0.7], 'Triquetrum-z':[12.6,0.9], 
-            'Pisiform-vol':[854,203], 'Pisiform-x':[15.7,1.4], 'Pisiform-y':[12.3,1.3], 'Pisiform-z':[10,1.2], 
-            'Trapezium-vol':[2394,443], 'Trapezium-x':[25.4,1.8], 'Trapezium-y':[17.5,1.8], 'Trapezium-z':[16.1,1.8], 
-            'Trapezoid-vol':[1497,237], 'Trapezoid-x':[20.6,1.4], 'Trapezoid-y':[15.5,0.8], 'Trapezoid-z':[12.3,0.7], 
-            'Capitate-vol':[3700,563], 'Capitate-x':[28,1.8], 'Capitate-y':[20.8,1.7], 'Capitate-z':[16,1.6],  
-            'Hamate-vol':[2940,378], 'Hamate-x':[27.5,1.9], 'Hamate-y':[23,1.8], 'Hamate-z':[16.9,1.2]
-            }
-        elif self.PatientGender == 'Female':
-            self.Prior_Volumes = {
-            'Scaphoid-vol':[1877,407], 'Scaphoid-x':[24.8,1.6], 'Scaphoid-y':[15.3,1.5], 'Scaphoid-z':[12.2,0.6], 
-            'Lunate-vol':[1368,165], 'Lunate-x':[18,1.1], 'Lunate-y':[16.9,0.8], 'Lunate-z':[11.9,0.8], 
-            'Triquetrum-vol':[1103,193], 'Triquetrum-x':[18.5,1.3], 'Triquetrum-y':[13.3,0.6], 'Triquetrum-z':[10.8,0.7], 
-            'Pisiform-vol':[569,121], 'Pisiform-x':[13.7,1.4], 'Pisiform-y':[10.7,1], 'Pisiform-z':[8.9,0.7], 
-            'Trapezium-vol':[1547,328], 'Trapezium-x':[21.8,1.8], 'Trapezium-y':[15.8,1.5], 'Trapezium-z':[13.1,1.2], 
-            'Trapezoid-vol':[1020,191], 'Trapezoid-x':[18,0.9], 'Trapezoid-y':[13.3,1.2], 'Trapezoid-z':[11.1,0.8], 
-            'Capitate-vol':[2547,344], 'Capitate-x':[24.6,1.1], 'Capitate-y':[18.2,1], 'Capitate-z':[13.9,0.8],  
-            'Hamate-vol':[2045,264], 'Hamate-x':[24.7,1.4], 'Hamate-y':[20.1,0.8], 'Hamate-z':[15,0.9]
-            }
-        else:
-            # Raise an erorr since 
-            raise ValueError('Patient gender must be either "Male", "Female", or "Unknown". Value given was ' + self.PatientGender)
-
-
-        # Allow some relaxation around the anatomical prior knowledge contraint
-        # Calculate what the ranges should be for each measure using average and standard deviation and relaxation term
-        self.lower_range_volume = (self.Prior_Volumes[self.current_bone + '-vol'][0] - self.Prior_Volumes[self.current_bone + '-vol'][1])*(1-self.AnatomicalRelaxation)
-        self.upper_range_volume = (self.Prior_Volumes[self.current_bone + '-vol'][0] + self.Prior_Volumes[self.current_bone + '-vol'][1])*(1+self.AnatomicalRelaxation)
-
-        self.lower_range_x = (self.Prior_Volumes[self.current_bone + '-x'][0] - self.Prior_Volumes[self.current_bone + '-x'][1])*(1-self.AnatomicalRelaxation)
-        self.upper_range_x = (self.Prior_Volumes[self.current_bone + '-x'][0] + self.Prior_Volumes[self.current_bone + '-x'][1])*(1+self.AnatomicalRelaxation)
-
-        self.lower_range_y = (self.Prior_Volumes[self.current_bone + '-y'][0] - self.Prior_Volumes[self.current_bone + '-y'][1])*(1-self.AnatomicalRelaxation)
-        self.upper_range_y = (self.Prior_Volumes[self.current_bone + '-y'][0] + self.Prior_Volumes[self.current_bone + '-y'][1])*(1+self.AnatomicalRelaxation)
-
-        self.lower_range_z = (self.Prior_Volumes[self.current_bone + '-z'][0] - self.Prior_Volumes[self.current_bone + '-z'][1])*(1-self.AnatomicalRelaxation)
-        self.upper_range_z = (self.Prior_Volumes[self.current_bone + '-z'][0] + self.Prior_Volumes[self.current_bone + '-z'][1])*(1+self.AnatomicalRelaxation)
-
-        # Use the bounding box ranges to create a suitable search window for the current particular carpal bone 
-        self.searchWindow = np.rint(np.asarray([self.upper_range_z, self.upper_range_x, self.upper_range_y]))
-
-        # Make the search window larger since the seed location won't be exactly in the center of the bone
-        self.searchWindow = np.rint(3*self.searchWindow)
-
-        if self.verbose == True:
-            print('\033[93m'  + 'Estimated Search Window is ' + str(self.searchWindow))
-            print(' ')
-
-        return self
-
-    def ConnectedComponent(self):
-
-        self.segImg = sitk.Cast(self.segImg, 1) #Can't be a 32 bit float
-        # self.segImg.CopyInformation(segmentation)
-
-        # Try to remove leakage areas by first eroding the binary and
-        # get the labels that are still connected to the original seed location
-
-        # self.segImg = self.erodeFilter.Execute(self.segImg, 0, 1, False)
-
-        # self.segImg = self.connectedComponentFilter.Execute(self.segImg)
-
-        # nda = sitk.GetArrayFromImage(self.segImg)
-        # nda = np.asarray(nda)
-
-        # # In numpy an array is indexed in the opposite order (z,y,x)
-        # tempseedPoint = self.seedPoint[0]
-        # val = nda[tempseedPoint[2]][tempseedPoint[1]][tempseedPoint[0]]
-
-        # # Keep only the label that intersects with the seed point
-        # nda[nda != val] = 0 
-        # nda[nda != 0] = 1
-
-        # self.segImg = sitk.GetImageFromArray(nda)
-
-        # Undo the earlier erode filter by dilating by same radius
-        # self.dilateFilter.SetKernelRadius(3)
-        # self.segImg = self.dilateFilter.Execute(self.segImg, 0, 1, False)
-
-        self.segImg = self.fillFilter.Execute(self.segImg)
-
-        # self.segImg = self.erodeFilter.Execute(self.segImg, 0, 1, False)
-
-        
-
-        return self
-
-    def HoleFilling(self):
-        # Cast to 16 bit (needed for the fill filter to work)
-        self.segImg  = sitk.Cast(self.segImg, sitk.sitkUInt16)
-
-        self.dilateFilter.SetKernelRadius(1)
-        self.segImg = self.dilateFilter.Execute(self.segImg, 0, 1, False)
-        self.segImg = self.fillFilter.Execute(self.segImg)
-        self.segImg = self.erodeFilter.Execute(self.segImg, 0, 1, False)
-
-        return self
-
     def LeakageCheck(self):
         # Check the image type of self.segImg and image are the same (for Python 3.3 and 3.4)
         # self.segImg = sitk.Cast(self.segImg, segmentation.GetPixelID()) #Can't be a 32 bit float
@@ -307,13 +185,6 @@ class BoneSeg(object):
         if (volume > self.lower_range_volume) and (volume < self.upper_range_volume):
             if self.verbose == True:
                 print('\033[97m' + "Passed with volume " + str(volume))
-
-                # TEST TEST
-                imageWriter = sitk.imageFileWriter()
-                imageWriter.Execute(self.segImg, 'segImg_BS.nii', False)
-                # END TEST TEST
-                asdf
-
         else:
             # Determine whether the segmentation was too large or too small
             if volume > self.upper_range_volume:
@@ -369,8 +240,6 @@ class BoneSeg(object):
                 print('Max Iterations of ' + str(MaxIts) + ' is too low! Stopping now.')
                 return self
 
-
-
             # Don't need to redo the pre-processing steps
             start_time = timeit.default_timer() 
             self.SigmoidLevelSetIterations()
@@ -410,6 +279,171 @@ class BoneSeg(object):
            
            # Redo the leakage check (basically iteratively)
             self.LeakageCheck()
+
+        return self
+
+    def SmoothLabel(self):
+        # Smooth the segmentation label image to reduce high frequency artifacts on the boundary
+        SmoothFilter = sitk.DiscreteGaussianImageFilter()
+
+        SmoothFilter.SetVariance(0.01)
+
+        self.segImg = SmoothFilter.Execute(self.segImg)
+
+        return self
+
+    def SetDefaultValues(self):
+        # Set the default values of all the parameters here
+        self.SetScalingFactor(1) #X,Y,Z
+       
+        self.SeedListFilename = "PointList.txt"
+        self.SetMaxVolume(300000) #Pixel counts (TODO change to mm^3) 
+
+        # Anisotropic Diffusion Filter
+        self.SetAnisotropicIts(5)
+        self.SetAnisotropicTimeStep(0.01)
+        self.SetAnisotropicConductance(2)
+
+        # Morphological Operators
+        self.fillFilter.SetForegroundValue(1) 
+        self.fillFilter.FullyConnectedOff() 
+        self.SetBinaryMorphologicalRadius(1)
+
+        # Shape Detection Filter
+        self.SetShapeMaxRMSError(0.004)
+        self.SetShapeMaxIterations(400)
+        self.SetShapePropagationScale(4)
+        self.SetShapeCurvatureScale(1)
+
+        # Sigmoid Filter
+        self.sigFilter.SetAlpha(0)
+        self.sigFilter.SetBeta(120)
+        self.sigFilter.SetOutputMinimum(0)
+        self.sigFilter.SetOutputMaximum(255)
+
+        # Search Space Window
+        # self.SetSearchWindowSize(50)
+
+        # Set current bone and patient gender group
+        self.SetCurrentBone('Capitate')
+        self.SetPatientGender('Unknown')
+
+        # Set the relaxation on the prior anatomical knowledge contraint
+        self.SetAnatomicalRelaxation(0.15)
+
+    def DefineAnatomicPrior(self):
+        # The prior anatomical knowledge on the bone volume and dimensions is addeded
+        # from Crisco et al. Carpal Bone Size and Scaling in Men Versus Women. J Hand Surgery 2005
+
+        if self.PatientGender == 'Unknown':
+            self.Prior_Volumes = {
+            'Scaphoid-vol':[2390,673], 'Scaphoid-x':[27, 3.1], 'Scaphoid-y':[16.5,1.8], 'Scaphoid-z':[13.1,1.2], 
+            'Lunate-vol':[1810,578], 'Lunate-x':[19.4, 2.3], 'Lunate-y':[18.5,2.2], 'Lunate-z':[13.2,1.7], 
+            'Triquetrum-vol':[1341,331], 'Triquetrum-x':[19.7,2], 'Triquetrum-y':[18.5,2.2], 'Triquetrum-z':[13.2,1.7], 
+            'Pisiform-vol':[712,219], 'Pisiform-x':[14.7,1.7], 'Pisiform-y':[11.5,1.4], 'Pisiform-z':[9.5,1.1], 
+            'Trapezium-vol':[1970,576], 'Trapezium-x':[23.6,2.5], 'Trapezium-y':[16.6,1.8], 'Trapezium-z':[14.6,2.2], 
+            'Trapezoid-vol':[1258,321], 'Trapezoid-x':[19.3,1.8], 'Trapezoid-y':[114.4,1.5], 'Trapezoid-z':[11.7,1.0], 
+            'Capitate-vol':[3123,743], 'Capitate-x':[26.3,2.3], 'Capitate-y':[19.5,1.9], 'Capitate-z':[15,1.6],  
+            'Hamate-vol':[2492,555], 'Hamate-x':[26.1,2.2], 'Hamate-y':[21.6,2], 'Hamate-z':[16,1.4]
+            }
+        elif self.PatientGender == 'Male':
+            self.Prior_Volumes = {
+            'Scaphoid-vol':[2903,461], 'Scaphoid-x':[29.3, 2.7], 'Scaphoid-y':[17.8,1.2], 'Scaphoid-z':[14.1,0.9], 
+            'Lunate-vol':[2252,499], 'Lunate-x':[20.9,2.2], 'Lunate-y':[20.1,1.8], 'Lunate-z':[14.4,1.3], 
+            'Triquetrum-vol':[1579,261], 'Triquetrum-x':[20.9,1.8], 'Triquetrum-y':[14.9,0.7], 'Triquetrum-z':[12.6,0.9], 
+            'Pisiform-vol':[854,203], 'Pisiform-x':[15.7,1.4], 'Pisiform-y':[12.3,1.3], 'Pisiform-z':[10,1.2], 
+            'Trapezium-vol':[2394,443], 'Trapezium-x':[25.4,1.8], 'Trapezium-y':[17.5,1.8], 'Trapezium-z':[16.1,1.8], 
+            'Trapezoid-vol':[1497,237], 'Trapezoid-x':[20.6,1.4], 'Trapezoid-y':[15.5,0.8], 'Trapezoid-z':[12.3,0.7], 
+            'Capitate-vol':[3700,563], 'Capitate-x':[28,1.8], 'Capitate-y':[20.8,1.7], 'Capitate-z':[16,1.6],  
+            'Hamate-vol':[2940,378], 'Hamate-x':[27.5,1.9], 'Hamate-y':[23,1.8], 'Hamate-z':[16.9,1.2]
+            }
+        elif self.PatientGender == 'Female':
+            self.Prior_Volumes = {
+            'Scaphoid-vol':[1877,407], 'Scaphoid-x':[24.8,1.6], 'Scaphoid-y':[15.3,1.5], 'Scaphoid-z':[12.2,0.6], 
+            'Lunate-vol':[1368,165], 'Lunate-x':[18,1.1], 'Lunate-y':[16.9,0.8], 'Lunate-z':[11.9,0.8], 
+            'Triquetrum-vol':[1103,193], 'Triquetrum-x':[18.5,1.3], 'Triquetrum-y':[13.3,0.6], 'Triquetrum-z':[10.8,0.7], 
+            'Pisiform-vol':[569,121], 'Pisiform-x':[13.7,1.4], 'Pisiform-y':[10.7,1], 'Pisiform-z':[8.9,0.7], 
+            'Trapezium-vol':[1547,328], 'Trapezium-x':[21.8,1.8], 'Trapezium-y':[15.8,1.5], 'Trapezium-z':[13.1,1.2], 
+            'Trapezoid-vol':[1020,191], 'Trapezoid-x':[18,0.9], 'Trapezoid-y':[13.3,1.2], 'Trapezoid-z':[11.1,0.8], 
+            'Capitate-vol':[2547,344], 'Capitate-x':[24.6,1.1], 'Capitate-y':[18.2,1], 'Capitate-z':[13.9,0.8],  
+            'Hamate-vol':[2045,264], 'Hamate-x':[24.7,1.4], 'Hamate-y':[20.1,0.8], 'Hamate-z':[15,0.9]
+            }
+        else:
+            # Raise an erorr since 
+            raise ValueError('Patient gender must be either "Male", "Female", or "Unknown". Value given was ' + self.PatientGender)
+
+
+        # Allow some relaxation around the anatomical prior knowledge contraint
+        # Calculate what the ranges should be for each measure using average and standard deviation and relaxation term
+        self.lower_range_volume = (self.Prior_Volumes[self.current_bone + '-vol'][0] - self.Prior_Volumes[self.current_bone + '-vol'][1])*(1-self.AnatomicalRelaxation)
+        self.upper_range_volume = (self.Prior_Volumes[self.current_bone + '-vol'][0] + self.Prior_Volumes[self.current_bone + '-vol'][1])*(1+self.AnatomicalRelaxation)
+
+        self.lower_range_x = (self.Prior_Volumes[self.current_bone + '-x'][0] - self.Prior_Volumes[self.current_bone + '-x'][1])*(1-self.AnatomicalRelaxation)
+        self.upper_range_x = (self.Prior_Volumes[self.current_bone + '-x'][0] + self.Prior_Volumes[self.current_bone + '-x'][1])*(1+self.AnatomicalRelaxation)
+
+        self.lower_range_y = (self.Prior_Volumes[self.current_bone + '-y'][0] - self.Prior_Volumes[self.current_bone + '-y'][1])*(1-self.AnatomicalRelaxation)
+        self.upper_range_y = (self.Prior_Volumes[self.current_bone + '-y'][0] + self.Prior_Volumes[self.current_bone + '-y'][1])*(1+self.AnatomicalRelaxation)
+
+        self.lower_range_z = (self.Prior_Volumes[self.current_bone + '-z'][0] - self.Prior_Volumes[self.current_bone + '-z'][1])*(1-self.AnatomicalRelaxation)
+        self.upper_range_z = (self.Prior_Volumes[self.current_bone + '-z'][0] + self.Prior_Volumes[self.current_bone + '-z'][1])*(1+self.AnatomicalRelaxation)
+
+        # Use the bounding box ranges to create a suitable search window for the current particular carpal bone 
+        self.searchWindow = np.rint(np.asarray([self.upper_range_x, self.upper_range_y, self.upper_range_z]))
+
+        # Make the search window larger since the seed location won't be exactly in the center of the bone
+        self.searchWindow = np.rint(self.WindowRelaxationFactor*self.searchWindow)
+
+        if self.verbose == True:
+            print('\033[93m'  + 'Estimated Search Window is ' + str(self.searchWindow))
+            print(' ')
+
+        return self
+
+    def ConnectedComponent(self):
+
+        self.segImg = sitk.Cast(self.segImg, 1) #Can't be a 32 bit float
+        # self.segImg.CopyInformation(segmentation)
+
+        # Try to remove leakage areas by first eroding the binary and
+        # get the labels that are still connected to the original seed location
+
+        # self.segImg = self.erodeFilter.Execute(self.segImg, 0, 1, False)
+
+        # self.segImg = self.connectedComponentFilter.Execute(self.segImg)
+
+        # nda = sitk.GetArrayFromImage(self.segImg)
+        # nda = np.asarray(nda)
+
+        # # In numpy an array is indexed in the opposite order (z,y,x)
+        # tempseedPoint = self.seedPoint[0]
+        # val = nda[tempseedPoint[2]][tempseedPoint[1]][tempseedPoint[0]]
+
+        # # Keep only the label that intersects with the seed point
+        # nda[nda != val] = 0 
+        # nda[nda != 0] = 1
+
+        # self.segImg = sitk.GetImageFromArray(nda)
+
+        # Undo the earlier erode filter by dilating by same radius
+        # self.dilateFilter.SetKernelRadius(3)
+        # self.segImg = self.dilateFilter.Execute(self.segImg, 0, 1, False)
+
+        self.segImg = self.fillFilter.Execute(self.segImg)
+
+        # self.segImg = self.erodeFilter.Execute(self.segImg, 0, 1, False)
+
+        
+
+        return self
+
+    def HoleFilling(self):
+        # Cast to 16 bit (needed for the fill filter to work)
+        self.segImg  = sitk.Cast(self.segImg, sitk.sitkUInt16)
+
+        self.dilateFilter.SetKernelRadius(1)
+        self.segImg = self.dilateFilter.Execute(self.segImg, 0, 1, False)
+        self.segImg = self.fillFilter.Execute(self.segImg)
+        self.segImg = self.erodeFilter.Execute(self.segImg, 0, 1, False)
 
         return self
 
@@ -534,15 +568,15 @@ class BoneSeg(object):
         init_ls = sitk.SignedMaurerDistanceMap(self.segImg, insideIsPositive=True, useImageSpacing=True)
         self.init_ls = sitk.Cast(init_ls, sitk.sitkFloat32)
 
-        self.processedImage = sitk.Cast(processedImage, sitk.sitkFloat32)
+        self.EdgePotentialMap = sitk.Cast(processedImage, sitk.sitkFloat32)
 
     def SigmoidLevelSetIterations(self):
         ' Run the Shape Detection Level Set Segmentation Method'
 
         # sitk.Show(self.init_ls, 'self.init_ls')
-        # sitk.Show(self.processedImage, 'self.processedImage')
+        # sitk.Show(self.EdgePotentialMap, 'self.EdgePotentialMap')
 
-        self.segImg = self.shapeDetectionFilter.Execute(self.init_ls, self.processedImage)
+        self.segImg = self.shapeDetectionFilter.Execute(self.init_ls, self.EdgePotentialMap)
      
         if self.verbose == True:
             print('Done with ShapeDetectionLevelSetImageFilter!')
@@ -590,45 +624,6 @@ class BoneSeg(object):
         # Set the deafult values 
         self.SetDefaultValues()
 
-    def SetDefaultValues(self):
-        # Set the default values of all the parameters here
-        self.SetScalingFactor(1) #X,Y,Z
-       
-        self.SeedListFilename = "PointList.txt"
-        self.SetMaxVolume(300000) #Pixel counts (TODO change to mm^3) 
-
-        # Anisotropic Diffusion Filter
-        self.SetAnisotropicIts(5)
-        self.SetAnisotropicTimeStep(0.01)
-        self.SetAnisotropicConductance(4)
-
-        # Morphological Operators
-        self.fillFilter.SetForegroundValue(1) 
-        self.fillFilter.FullyConnectedOff() 
-        self.SetBinaryMorphologicalRadius(1)
-
-        # Shape Detection Filter
-        self.SetShapeMaxRMSError(0.004)
-        self.SetShapeMaxIterations(1000)
-        self.SetShapePropagationScale(4)
-        self.SetShapeCurvatureScale(1)
-
-        # Sigmoid Filter
-        self.sigFilter.SetAlpha(0)
-        self.sigFilter.SetBeta(120)
-        self.sigFilter.SetOutputMinimum(0)
-        self.sigFilter.SetOutputMaximum(255)
-
-        # Search Space Window
-        self.SetSearchWindowSize(50)
-
-        # Set current bone and patient gender group
-        self.SetCurrentBone('Capitate')
-        self.SetPatientGender('Unknown')
-
-        # Set the relaxation on the prior anatomical knowledge contraint
-        self.SetAnatomicalRelaxation(0.05)
-
     def SetAnatomicalRelaxation(self, newRelaxation):
         self.AnatomicalRelaxation = newRelaxation
     def SetCurrentBone(self, newBone):
@@ -644,8 +639,8 @@ class BoneSeg(object):
         MaxIts = self.shapeDetectionFilter.GetNumberOfIterations()
         return MaxIts
 
-    def SetSearchWindowSize(self, searchWindow):
-        self.searchWindow = [searchWindow, searchWindow, searchWindow]
+    # def SetSearchWindowSize(self, searchWindow):
+    #     self.searchWindow = [searchWindow, searchWindow, searchWindow]
 
     def SetShapePropagationScale(self, propagationScale):
         self.shapeDetectionFilter.SetPropagationScaling(-1*propagationScale)

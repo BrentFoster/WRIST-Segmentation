@@ -134,7 +134,7 @@ def output_measures(GroundTruth, segmentedImg, seedPoint, label, MRI_Filename, M
 	#print('Dice = ' + str(dice_value) + ' for Volunteer ' + str(MRI_num) + ' and location ' + str(seedPoint))
 
 	# Determine how long the algorithm took to run
-	elapsed = timeit.default_timer() - start_time
+	elapsed = round(timeit.default_timer() - start_time, 3)
 
 	# Save the log data to a text file
 	logData = str(dice_value) + ',' + str(label) + ',' + str(elapsed) + ',' + \
@@ -158,7 +158,7 @@ def main(MRI_Filename, GT_Filename, label, Subject_Gender, num_seeds=5, kernelRa
 	# Load MRI and cast to 16 bit
 	MRI = load_MRI(MRI_Filename)
 
-	#MRI = BrentPython.FlipImageVertical(MRI)
+	MRI = BrentPython.FlipImageVertical(MRI)
 
 	# Load the ground truth (manual segmented) image
 	GroundTruth = load_GT(GT_Filename, label)
@@ -168,7 +168,6 @@ def main(MRI_Filename, GT_Filename, label, Subject_Gender, num_seeds=5, kernelRa
 	# Use the label number to determine which bone it is from (since the labels are in specified order)
 	Current_Bone = GetBoneLabel(label)
 
-
 	# DEBUG
 	print(MRI_Filename)
 	print(GT_Filename)
@@ -177,17 +176,16 @@ def main(MRI_Filename, GT_Filename, label, Subject_Gender, num_seeds=5, kernelRa
 	print(seedPoints)
 	# DEBUG END
 
-
 	# Set the parameters for the segmentation class object
 	segmentationClass = BoneSegmentation.BoneSeg()
 	segmentationClass.SetShapeCurvatureScale(1)
-	segmentationClass.SetShapeMaxRMSError(0.003)
-	segmentationClass.SetShapeMaxIterations(150)
+	segmentationClass.SetShapeMaxRMSError(0.002)
+	segmentationClass.SetShapeMaxIterations(800)
 	segmentationClass.SetShapePropagationScale(4)
+	segmentationClass.SetAnatomicalRelaxation(0.05)
 
 	segmentationClass.SetPatientGender(Subject_Gender)
-	segmentationClass.SetCurrentBone(Current_Bone)
-	segmentationClass.SetAnatomicalRelaxation(0.15)
+	segmentationClass.SetCurrentBone(Current_Bone)	
 
 	for i in range(0, len(seedPoints)):
 
@@ -228,8 +226,8 @@ if __name__ == '__main__':
 	[MRI_Filenames, GT_Filenames, GenderList] = GetImagePaths()
 
 
-	for i in [1]:#range(1, len(MRI_Filenames)):
-		for label in range(1,10):
+	for i in [4]:#range(1, len(MRI_Filenames)):
+		for label in range(1,9):
 
 			print('i = ' + str(i) + ' label = ' + str(label))
 			MRI_Filename = MRI_Filenames[i]

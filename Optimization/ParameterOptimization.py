@@ -4,6 +4,11 @@ import timeit
 import Dice
 import numpy as np
 
+from scipy.optimize import differential_evolution
+from scipy.optimize import minimize
+
+import BrentPython
+
 
 def GetImagePaths():
 	# Brent's MacBook image paths
@@ -39,8 +44,6 @@ def GetRandomSeeds(GT_Filename, num_seeds, kernelRadius, label):
 	erodeFilter = sitk.BinaryErodeImageFilter()
 	erodeFilter.SetKernelRadius(kernelRadius)
 	GroundTruth = erodeFilter.Execute(GroundTruth, 0, label, False) 
-
-	sitk.Show(GroundTruth, 'GroundTruth')
 
 	# Find all the locations within the ground truth bone with an intensity of 1 (current label)
 	ndaGT = sitk.GetArrayFromImage(GroundTruth)
@@ -119,57 +122,97 @@ def GetBoneLabel(label):
 	Current_Bone = BoneList[label-1] # Subtract one sice index starts at 0 and labels start at 1
 	return Current_Bone
 
-def main(MRI_Filename, GT_Filename, label, parameter, Subject_Gender, num_seeds=1, kernelRadius=1):
-	# Load MRI and cast to 16 bit image type
-	MRI = sitk.ReadImage(MRI_Filename)
-	MRI = sitk.Cast(MRI, sitk.sitkUInt16)
+def runSegmentation(parameter):
 
-	# Load the ground truth image
-	GroundTruth = sitk.ReadImage(GT_Filename)
-
-	# sitk.Show(GroundTruth)
-
-	# Remove the non-label intensities from the ground truth and make them zero
-	GroundTruth = RemoveLabels(label, GroundTruth, MRI)
-
-	# Use the label number to determine which bone it is from (since the labels are in specified order)
-	Current_Bone = GetBoneLabel(label)
-
-	# Use the ground truth image to create random seed locations within bone label 
-	seedPoint = GetRandomSeeds(GT_Filename, num_seeds, kernelRadius, label)
-	print(seedPoint)
+	start_time = timeit.default_timer()
+	
+	# global segmentationClass, SeedPoints, GroundTruth, MRI_Image, DiceCalulator
+	
+	# Segmentation = multiHelper.Execute(segmentationClass, SeedPoints, MRI_Image,parameter)
 
 	# Initilize the needed python classes
 	segmentationClass = BoneSegmentation.BoneSeg()
 
-	start_time = timeit.default_timer()
+	[MRI_Filenames, GT_Filenames, GenderList] = GetImagePaths()
+	
+	iter = 0
+	dice_array = []
 
-	for i in parameter:
-		# Set the parameters for the segmentation class object
-		segmentationClass.SetShapeCurvatureScale(1)
-		# segmentationClass.SetShapeMaxRMSError(0.002)
-		segmentationClass.SetShapeMaxIterations(800)
-		segmentationClass.SetShapePropagationScale(4)
-		segmentationClass.SetAnatomicalRelaxation(0.05)
+	for i in range(2): # MRI Filename Number
+		for j in range(2): # Bone Label Number
+			for k in range(1): # Seed Number
+				MRI_Filename = MRI_Filenames[i]
+				GT_Filename = GT_Filenames[i]
+				Subject_Gender = GenderList[i]
+				label=j
 
-		segmentationClass.SetPatientGender(Subject_Gender)
-		segmentationClass.SetCurrentBone(Current_Bone)	
+				# Load MRI and cast to 16 bit image type
+				MRI = sitk.ReadImage(MRI_Filename)
+				MRI = sitk.Cast(MRI, sitk.sitkUInt16)
 
-		# Use the current parameter to modify the segmentation class
-		segmentationClass.SetShapeMaxRMSError(i)
+				MRI = BrentPython.FlipImageVertical(MRI)
 
+				# Load GroundTruth and cast to 16 bit image type
+				GroundTruth = sitk.ReadImage(GT_Filename)
+				GroundTruth = sitk.Cast(GroundTruth, sitk.sitkUInt16)
+
+				# Use the ground truth image to create random seed locations within bone label 
+				seedPoint = GetRandomSeeds(GT_Filename, num_seeds=1, kernelRadius=1, label=label)
+				print(seedPoint)
+				
+				# Use the label number to determine which bone it is from (since the labels are in specified order)
+				Current_Bone = GetBoneLabel(label)
+
+				# Set the currently being optimized parameters for the segmentation class object				
+				segmentationClass.SetShapeMaxIterations(parameter[0])
+				segmentationClass.SetAnatomicalRelaxation(parameter[1])
+				segmentationClass.SetShapePropagationScale(parameter[2])
+				segmentationClass.SetShapeCurvatureScale(parameter[3])
+				segmentationClass.SetShapeMaxRMSError(parameter[4])				
+
+				segmentationClass.SetPatientGender(Subject_Gender)
+				segmentationClass.SetCurrentBone(Current_Bone)	
 			
-		# Run segmentation with a randomly selected seed
-		segmentedImg = segmentationClass.Execute(MRI, [seedPoints[0]], True, returnSitkImage=True, convertSeedPhyscialFlag=False)
 
-		# Determine how long the algorithm took to run
-		elapsed = timeit.default_timer() - start_time
+				# Run segmentation with a randomly selected seed
+				segmentedImg = segmentationClass.Execute(MRI, seedPoint, True, returnSitkImage=True, convertSeedPhyscialFlag=False)
 
-		ComputeDice(GroundTruth, segmentedImg, seedPoint, elapsed, MRI_Filename, label, i)
+				# Determine how long the algorithm took to run
+				elapsed = timeit.default_timer() - start_time
 
-		# sitk.Show(segmentedImg, 'segmentedImg')
+				#Calculate Dice coefficient 
+				DiceCalulator = Dice.DiceCalulator()
+				DiceCalulator.SetImages(GroundTruth, segmentedImg)
+				temp_dice = DiceCalulator.Calculate()
+				temp_dice = -1*round(temp_dice,2) #Try rounding it
+				dice_array.append(temp_dice)
+				iter = iter + 1
 
-	return 0
+				print(dice_array)
+
+	#Determine how long the algorithm took to run
+	elapsed = timeit.default_timer() - start_time
+
+	mean_dice = np.average(dice_array)
+	#Save the data to a log file (for plotting later perhaps)
+	logData = [parameter[0], parameter[1], parameter[2], parameter[3], parameter[4], mean_dice, elapsed]
+	filename = 'OptimizationLog.txt'
+	saveLog(filename, logData)
+
+	#Print the status updates to the terminal
+	print(Style.BRIGHT + Fore.YELLOW + ' Dice = '),
+	print(Fore.GREEN + str(round(Dice * 100,4)) + ','), #Round the dice coeffient only for better displaying
+	print(Fore.CYAN + 'Threshold = '),
+	print(str(round(parameter[0],2))),
+	print(Fore.CYAN + 'Iterations = '),
+	print(str(round(parameter[1],0))),
+	print(Fore.CYAN + 'MaxRMSError = '),
+	print(str(round(parameter[2],3))),
+	print(Fore.BLUE + "Elapsed Time (secs):"),
+	print(str(round(elapsed,2)))	
+
+	#Need to return the negative dice coefficient (since optimization minimizes not maximizes)
+	return dice_array
 
 if __name__ == '__main__':
 	
@@ -185,49 +228,16 @@ if __name__ == '__main__':
 
 		print(Style.BRIGHT + Fore.YELLOW + 'Starting parameter sensitivity test code ')
 
-
-	i = 0
-	label = 1
-	# parameter = np.linspace(40, 110, num=10) # Sigmoid threshold level
-	# parameter = np.linspace(50, 2500, num=14) # Levelset maximum iterations
-	# parameter = np.linspace(0, 0.015, num=15) # Levelset max RMS error
-
-	parameter = np.linspace(5.4, 6.5, num=1) # Levelset shape propagation scale
-
-	[MRI_Filenames, GT_Filenames, GenderList] = GetImagePaths()
-	
-
-	MRI_Filename = MRI_Filenames[i]
-	GT_Filename = GT_Filenames[i]
-
 	# num_seeds = 10 corresponds to ~3 hours
 	# kernelRadius = 5 seems to be a good amount
-	main(MRI_Filename, GT_Filename, label, parameter, Subject_Gender, num_seeds=1, kernelRadius=5)			
+
+	# Run optimization
+	minimizer_kwargs = {"method": "Nelder-Mead"}
+	bounds = [(400,1000), (0,0.30), (3,5), (0.5,2), (0.001, 0.01)]
+	print("Starting")
+	result = differential_evolution(runSegmentation, bounds, disp=True, popsize=2)
 
 	# Determine how long the algorithm took to run
 	elapsed = timeit.default_timer() - start_time
 	
 	print(Fore.BLUE + "Elapsed Time (secs):" + str(round(elapsed,3)))
-
-
-
-
-
-
-# seedListFiles = [\
-# 'SeedList/Volunteer1_SeedList.csv',\
-# 'SeedList/Volunteer2_SeedList.csv',\
-# 'SeedList/Volunteer3_SeedList.csv',\
-# 'SeedList/Volunteer4_SeedList.csv']
-
-
-# Show the seed location on the MRI image
-# ndaGT = ndaGT * 0
-# ndaGT[new_point[0], new_point[1], new_point[2]] = 255
-# GroundTruth = sitk.Cast(sitk.GetImageFromArray(ndaGT), GroundTruth.GetPixelID())
-# GroundTruth.CopyInformation(MRI)
-# sitk.Show(GroundTruth)
-# sitk.Show(MRI)
-# return
-# sitk.Show(GroundTruth, 'GroundTruth')
-# sitk.Show(segmentedImg, 'segmentedImg')

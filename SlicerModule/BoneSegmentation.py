@@ -89,21 +89,21 @@ class BoneSeg(object):
             print('\033[93m' + "Running Leakage Check...")
         self.LeakageCheck()
 
-        if self.verbose == True:
-            print(' ')
-            print('\033[93m' + "Filling Any Holes...")
+        # if self.verbose == True:
+        #     print(' ')
+        #     print('\033[93m' + "Filling Any Holes...")
         # Fill holes prior to uncropping image for much faster computation
         # self.HoleFilling()
 
-        if self.verbose == True:
-            print(' ')
-            print('\033[93m' + "Smoothing Label...")
-        self.SmoothLabel()
-
         # if self.verbose == True:
         #     print(' ')
-        #     print('\033[90m' + "Uncropping Image...")
-        # self.UnCropImage()
+        #     print('\033[93m' + "Smoothing Label...")
+        # self.SmoothLabel()
+
+        if self.verbose == True:
+            print(' ')
+            print('\033[90m' + "Uncropping Image...")
+        self.UnCropImage()
 
         if self.verbose == True:
             print(' ')
@@ -350,6 +350,11 @@ class BoneSeg(object):
         if (volume > self.lower_range_volume) and (volume < self.upper_range_volume):
             if self.verbose == True:
                 print('\033[97m' + "Passed with volume " + str(volume))
+                # TEST TEST
+                imageWriter = sitk.imageFileWriter()
+                imageWriter.Execute(self.segImg, 'segImg_BS.nii', False)
+                # END TEST TEST
+                asdf
         else:
             # Determine whether the segmentation was too large or too small
             if volume > self.upper_range_volume:
