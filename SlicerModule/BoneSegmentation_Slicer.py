@@ -234,7 +234,7 @@ class BoneSegmentation_SlicerWidget:
         self.ShapeMaxItsInputSlider = ctk.ctkSliderWidget()
         self.ShapeMaxItsInputSlider.minimum = 0
         self.ShapeMaxItsInputSlider.maximum = 2500
-        self.ShapeMaxItsInputSlider.value = 1000
+        self.ShapeMaxItsInputSlider.value = 500
         self.ShapeMaxItsInputSlider.connect('valueChanged(double)', self.onShapeMaxItsInputSliderChange)
         frameLayout.addRow(self.label, self.ShapeMaxItsInputSlider)
         #Set default value
@@ -318,21 +318,21 @@ class BoneSegmentation_SlicerWidget:
         # #Set default value
         # self.NumScaling = self.NumScalingSlider.value
 
-        # #
-        # # Search Space Window Size 
-        # # 
-        # self.label = qt.QLabel()
-        # self.label.setText("Search Space Size: ")
-        # self.label.setToolTip(
-        #     "Select the size of the cube to use for defining the search space around the initial seed location.")
-        # self.WindowScalingSlider = ctk.ctkSliderWidget()
-        # self.WindowScalingSlider.minimum = 5
-        # self.WindowScalingSlider.maximum = 200
-        # self.WindowScalingSlider.value = 40
-        # self.WindowScalingSlider.connect('valueChanged(double)', self.onWindowScalingSliderChange)
-        # frameLayout.addRow(self.label, self.WindowScalingSlider)
-        # #Set default value
-        # self.WindowScaling = self.WindowScalingSlider.value
+        #
+        # Anisotropic Diffusion Iterations 
+        # 
+        self.label = qt.QLabel()
+        self.label.setText("Anisotropic Diffusion Iterations: ")
+        self.label.setToolTip(
+            "Select the number of iterations for the Anisotropic Diffusion filter for image denoising.")
+        self.DiffusionItsSlider = ctk.ctkSliderWidget()
+        self.DiffusionItsSlider.minimum = 0
+        self.DiffusionItsSlider.maximum = 25
+        self.DiffusionItsSlider.value = 5
+        self.DiffusionItsSlider.connect('valueChanged(double)', self.onDiffusionItsSliderChange)
+        frameLayout.addRow(self.label, self.DiffusionItsSlider)
+        #Set default value
+        self.DiffusionIts = self.DiffusionItsSlider.value
        
         #
         # Compute button
@@ -368,12 +368,13 @@ class BoneSegmentation_SlicerWidget:
         # Reset the table now that the bone list has flipped
         self.Reset_Table_Widget()
 
+    def onDiffusionItsSliderChange(self, newValue):
+        self.DiffusionIts = newValue
 
     def onGenderSelectionListChange(self):
         self.selected_gender = self.GenderSelectionList.currentItem().text()
         print('self.selected_gender')
         print(self.selected_gender)
-
 
     def onModuleListChange(self):
         # Reset the table first!
@@ -399,9 +400,7 @@ class BoneSegmentation_SlicerWidget:
 
         print('BonesSelected')
         print(self.BonesSelected)
-        print(' ')
-
-        
+        print(' ')        
 
     def onRelaxationSliderChange(self, newValue):
         self.RelaxationAmount = newValue
@@ -457,6 +456,11 @@ class BoneSegmentation_SlicerWidget:
     def onCompute(self):
         slicer.app.processEvents()
 
+        # Find the output image in Slicer to save the segmentation to
+        imageID = self.outputSelector.currentNode()
+        imageID.GetName() # Give error if there is no output volume selected
+
+
         # TODO: Consider adding a QProgressBar() if not too difficult
         # Make a list of all the seed point locations
         fidList = self.markupSelector.currentNode()
@@ -493,35 +497,23 @@ class BoneSegmentation_SlicerWidget:
         print(Segmentation)
 
         # Segmentation = sitk.Cast(Segmentation, sitk.sitkLabelUInt8)
-
-
+        Foreground_Value = 1
 
         BinaryToLabelFilter = sitk.BinaryImageToLabelMapFilter()
-        BinaryToLabelFilter.SetInputForegroundValue(1)
+        BinaryToLabelFilter.SetInputForegroundValue(Foreground_Value)
         BinaryToLabelFilter.SetOutputBackgroundValue(0)
         LabelMapToLabelImageFilter = sitk.LabelMapToLabelImageFilter()
 
-        Segmentation = BinaryToLabelFilter.Execute(Segmentation)
-        Segmentation = LabelMapToLabelImageFilter.Execute(Segmentation)
+        # Segmentation = BinaryToLabelFilter.Execute(Segmentation)
+        # Segmentation = LabelMapToLabelImageFilter.Execute(Segmentation)
 
-
-        # print('done with LabelMapToLabelImageFilter')
-        # print(Segmentation)
-
-        # imageWriter = sitk.ImageFileWriter()
-        # imageWriter.Execute(Segmentation, 'C:\Users\Brent\GitRepositories\BoneSegmentation\SlicerModule\segImg.nii', True)
 
         # Output options in Slicer = {0:'background', 1:'foreground', 2:'label'}
         imageID = self.outputSelector.currentNode()
-        # sitkUtils.PushLabel(Segmentation, imageID.GetName(), overwrite=True)  
-
-        # TEST
-        # Segmentation = sitk.Cast(Segmentation, sitk.sitkUInt16)
-        # END TEST   
-
-        sitkUtils.PushToSlicer(Segmentation, 'Segmentation', 2, overwrite=True) 
         
-        volumeNode = slicer.util.getNode('Segmentation')
+        sitkUtils.PushToSlicer(Segmentation, imageID.GetName(), 2, overwrite=True) 
+        
+        volumeNode = slicer.util.getNode(imageID.GetName())
         displayNode = volumeNode.GetDisplayNode()
         displayNode.AutoWindowLevelOff()
         displayNode.SetWindow(3) # 2.5
@@ -529,9 +521,6 @@ class BoneSegmentation_SlicerWidget:
 
         displayNode.SetAndObserveColorNodeID('vtkMRMLColorTableNodeLabels')
 
-        # Find the output image in Slicer to save the segmentation to
-        # imageID = self.outputSelector.currentNode()
-        # image = sitkUtils.PushToSlicer(Segmentation, imageID.GetName(), 1, overwrite=True)
 
 
 
@@ -609,9 +598,6 @@ class Multiprocessor(object):
         segmentationClass.SetPatientGender(self.parameters[4])
         segmentationClass.SetCurrentBone(self.parameters[5][ndx])
         segmentationClass.SetAnatomicalRelaxation(self.parameters[6])
-
-        # Search Window Size
-        segmentationClass.SetSearchWindowSize(self.parameters[5])
 
         # segmentation = segmentationClass.Execute(self.MRI_Image,[SeedPoint])
         segmentation = segmentationClass.Execute(self.MRI_Image, [SeedPoint], verbose=True, 

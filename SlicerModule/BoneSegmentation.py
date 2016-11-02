@@ -11,6 +11,10 @@ class BoneSeg(object):
 
         self.verbose = verbose # Optional argument to output text to terminal
 
+        # Cast the original_image to UInt 16 just to be safe
+        original_image = sitk.Cast(original_image, sitk.sitkUInt16)
+
+
         self.image = original_image
         self.original_image = original_image
         self.seedPoint = original_seedPoint
@@ -89,16 +93,21 @@ class BoneSeg(object):
             print('\033[93m' + "Running Leakage Check...")
         self.LeakageCheck()
 
-        # if self.verbose == True:
-        #     print(' ')
-        #     print('\033[93m' + "Filling Any Holes...")
+        if self.verbose == True:
+            print(' ')
+            print('\033[93m' + "Filling Any Holes...")
         # Fill holes prior to uncropping image for much faster computation
-        # self.HoleFilling()
+        self.HoleFilling()
 
         # if self.verbose == True:
         #     print(' ')
         #     print('\033[93m' + "Smoothing Label...")
         # self.SmoothLabel()
+
+        if self.verbose == True:
+            print(' ')
+            print('\033[93m' + "Changing Label Value...")
+        self.ChangeLabelValue()
 
         if self.verbose == True:
             print(' ')
@@ -112,7 +121,7 @@ class BoneSeg(object):
 
         if self.returnSitkImage == True:
             # Check the image type first
-            # self.segImg = sitk.Cast(self.segImg, original_image.GetPixelID())
+            self.segImg = sitk.Cast(self.segImg, original_image.GetPixelID())
             # Return a SimpleITK type image
             return  self.segImg 
         else:
@@ -121,6 +130,35 @@ class BoneSeg(object):
             npImg = sitk.GetArrayFromImage(self.segImg)
 
             return  npImg
+
+    def ChangeLabelValue(self):
+        BoneList = ['Trapezium', 'Trapezoid', 'Scaphoid', 'Capitate', 'Lunate', 'Hamate', 'Triquetrum', 'Pisiform']
+
+        ndx = BoneList.index(self.current_bone)
+
+        # Add one to the ndx because index starts at 0 instead of 1
+        ndx = ndx + 1 
+
+        npImg = sitk.GetArrayFromImage(self.segImg)
+
+        print('Unique of npImg is ' + str(np.unique(npImg)))
+
+        npImg[npImg != 0] = ndx
+
+        print('Unique of npImg is now ' + str(np.unique(npImg)))
+
+        # Convert back to SimpleITK image type
+        tempImg = sitk.Cast(sitk.GetImageFromArray(npImg), sitk.sitkUInt16)
+        tempImg.CopyInformation(self.segImg)
+
+        self.segImg = tempImg
+
+        return self
+
+
+
+
+
     def SmoothLabel(self):
         # Smooth the segmentation label image to reduce high frequency artifacts on the boundary
         SmoothFilter = sitk.DiscreteGaussianImageFilter()
@@ -292,7 +330,7 @@ class BoneSeg(object):
         # self.segImg = sitk.Cast(self.segImg, segmentation.GetPixelID()) #Can't be a 32 bit float
         # self.segImg.CopyInformation(segmentation)
 
-        # Label Statistics Image Filter can't be 64-bit float
+        # Label Statistics Image Filter can't be 32-bit or 64-bit float
         self.segImg = sitk.Cast(self.segImg, sitk.sitkUInt16)
 
         # Fill any segmentation holes first
@@ -313,7 +351,7 @@ class BoneSeg(object):
         BoundingBoxFilter = sitk.LabelStatisticsImageFilter()
 
         # BoundingBoxFilter.Execute(self.original_image, self.segImg)
-        self.segImg = sitk.Cast(self.segImg, self.original_image.GetPixelID()) # Can't be 32-bit float
+        # self.segImg = sitk.Cast(self.segImg, self.original_image.GetPixelID()) # Can't be 32-bit float
         BoundingBoxFilter.Execute(self.segImg, self.segImg)
 
         label = 1 # Only considering one bone in the segmentaiton for now
@@ -349,12 +387,7 @@ class BoneSeg(object):
 
         if (volume > self.lower_range_volume) and (volume < self.upper_range_volume):
             if self.verbose == True:
-                print('\033[97m' + "Passed with volume " + str(volume))
-                # TEST TEST
-                imageWriter = sitk.imageFileWriter()
-                imageWriter.Execute(self.segImg, 'segImg_BS.nii', False)
-                # END TEST TEST
-                asdf
+                print('\033[97m' + "Passed with volume " + str(volume))                
         else:
             # Determine whether the segmentation was too large or too small
             if volume > self.upper_range_volume:

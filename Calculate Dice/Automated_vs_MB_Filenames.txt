@@ -1,0 +1,2 @@
+E:\Google Drive\Research\Projects\Carpal Bone Segmentation\MRI Images\Radiologist - MRI Carpal Bone Segmentation\Expert Segmentations\Expert Segmentations in Nii Format\Healthy_Men_1_MB.nii
+E:\Google Drive\Research\Projects\Carpal Bone Segmentation\MRI Images\Radiologist - MRI Carpal Bone Segmentation\Expert Segmentations\Automaged Segmentations\Healthy_Men_1_Automated.nii
