@@ -7,6 +7,8 @@ Filenames = text_file.read().splitlines()
 
 Calculate_Hausdorff = False
 
+
+
 displayColors = True #Change the color of the output text
 if displayColors == True:
 	from colorama import init

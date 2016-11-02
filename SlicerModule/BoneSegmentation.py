@@ -141,6 +141,7 @@ class BoneSeg(object):
 
         npImg = sitk.GetArrayFromImage(self.segImg)
 
+        print(' For bone ' + self.current_bone)
         print('Unique of npImg is ' + str(np.unique(npImg)))
 
         npImg[npImg != 0] = ndx

@@ -510,14 +510,14 @@ class BoneSegmentation_SlicerWidget:
 
         # Output options in Slicer = {0:'background', 1:'foreground', 2:'label'}
         imageID = self.outputSelector.currentNode()
-        
+
         sitkUtils.PushToSlicer(Segmentation, imageID.GetName(), 2, overwrite=True) 
         
         volumeNode = slicer.util.getNode(imageID.GetName())
         displayNode = volumeNode.GetDisplayNode()
         displayNode.AutoWindowLevelOff()
-        displayNode.SetWindow(3) # 2.5
-        displayNode.SetLevel(2)    # 2
+        displayNode.SetWindow(5) # 2.5
+        displayNode.SetLevel(4)    # 2
 
         displayNode.SetAndObserveColorNodeID('vtkMRMLColorTableNodeLabels')
 
