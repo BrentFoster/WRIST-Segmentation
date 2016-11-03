@@ -210,7 +210,7 @@ class BoneSegmentation_SlicerWidget:
             "Select the relaxation on the prior anatomical knowledge contraint (e.g. 0.10 is 10 percent relaxation)")
         self.RelaxationSlider = ctk.ctkSliderWidget()
         self.RelaxationSlider.minimum = 0
-        self.RelaxationSlider.maximum = 0.5
+        self.RelaxationSlider.maximum = 1.0
         self.RelaxationSlider.value = 0.10
 
         self.RelaxationSlider.singleStep = 0.01
@@ -516,7 +516,7 @@ class BoneSegmentation_SlicerWidget:
         volumeNode = slicer.util.getNode(imageID.GetName())
         displayNode = volumeNode.GetDisplayNode()
         displayNode.AutoWindowLevelOff()
-        displayNode.SetWindow(5) # 2.5
+        displayNode.SetWindow(8) # 2.5
         displayNode.SetLevel(4)    # 2
 
         displayNode.SetAndObserveColorNodeID('vtkMRMLColorTableNodeLabels')

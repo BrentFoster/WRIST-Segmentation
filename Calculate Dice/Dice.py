@@ -52,6 +52,41 @@ class DiceCalulator(object):
 		# except:
 			# print('No images loaded. Please use SetImages or SetImageFiles first.')
 	
+	def CalculateSITKDice(self, GetAllValues=False):
+		# Use the SimpleITK function to calculate the Dice overlap
+
+		BinaryToLabelFilter = sitk.BinaryImageToLabelMapFilter()
+		BinaryToLabelFilter.SetInputForegroundValue(self.label)
+		BinaryToLabelFilter.SetOutputBackgroundValue(0)
+		LabelMapToLabelImageFilter = sitk.LabelMapToLabelImageFilter()
+
+		Observer_One_SegImg = sitk.Cast(self.GroundTruth_sitk, sitk.sitkUInt16)
+		Observer_Two_SegImg = sitk.Cast(self.Segmentation_sitk, sitk.sitkUInt16)
+
+		Observer_One_SegImg = BinaryToLabelFilter.Execute(Observer_One_SegImg)
+		Observer_Two_SegImg = BinaryToLabelFilter.Execute(Observer_Two_SegImg)
+
+		Observer_One_SegImg = LabelMapToLabelImageFilter.Execute(Observer_One_SegImg)
+		Observer_Two_SegImg = LabelMapToLabelImageFilter.Execute(Observer_Two_SegImg)
+
+
+		OverlapFilter = sitk.LabelOverlapMeasuresImageFilter()
+		OverlapFilter.Execute(Observer_One_SegImg, Observer_Two_SegImg)
+
+		dice = OverlapFilter.GetDiceCoefficient()
+		jaccard = OverlapFilter.GetJaccardCoefficient()
+		FalseNegativeError = OverlapFilter.GetFalseNegativeError()
+		FalsePositiveError = OverlapFilter.GetFalsePositiveError()
+		VolumeSimiarity = OverlapFilter.GetVolumeSimilarity()
+
+		if GetAllValues == True:
+			return (dice, jaccard, FalseNegativeError, FalsePositiveError, VolumeSimiarity)
+		else:
+			return dice
+
+
+
+
 	def AllLabels(self):
 		if self.label == 0:
 			self.GroundTruth_np[self.GroundTruth_np != self.label] = 1

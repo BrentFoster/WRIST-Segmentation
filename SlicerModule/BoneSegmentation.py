@@ -91,7 +91,9 @@ class BoneSeg(object):
         if self.verbose == True:
             print(' ')
             print('\033[93m' + "Running Leakage Check...")
-        self.LeakageCheck()
+        # Don't run leakage check if relaxation is 100%
+        if self.AnatomicalRelaxation != 1:
+            self.LeakageCheck()
 
         if self.verbose == True:
             print(' ')
@@ -270,7 +272,7 @@ class BoneSeg(object):
         self.searchWindow = np.rint(np.asarray([self.upper_range_x, self.upper_range_y, self.upper_range_z]))
 
         # Make the search window larger since the seed location won't be exactly in the center of the bone
-        self.searchWindow = np.rint(2*self.searchWindow)
+        self.searchWindow = np.rint((2+self.AnatomicalRelaxation*2)*self.searchWindow)
 
         if self.verbose == True:
             print('\033[93m'  + 'Estimated Search Window is ' + str(self.searchWindow))
@@ -319,7 +321,7 @@ class BoneSeg(object):
         # Cast to 16 bit (needed for the fill filter to work)
         self.segImg  = sitk.Cast(self.segImg, sitk.sitkUInt16)
 
-        self.dilateFilter.SetKernelRadius(1)
+        self.dilateFilter.SetKernelRadius(2)
         self.segImg = self.dilateFilter.Execute(self.segImg, 0, 1, False)
         self.segImg = self.fillFilter.Execute(self.segImg)
         self.segImg = self.erodeFilter.Execute(self.segImg, 0, 1, False)
@@ -441,7 +443,7 @@ class BoneSeg(object):
             self.SetShapeMaxIterations(MaxIts)
 
             if MaxIts < 10:
-                raise Warning('Max Iterations of ' + str(MaxIts) + ' is too low! Stopping now.')
+                print('Max Iterations of ' + str(MaxIts) + ' is too low! Stopping now.')
                 return self
 
             # Don't need to redo the pre-processing steps
@@ -470,7 +472,7 @@ class BoneSeg(object):
             self.SetShapeMaxIterations(MaxIts)
 
             if MaxIts > 3000:
-                raise Warning('Max Iterations of ' + str(MaxIts) + ' is too high! Stopping now.')
+                print('Max Iterations of ' + str(MaxIts) + ' is too high! Stopping now.')
                 return self
 
             # Don't need to redo the pre-processing steps

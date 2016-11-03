@@ -2,7 +2,20 @@ import SimpleITK as sitk
 import Dice
 import numpy as np
 
-text_file = open("Automated_vs_MB_Filenames.txt", "r")
+def saveLog(filename, logData):
+	try:
+		#Save computation time in a log file
+		text_file = open(filename, "r+")
+		text_file.readlines()
+		text_file.write("%s\n" % logData)
+		text_file.close()
+	except:
+		print("Failed writing log data to .txt file")
+
+text_file = open("Automated_vs_YA_Filenames.txt", "r")
+# text_file = open("Automated_vs_MB_Filenames.txt", "r")
+# text_file = open("MB_vs_YA_Filenames.txt", "r")
+
 Filenames = text_file.read().splitlines()
 
 Calculate_Hausdorff = False
@@ -30,16 +43,16 @@ for i in range(0, len(Filenames)/2):
 
 num_obervers = 2
 num_Images = len(Observer_One_Filenames)
+num_Bones  = 8
 
+# Initilize some variables to hold the output numbers
 dice_values = np.zeros((num_Images, 8))
 Hausdorff_Distance_values = np.zeros((num_Images, 8))
 AverageHausdorffDistance_values = np.zeros((num_Images, 8))
 
-
 for i in range(0, num_Images):
 	print(Fore.GREEN + 'Running File Number ' + str(i))
-
-	for k in range(1,9):		
+	for k in range(1,num_Bones+1):		
 		print(Fore.BLUE + 'Running Label Number ' + str(k))
 
 		Observer_One_SegImg = sitk.ReadImage(Observer_One_Filenames[i])
@@ -47,11 +60,15 @@ for i in range(0, num_Images):
 
 		DiceCalulator = Dice.DiceCalulator()
 		DiceCalulator.SetImages(Observer_One_SegImg, Observer_Two_SegImg, label=k)
+		# dice = DiceCalulator.CalculateSITKDice()
 		dice = DiceCalulator.Calculate()
+		
 		dice = round(dice*100, 2)
 		dice_values[i][k-1] = dice
-
 		print(Fore.CYAN  + 'Dice: ' + str(dice_values))
+
+		
+		
 
 		if Calculate_Hausdorff == True:
 			(Hausdorff_Distance, AverageHausdorffDistance) = DiceCalulator.HausdorffDistance()
@@ -65,6 +82,8 @@ for i in range(0, num_Images):
 			print(Fore.CYAN  + 'Hausdorff Distance: ' + str(Hausdorff_Distance_values))
 			print(Fore.CYAN  + 'Average Hausdorff Distance: ' + str(AverageHausdorffDistance_values))
 	
-
+# Save the output to a .txt file
+filename = 'Output_Dice_Values.txt'
+saveLog(filename, dice_values)
 
 
