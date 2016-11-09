@@ -13,9 +13,9 @@ def saveLog(filename, logData, HeaderText):
 	except:
 		print("Failed writing log data to .txt file")
 
-Calculate_Hausdorff = True
+Calculate_Hausdorff = False
 Calculate_Dice = True
-Calculate_Jaccard = True
+Calculate_Jaccard = False
 
 
 displayColors = True #Change the color of the output text
@@ -31,6 +31,9 @@ if displayColors == True:
 ImageFileNames = ("Mac_Automated_vs_MB_Filenames.txt", 
 					"Mac_Automated_vs_YA_Filenames.txt", 
 					"Mac_MB_vs_YA_Filenames.txt")
+
+
+# ImageFileNames = ("Mac_Automated_vs_YA_Filenames.txt",)
 
 for k in range(0,len(ImageFileNames)):
 

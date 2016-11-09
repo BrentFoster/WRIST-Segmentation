@@ -1,11 +1,20 @@
-	Observer_Two_SegImg_np = np.asarray(sitk.GetArrayFromImage(Observer_Two_SegImg))
+import SimpleITK as sitk
+import numpy as np
 
-	Observer_Two_SegImg_np[Observer_Two_SegImg_np != 0] = Observer_Two_SegImg_np[Observer_Two_SegImg_np != 0] - 1
+' Remove the thumb (label=1) and subtract one from the other labels '
 
-	tempImg = sitk.Cast(sitk.GetImageFromArray(Observer_Two_SegImg_np), Observer_Two_SegImg.GetPixelID())
-	tempImg.CopyInformation(Observer_Two_SegImg)
+FileName = '/Users/Brent/Google Drive/Research/Projects/Carpal Bone Segmentation/MRI Images/Radiologist - MRI Carpal Bone Segmentation/Expert Segmentations/Expert Segmentations in Nii Format/Healthy_Women_5_YA.nii'
 
-	Observer_Two_SegImg = tempImg
+img = sitk.ReadImage(FileName)
 
-	imageWriter = sitk.ImageFileWriter()
-	imageWriter.Execute(Observer_Two_SegImg, Observer_Two_Filenames[k], False)
+img_np = np.asarray(sitk.GetArrayFromImage(img))
+
+img_np[img_np != 0] = img_np[img_np != 0] - 1
+
+tempImg = sitk.Cast(sitk.GetImageFromArray(img_np), img.GetPixelID())
+tempImg.CopyInformation(img)
+
+img = tempImg
+
+imageWriter = sitk.ImageFileWriter()
+imageWriter.Execute(img, FileName, False)
