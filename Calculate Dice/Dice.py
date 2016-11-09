@@ -52,7 +52,7 @@ class DiceCalulator(object):
 		# except:
 			# print('No images loaded. Please use SetImages or SetImageFiles first.')
 	
-	def CalculateSITKDice(self, GetAllValues=False):
+	def CalculateSITKDice(self, GetJaccard=True, GetAllValues=False):
 		# Use the SimpleITK function to calculate the Dice overlap
 
 		BinaryToLabelFilter = sitk.BinaryImageToLabelMapFilter()
@@ -81,6 +81,8 @@ class DiceCalulator(object):
 
 		if GetAllValues == True:
 			return (dice, jaccard, FalseNegativeError, FalsePositiveError, VolumeSimiarity)
+		elif GetJaccard == True:
+			return jaccard
 		else:
 			return dice
 
