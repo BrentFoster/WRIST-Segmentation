@@ -20,23 +20,52 @@ def GetImagePaths():
 	# MRI_Filenames = ['/Users/Brent/Google Drive/Research/MRI Wrist Images/CMC OA/Filtered Images/Volunteer1_VIBE_we_filtered.hdr']
 
 	# Brent's Lab PC image paths
-	MRI_Directory = 'E:\Google Drive\Research\Projects\Carpal Bone Segmentation\MRI Images\Training Dataset\VIBE Images'
-	MRI_Filenames = [MRI_Directory + '\Volunteer1_VIBE_Neutral_1.hdr',\
-					MRI_Directory + '\Volunteer7_VIBE_Position_1.hdr',\
-					MRI_Directory + '\Volunteer9_VIBE_Position_1.hdr',\
-					MRI_Directory + '\Volunteer10_VIBE_Position_1.hdr',\
-					MRI_Directory + '\Volunteer11_VIBE_Neutral.hdr']
+	# MRI_Directory = 'E:\Google Drive\Research\Projects\Carpal Bone Segmentation\MRI Images\Training Dataset\VIBE Images'
+	# MRI_Filenames = [MRI_Directory + '\Volunteer1_VIBE_Neutral_1.hdr',\
+	# 				MRI_Directory + '\Volunteer7_VIBE_Position_1.hdr',\
+	# 				MRI_Directory + '\Volunteer9_VIBE_Position_1.hdr',\
+	# 				MRI_Directory + '\Volunteer10_VIBE_Position_1.hdr',\
+	# 				MRI_Directory + '\Volunteer11_VIBE_Neutral.hdr']
 
 	# Ground truth image paths (manually created using 3D Slicer)
-	GT_Directory = 'E:\Google Drive\Research\Projects\Carpal Bone Segmentation\MRI Images\Training Dataset\Segmented Images'
-	GT_Filenames = [GT_Directory + '\Volunteer1_Neutral.nii',\
-					GT_Directory + '\Volunteer7_VIBE_gt.nii',\
-					GT_Directory + '\Volunteer9_VIBE_gt.nii',\
-					GT_Directory + '\Volunteer10_VIBE_gt.nii',\
-					GT_Directory + '\Volunteer11_VIBE_gt.nii']
+	# GT_Directory = 'E:\Google Drive\Research\Projects\Carpal Bone Segmentation\MRI Images\Training Dataset\Segmented Images'
+	# GT_Filenames = [GT_Directory + '\Volunteer1_Neutral.nii',\
+	# 				GT_Directory + '\Volunteer7_VIBE_gt.nii',\
+	# 				GT_Directory + '\Volunteer9_VIBE_gt.nii',\
+	# 				GT_Directory + '\Volunteer10_VIBE_gt.nii',\
+	# 				GT_Directory + '\Volunteer11_VIBE_gt.nii']
 	
-	GenderList = ['Male', 'Male', 'Male', 'Female', 'Female']
+	# GenderList = ['Male', 'Male', 'Male', 'Female', 'Female']
 
+
+
+	GT_Filenames = [
+	'E:\Google Drive\Research\Projects\Carpal Bone Segmentation\MRI Images\Radiologist - MRI Carpal Bone Segmentation\Expert Segmentations\Expert Segmentations in Nii Format\Healthy_Men_1_MB.nii',\
+	'E:\Google Drive\Research\Projects\Carpal Bone Segmentation\MRI Images\Radiologist - MRI Carpal Bone Segmentation\Expert Segmentations\Expert Segmentations in Nii Format\Healthy_Men_2_MB.nii',\
+	'E:\Google Drive\Research\Projects\Carpal Bone Segmentation\MRI Images\Radiologist - MRI Carpal Bone Segmentation\Expert Segmentations\Expert Segmentations in Nii Format\Healthy_Men_3_MB.nii',\
+	'E:\Google Drive\Research\Projects\Carpal Bone Segmentation\MRI Images\Radiologist - MRI Carpal Bone Segmentation\Expert Segmentations\Expert Segmentations in Nii Format\Healthy_Men_4_MB.nii',\
+	'E:\Google Drive\Research\Projects\Carpal Bone Segmentation\MRI Images\Radiologist - MRI Carpal Bone Segmentation\Expert Segmentations\Expert Segmentations in Nii Format\Healthy_Men_5_MB.nii',\
+	'E:\Google Drive\Research\Projects\Carpal Bone Segmentation\MRI Images\Radiologist - MRI Carpal Bone Segmentation\Expert Segmentations\Expert Segmentations in Nii Format\Healthy_Women_1_MB.nii',\
+	'E:\Google Drive\Research\Projects\Carpal Bone Segmentation\MRI Images\Radiologist - MRI Carpal Bone Segmentation\Expert Segmentations\Expert Segmentations in Nii Format\Healthy_Women_2_MB.nii',\
+	'E:\Google Drive\Research\Projects\Carpal Bone Segmentation\MRI Images\Radiologist - MRI Carpal Bone Segmentation\Expert Segmentations\Expert Segmentations in Nii Format\Healthy_Women_3_MB.nii',\
+	'E:\Google Drive\Research\Projects\Carpal Bone Segmentation\MRI Images\Radiologist - MRI Carpal Bone Segmentation\Expert Segmentations\Expert Segmentations in Nii Format\Healthy_Women_4_MB.nii',\
+	'E:\Google Drive\Research\Projects\Carpal Bone Segmentation\MRI Images\Radiologist - MRI Carpal Bone Segmentation\Expert Segmentations\Expert Segmentations in Nii Format\Healthy_Women_5_MB.nii'
+	]
+
+
+	MRI_Filenames= [
+	'E:\Google Drive\Research\Projects\Carpal Bone Segmentation\MRI Images\Radiologist - MRI Carpal Bone Segmentation\Men\Healthy_Men_1.nii',\
+	'E:\Google Drive\Research\Projects\Carpal Bone Segmentation\MRI Images\Radiologist - MRI Carpal Bone Segmentation\Men\Healthy_Men_2.nii',\
+	'E:\Google Drive\Research\Projects\Carpal Bone Segmentation\MRI Images\Radiologist - MRI Carpal Bone Segmentation\Men\Healthy_Men_3.nii',\
+	'E:\Google Drive\Research\Projects\Carpal Bone Segmentation\MRI Images\Radiologist - MRI Carpal Bone Segmentation\Men\Healthy_Men_4.nii',\
+	'E:\Google Drive\Research\Projects\Carpal Bone Segmentation\MRI Images\Radiologist - MRI Carpal Bone Segmentation\Men\Healthy_Men_5.nii',\
+	'E:\Google Drive\Research\Projects\Carpal Bone Segmentation\MRI Images\Radiologist - MRI Carpal Bone Segmentation\Women\Healthy_Women_1.nii',\
+	'E:\Google Drive\Research\Projects\Carpal Bone Segmentation\MRI Images\Radiologist - MRI Carpal Bone Segmentation\Women\Healthy_Women_2.nii',\
+	'E:\Google Drive\Research\Projects\Carpal Bone Segmentation\MRI Images\Radiologist - MRI Carpal Bone Segmentation\Women\Healthy_Women_3.nii',\
+	'E:\Google Drive\Research\Projects\Carpal Bone Segmentation\MRI Images\Radiologist - MRI Carpal Bone Segmentation\Women\Healthy_Women_4.nii',\
+	'E:\Google Drive\Research\Projects\Carpal Bone Segmentation\MRI Images\Radiologist - MRI Carpal Bone Segmentation\Women\Healthy_Women_5.nii']
+
+	GenderList = ['Male', 'Male', 'Male', 'Male', 'Male', 'Female', 'Female', 'Female', 'Female', 'Female']
 
 	return MRI_Filenames, GT_Filenames, GenderList
 
@@ -123,7 +152,7 @@ def load_MRI(MRI_Filename, apply_filtering=False):
 
 	return MRI
 
-def output_measures(GroundTruth, segmentedImg, seedPoint, label, MRI_Filename, MRI_num, seed_num):
+def output_measures(GroundTruth, segmentedImg, seedPoint, label, MRI_Filename, MRI_num, seed_num, elapsed):
 	''' Create output measures by comparing the segmentation with ground truth '''
 	overlapFitler = sitk.LabelOverlapMeasuresImageFilter()
 	overlapFitler.Execute(GroundTruth, segmentedImg)
@@ -134,7 +163,7 @@ def output_measures(GroundTruth, segmentedImg, seedPoint, label, MRI_Filename, M
 	#print('Dice = ' + str(dice_value) + ' for Volunteer ' + str(MRI_num) + ' and location ' + str(seedPoint))
 
 	# Determine how long the algorithm took to run
-	elapsed = round(timeit.default_timer() - start_time, 3)
+	elapsed = round(elapsed, 3)
 
 	# Save the log data to a text file
 	logData = str(dice_value) + ',' + str(label) + ',' + str(elapsed) + ',' + \
@@ -158,7 +187,7 @@ def main(MRI_Filename, GT_Filename, label, Subject_Gender, num_seeds=5, kernelRa
 	# Load MRI and cast to 16 bit
 	MRI = load_MRI(MRI_Filename)
 
-	MRI = BrentPython.FlipImageVertical(MRI)
+	# MRI = BrentPython.FlipImageVertical(MRI)
 
 	# Load the ground truth (manual segmented) image
 	GroundTruth = load_GT(GT_Filename, label)
@@ -179,10 +208,11 @@ def main(MRI_Filename, GT_Filename, label, Subject_Gender, num_seeds=5, kernelRa
 	# Set the parameters for the segmentation class object
 	segmentationClass = BoneSegmentation.BoneSeg()
 	segmentationClass.SetShapeCurvatureScale(1)
-	segmentationClass.SetShapeMaxRMSError(0.002)
-	segmentationClass.SetShapeMaxIterations(800)
+	segmentationClass.SetShapeMaxRMSError(0.004)
+	segmentationClass.SetShapeMaxIterations(400)
 	segmentationClass.SetShapePropagationScale(4)
-	segmentationClass.SetAnatomicalRelaxation(0.05)
+	segmentationClass.SetAnatomicalRelaxation(0.15)
+	segmentationClass.SetAnisotropicIts(5)
 
 	segmentationClass.SetPatientGender(Subject_Gender)
 	segmentationClass.SetCurrentBone(Current_Bone)	
@@ -194,14 +224,17 @@ def main(MRI_Filename, GT_Filename, label, Subject_Gender, num_seeds=5, kernelRa
 		start_time = timeit.default_timer()
 
 		# Run segmentation with a randomly selected seed
-		segmentedImg = segmentationClass.Execute(MRI, [seedPoints[i]], True, returnSitkImage=True, convertSeedPhyscialFlag=False)
+		segmentedImg = segmentationClass.Execute(MRI, [seedPoints[i]], verbose=False, returnSitkImage=True, convertSeedPhyscialFlag=False)
 		
 		BrentPython.SaveSegmentation(segmentedImg, 'SegImg.nii', verbose=True)
 		
 		segmentedImg.CopyInformation(GroundTruth)
 		segmentedImg = sitk.Cast(segmentedImg, GroundTruth.GetPixelID())
 
-		dice_value = output_measures(GroundTruth, segmentedImg, seedPoints[i], label, MRI_Filename, MRI_num,i)
+		# Determine how long the algorithm took to run
+		elapsed = timeit.default_timer() - start_time
+
+		dice_value = output_measures(GroundTruth, segmentedImg, seedPoints[i], label, MRI_Filename, MRI_num, i, elapsed)
 		
 		# Save a screenshot to understand any errors
 		slice_filename = 'ScreenShots\Volunteer_' + str(MRI_num) + '_label_' + str(label) + '_slice_' + str(seedPoints[i][2]) + '_dice_' + str(dice_value) + '.nii'
@@ -226,7 +259,7 @@ if __name__ == '__main__':
 	[MRI_Filenames, GT_Filenames, GenderList] = GetImagePaths()
 
 
-	for i in [4]:#range(1, len(MRI_Filenames)):
+	for i in range(1, len(MRI_Filenames)):
 		for label in range(1,9):
 
 			print('i = ' + str(i) + ' label = ' + str(label))
@@ -234,10 +267,10 @@ if __name__ == '__main__':
 			GT_Filename = GT_Filenames[i]
 			Subject_Gender = GenderList[i]
 
-			# try:			
-			main(MRI_Filename, GT_Filename, label, Subject_Gender, num_seeds=1, kernelRadius=1, MRI_num=i+1)	
-			# except:
-				# print('ERROR IN MAIN!!')
+			try:			
+				main(MRI_Filename, GT_Filename, label, Subject_Gender, num_seeds=30, kernelRadius=3, MRI_num=i+1)	
+			except:
+				print('ERROR IN MAIN!!')
 
 	# Determine how long the algorithm took to run
 	elapsed = timeit.default_timer() - start_time

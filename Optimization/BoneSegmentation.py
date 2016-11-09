@@ -18,7 +18,7 @@ class BoneSeg(object):
         self.convertSeedPhyscialFlag = convertSeedPhyscialFlag
         self.returnSitkImage = returnSitkImage   
 
-        self.WindowRelaxationFactor = 4     
+        self.WindowRelaxationFactor = 3     
 
         # Convert images to type float 32 first
         try:
@@ -103,6 +103,11 @@ class BoneSeg(object):
 
         if self.verbose == True:
             print(' ')
+            print('\033[93m' + "Finding Connected Components...")        
+        self.ConnectedComponent()
+
+        if self.verbose == True:
+            print(' ')
             print('\033[90m' + "Uncropping Image...")
         self.UnCropImage()
 
@@ -122,6 +127,45 @@ class BoneSeg(object):
             npImg = sitk.GetArrayFromImage(self.segImg)
 
             return  npImg
+
+    def ConnectedComponent(self):
+        self.connectedComponentFilter = sitk.ScalarConnectedComponentImageFilter()
+        self.connectedComponentFilter.SetFullyConnected(True)
+        # Distance -> Intensity difference NOT location distance
+        self.connectedComponentFilter.SetDistanceThreshold(0.01)
+
+
+        self.segImg = sitk.Cast(self.segImg, 1) #Can't be a 32 bit float
+
+        # Try to remove leakage areas by first eroding the binary and
+        # get the labels that are still connected to the original seed location
+
+        self.segImg = self.erodeFilter.Execute(self.segImg, 0, 1, False)
+
+        self.segImg = self.connectedComponentFilter.Execute(self.segImg)
+
+        nda = sitk.GetArrayFromImage(self.segImg)
+        nda = np.asarray(nda)
+
+        #In numpy an array is indexed in the opposite order (z,y,x)
+        tempseedPoint = self.seedPoint[0]
+        val = nda[tempseedPoint[2]][tempseedPoint[1]][tempseedPoint[0]]
+
+        #Keep only the label that intersects with the seed point
+        nda[nda != val] = 0 
+        nda[nda != 0] = 1
+
+        self.segImg = sitk.GetImageFromArray(nda)
+
+        #Undo the earlier erode filter by dilating by same radius
+        self.dilateFilter.SetKernelRadius(3)
+        self.segImg = self.dilateFilter.Execute(self.segImg, 0, 1, False)
+
+        # self.segImg = sitk.Cast(self.segImg, segmentation.GetPixelID())
+        # self.segImg.CopyInformation(segmentation)
+
+        return self
+
     def LeakageCheck(self):
         # Check the image type of self.segImg and image are the same (for Python 3.3 and 3.4)
         # self.segImg = sitk.Cast(self.segImg, segmentation.GetPixelID()) #Can't be a 32 bit float
