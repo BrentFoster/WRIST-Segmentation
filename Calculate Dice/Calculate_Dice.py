@@ -12,15 +12,13 @@ def saveLog(filename, logData):
 	except:
 		print("Failed writing log data to .txt file")
 
-text_file = open("Automated_vs_YA_Filenames.txt", "r")
-# text_file = open("Automated_vs_MB_Filenames.txt", "r")
-# text_file = open("MB_vs_YA_Filenames.txt", "r")
+text_file = open("Mac_Automated_vs_MB_Filenames.txt", "r")
+text_file = open("Mac_Automated_vs_YA_Filenames.txt", "r")
+text_file = open("Mac_MB_vs_YA_Filenames.txt", "r")
 
 Filenames = text_file.read().splitlines()
 
 Calculate_Hausdorff = False
-
-
 
 displayColors = True #Change the color of the output text
 if displayColors == True:
