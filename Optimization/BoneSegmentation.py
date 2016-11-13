@@ -18,7 +18,7 @@ class BoneSeg(object):
         self.convertSeedPhyscialFlag = convertSeedPhyscialFlag
         self.returnSitkImage = returnSitkImage   
 
-        self.WindowRelaxationFactor = 3     
+        self.WindowRelaxationFactor = 5   
 
         # Convert images to type float 32 first
         try:
@@ -484,10 +484,16 @@ class BoneSeg(object):
         # Cast to 16 bit (needed for the fill filter to work)
         self.segImg  = sitk.Cast(self.segImg, sitk.sitkUInt16)
 
-        self.dilateFilter.SetKernelRadius(1)
+        self.dilateFilter.SetKernelRadius(2)
         self.segImg = self.dilateFilter.Execute(self.segImg, 0, 1, False)
         self.segImg = self.fillFilter.Execute(self.segImg)
         self.segImg = self.erodeFilter.Execute(self.segImg, 0, 1, False)
+
+
+
+        # TEST
+        # self.segImg = self.dilateFilter.Execute(self.segImg, 0, 1, False)
+        # END TEST
 
         return self
 

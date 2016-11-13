@@ -40,32 +40,34 @@ def GetImagePaths():
 
 
 	GT_Filenames = [
-	'E:\Google Drive\Research\Projects\Carpal Bone Segmentation\MRI Images\Radiologist - MRI Carpal Bone Segmentation\Expert Segmentations\Expert Segmentations in Nii Format\Healthy_Men_1_MB.nii',\
-	'E:\Google Drive\Research\Projects\Carpal Bone Segmentation\MRI Images\Radiologist - MRI Carpal Bone Segmentation\Expert Segmentations\Expert Segmentations in Nii Format\Healthy_Men_2_MB.nii',\
-	'E:\Google Drive\Research\Projects\Carpal Bone Segmentation\MRI Images\Radiologist - MRI Carpal Bone Segmentation\Expert Segmentations\Expert Segmentations in Nii Format\Healthy_Men_3_MB.nii',\
-	'E:\Google Drive\Research\Projects\Carpal Bone Segmentation\MRI Images\Radiologist - MRI Carpal Bone Segmentation\Expert Segmentations\Expert Segmentations in Nii Format\Healthy_Men_4_MB.nii',\
-	'E:\Google Drive\Research\Projects\Carpal Bone Segmentation\MRI Images\Radiologist - MRI Carpal Bone Segmentation\Expert Segmentations\Expert Segmentations in Nii Format\Healthy_Men_5_MB.nii',\
-	'E:\Google Drive\Research\Projects\Carpal Bone Segmentation\MRI Images\Radiologist - MRI Carpal Bone Segmentation\Expert Segmentations\Expert Segmentations in Nii Format\Healthy_Women_1_MB.nii',\
-	'E:\Google Drive\Research\Projects\Carpal Bone Segmentation\MRI Images\Radiologist - MRI Carpal Bone Segmentation\Expert Segmentations\Expert Segmentations in Nii Format\Healthy_Women_2_MB.nii',\
-	'E:\Google Drive\Research\Projects\Carpal Bone Segmentation\MRI Images\Radiologist - MRI Carpal Bone Segmentation\Expert Segmentations\Expert Segmentations in Nii Format\Healthy_Women_3_MB.nii',\
-	'E:\Google Drive\Research\Projects\Carpal Bone Segmentation\MRI Images\Radiologist - MRI Carpal Bone Segmentation\Expert Segmentations\Expert Segmentations in Nii Format\Healthy_Women_4_MB.nii',\
-	'E:\Google Drive\Research\Projects\Carpal Bone Segmentation\MRI Images\Radiologist - MRI Carpal Bone Segmentation\Expert Segmentations\Expert Segmentations in Nii Format\Healthy_Women_5_MB.nii'
+	'E:\Google Drive\Research\Projects\Carpal Bone Segmentation\MRI Images\Radiologist - MRI Carpal Bone Segmentation\Expert Segmentations\Expert Segmentations in Nii Format\Healthy_Men_1_YA.nii',\
+	'E:\Google Drive\Research\Projects\Carpal Bone Segmentation\MRI Images\Radiologist - MRI Carpal Bone Segmentation\Expert Segmentations\Expert Segmentations in Nii Format\Healthy_Men_2_YA.nii',\
+	# 'E:\Google Drive\Research\Projects\Carpal Bone Segmentation\MRI Images\Radiologist - MRI Carpal Bone Segmentation\Expert Segmentations\Expert Segmentations in Nii Format\Healthy_Men_3_YA.nii',\
+	# 'E:\Google Drive\Research\Projects\Carpal Bone Segmentation\MRI Images\Radiologist - MRI Carpal Bone Segmentation\Expert Segmentations\Expert Segmentations in Nii Format\Healthy_Men_4_YA.nii',\
+	'E:\Google Drive\Research\Projects\Carpal Bone Segmentation\MRI Images\Radiologist - MRI Carpal Bone Segmentation\Expert Segmentations\Expert Segmentations in Nii Format\Healthy_Men_5_YA.nii',\
+	'E:\Google Drive\Research\Projects\Carpal Bone Segmentation\MRI Images\Radiologist - MRI Carpal Bone Segmentation\Expert Segmentations\Expert Segmentations in Nii Format\Healthy_Women_1_YA.nii',\
+	'E:\Google Drive\Research\Projects\Carpal Bone Segmentation\MRI Images\Radiologist - MRI Carpal Bone Segmentation\Expert Segmentations\Expert Segmentations in Nii Format\Healthy_Women_2_YA.nii',\
+	#'E:\Google Drive\Research\Projects\Carpal Bone Segmentation\MRI Images\Radiologist - MRI Carpal Bone Segmentation\Expert Segmentations\Expert Segmentations in Nii Format\Healthy_Women_3_YA.nii',\
+	#'E:\Google Drive\Research\Projects\Carpal Bone Segmentation\MRI Images\Radiologist - MRI Carpal Bone Segmentation\Expert Segmentations\Expert Segmentations in Nii Format\Healthy_Women_4_YA.nii',\
+	'E:\Google Drive\Research\Projects\Carpal Bone Segmentation\MRI Images\Radiologist - MRI Carpal Bone Segmentation\Expert Segmentations\Expert Segmentations in Nii Format\Healthy_Women_5_YA.nii'
 	]
 
 
 	MRI_Filenames= [
 	'E:\Google Drive\Research\Projects\Carpal Bone Segmentation\MRI Images\Radiologist - MRI Carpal Bone Segmentation\Men\Healthy_Men_1.nii',\
 	'E:\Google Drive\Research\Projects\Carpal Bone Segmentation\MRI Images\Radiologist - MRI Carpal Bone Segmentation\Men\Healthy_Men_2.nii',\
-	'E:\Google Drive\Research\Projects\Carpal Bone Segmentation\MRI Images\Radiologist - MRI Carpal Bone Segmentation\Men\Healthy_Men_3.nii',\
-	'E:\Google Drive\Research\Projects\Carpal Bone Segmentation\MRI Images\Radiologist - MRI Carpal Bone Segmentation\Men\Healthy_Men_4.nii',\
+	# 'E:\Google Drive\Research\Projects\Carpal Bone Segmentation\MRI Images\Radiologist - MRI Carpal Bone Segmentation\Men\Healthy_Men_3.nii',\
+	# 'E:\Google Drive\Research\Projects\Carpal Bone Segmentation\MRI Images\Radiologist - MRI Carpal Bone Segmentation\Men\Healthy_Men_4.nii',\
 	'E:\Google Drive\Research\Projects\Carpal Bone Segmentation\MRI Images\Radiologist - MRI Carpal Bone Segmentation\Men\Healthy_Men_5.nii',\
 	'E:\Google Drive\Research\Projects\Carpal Bone Segmentation\MRI Images\Radiologist - MRI Carpal Bone Segmentation\Women\Healthy_Women_1.nii',\
 	'E:\Google Drive\Research\Projects\Carpal Bone Segmentation\MRI Images\Radiologist - MRI Carpal Bone Segmentation\Women\Healthy_Women_2.nii',\
-	'E:\Google Drive\Research\Projects\Carpal Bone Segmentation\MRI Images\Radiologist - MRI Carpal Bone Segmentation\Women\Healthy_Women_3.nii',\
-	'E:\Google Drive\Research\Projects\Carpal Bone Segmentation\MRI Images\Radiologist - MRI Carpal Bone Segmentation\Women\Healthy_Women_4.nii',\
-	'E:\Google Drive\Research\Projects\Carpal Bone Segmentation\MRI Images\Radiologist - MRI Carpal Bone Segmentation\Women\Healthy_Women_5.nii']
+	#'E:\Google Drive\Research\Projects\Carpal Bone Segmentation\MRI Images\Radiologist - MRI Carpal Bone Segmentation\Women\Healthy_Women_3.nii',\
+	#'E:\Google Drive\Research\Projects\Carpal Bone Segmentation\MRI Images\Radiologist - MRI Carpal Bone Segmentation\Women\Healthy_Women_4.nii',\
+	'E:\Google Drive\Research\Projects\Carpal Bone Segmentation\MRI Images\Radiologist - MRI Carpal Bone Segmentation\Women\Healthy_Women_5.nii'
+	]
 
-	GenderList = ['Male', 'Male', 'Male', 'Male', 'Male', 'Female', 'Female', 'Female', 'Female', 'Female']
+	# GenderList = ['Male', 'Male', 'Male', 'Male', 'Male']#, 'Female', 'Female', 'Female', 'Female', 'Female']
+	GenderList = ['Male', 'Male', 'Male', 'Female', 'Female', 'Female']
 
 	return MRI_Filenames, GT_Filenames, GenderList
 
@@ -109,6 +111,8 @@ def SaveSlice(MRI, segmentedImg, seedPoint, filename):
 	sitkSlice = sitk.Cast(sitk.GetImageFromArray(ndaImg), overlaidImg.GetPixelID())
 
 	BrentPython.SaveSegmentation(sitkSlice, filename, verbose = False)	
+
+	BrentPython.SaveSegmentation(segmentedImg, filename, verbose = False)	
 
 	return 0
 
@@ -208,11 +212,11 @@ def main(MRI_Filename, GT_Filename, label, Subject_Gender, num_seeds=5, kernelRa
 	# Set the parameters for the segmentation class object
 	segmentationClass = BoneSegmentation.BoneSeg()
 	segmentationClass.SetShapeCurvatureScale(1)
-	segmentationClass.SetShapeMaxRMSError(0.004)
-	segmentationClass.SetShapeMaxIterations(400)
+	segmentationClass.SetShapeMaxRMSError(0.003)
+	segmentationClass.SetShapeMaxIterations(300)
 	segmentationClass.SetShapePropagationScale(4)
-	segmentationClass.SetAnatomicalRelaxation(0.15)
-	segmentationClass.SetAnisotropicIts(5)
+	segmentationClass.SetAnatomicalRelaxation(0.10)
+	segmentationClass.SetAnisotropicIts(2)
 
 	segmentationClass.SetPatientGender(Subject_Gender)
 	segmentationClass.SetCurrentBone(Current_Bone)	
@@ -259,7 +263,7 @@ if __name__ == '__main__':
 	[MRI_Filenames, GT_Filenames, GenderList] = GetImagePaths()
 
 
-	for i in range(1, len(MRI_Filenames)):
+	for i in range(0, len(MRI_Filenames)):
 		for label in range(1,9):
 
 			print('i = ' + str(i) + ' label = ' + str(label))
@@ -268,7 +272,7 @@ if __name__ == '__main__':
 			Subject_Gender = GenderList[i]
 
 			try:			
-				main(MRI_Filename, GT_Filename, label, Subject_Gender, num_seeds=30, kernelRadius=3, MRI_num=i+1)	
+				main(MRI_Filename, GT_Filename, label, Subject_Gender, num_seeds=30, kernelRadius=4, MRI_num=i+1)	
 			except:
 				print('ERROR IN MAIN!!')
 
