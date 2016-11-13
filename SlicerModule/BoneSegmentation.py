@@ -49,6 +49,8 @@ class BoneSeg(object):
 
         # Estimate the threshold level by image intensity statistics
         LowerThreshold = self.EstimateSigmoid()
+        # LowerThreshold = 150
+
         self.SetLevelSetLowerThreshold(LowerThreshold)
 
         # Crop the image so that it considers only a search space around the seed point
