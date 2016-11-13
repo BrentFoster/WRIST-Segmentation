@@ -14,8 +14,8 @@ def saveLog(filename, logData, HeaderText):
 		print("Failed writing log data to .txt file")
 
 Calculate_Hausdorff = False
-Calculate_Dice = True
-Calculate_Jaccard = False
+Calculate_Dice = False
+Calculate_Jaccard = True
 
 
 displayColors = True #Change the color of the output text

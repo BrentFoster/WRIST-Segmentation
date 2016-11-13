@@ -11,10 +11,6 @@ class BoneSeg(object):
 
         self.verbose = verbose # Optional argument to output text to terminal
 
-        # Cast the original_image to UInt 16 just to be safe
-        original_image = sitk.Cast(original_image, sitk.sitkUInt16)
-
-
         self.image = original_image
         self.original_image = original_image
         self.seedPoint = original_seedPoint
@@ -29,6 +25,9 @@ class BoneSeg(object):
             # Convert from numpy array to a SimpleITK image type first then cast
             self.image = sitk.Cast(sitk.GetImageFromArray(self.image), sitk.sitkFloat32)
             self.original_image = self.image # original_image needs to be a SimpleITK image type for later
+
+        # Cast the original_image to UInt 16 just to be safe
+        self.original_image = sitk.Cast(self.original_image, sitk.sitkUInt16)
 
         # Define what the anatimical prior volume and bounding box is for each carpal bone
         self.DefineAnatomicPrior()

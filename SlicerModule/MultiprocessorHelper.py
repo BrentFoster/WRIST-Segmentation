@@ -6,7 +6,7 @@ import timeit
 # import BrentPython
 # from BrentPython import *
 
-def f(MRI_Array, SeedPoint, q, parameter, searchWindow):
+def f(MRI_Array, SeedPoint, q, parameter):
 	""" Function to be used with the Multiprocessor class (needs to be its own function 
 		and not part of the same class to avoid the 'Pickle' type errors. """
 	import BoneSegmentation # This seems to be needed for Windows
@@ -21,19 +21,20 @@ def f(MRI_Array, SeedPoint, q, parameter, searchWindow):
 
 
 	# Set the parameters for the segmentation class object
-	# segmentationClass = BoneSegmentation.BoneSeg()
-	# segmentationClass.SetScalingFactor(1)
-	#segmentationClass.SetLevelSetUpperThreshold(120) #250 
-	# segmentationClass.SetShapeMaxRMSError(0.002) #0.004
-	# segmentationClass.SetShapeMaxIterations(3000) # 3000
-	# segmentationClass.SetShapePropagationScale(4) # 4
-	# segmentationClass.SetShapeCurvatureScale(1)
+	segmentationClass.SetCurrentBone('Hamate')
+	segmentationClass.SetPatientGender('Male')
 
-	output = segmentationClass.Execute(MRI_Array, [SeedPoint], verbose=False, 
-									returnSitkImage=False, convertSeedPhyscial=False,
-									searchWindow=searchWindow)
+	segmentationClass.SetShapeCurvatureScale(1)
+	segmentationClass.SetShapeMaxRMSError(0.002)
+	segmentationClass.SetShapeMaxIterations(100)
+	segmentationClass.SetShapePropagationScale(4)
+	segmentationClass.SetAnatomicalRelaxation(0.30)
+	segmentationClass.SetAnisotropicIts(5)
 
 
+	output = segmentationClass.Execute(MRI_Array, [SeedPoint], verbose=True, 
+									returnSitkImage=False, convertSeedPhyscialFlag=False)
+	
 	# output = segmentationClass.Execute(MRI_Array,[SeedPoint], verbose=True, returnSitkImage=False)
 	q.put(output)
 	q.close()
@@ -45,13 +46,12 @@ class Multiprocessor(object):
 		# super(ClassName, self).__init__()
 		self = self
 
-	def Execute(self, seedList, MRI_Image, searchWindow, parameter=0, verbose=False):
+	def Execute(self, seedList, MRI_Image, parameter=0, verbose=False):
 		# self.segmentationClass = segmentationClass
 		self.seedList = seedList
 		self.MRI_Image = MRI_Image
 		self.parameter = parameter
 		self.verbose = verbose # Flag to show output to terminal or not
-		self.searchWindow = searchWindow
 
 		# Convert to voxel coordinates if the seed points are in physical units
 		# self.RoundSeedPoints() 
@@ -109,7 +109,7 @@ class Multiprocessor(object):
 		procs = []
 		q = multiprocessing.Queue()
 		for x in jobOrder:
-			p = multiprocessing.Process(target=f, args=(self.MRI_Array, self.seedList[x],q, self.parameter,self.searchWindow,))
+			p = multiprocessing.Process(target=f, args=(self.MRI_Array, self.seedList[x],q, self.parameter,))
 			p.start()
 			procs.append(p) #List of current processes
 
