@@ -446,7 +446,7 @@ class BoneSeg(object):
             self.SetShapeMaxIterations(MaxIts)
 
             if MaxIts < 10:
-                print('Max Iterations of ' + str(MaxIts) + ' is too low! Stopping now.')
+                raise Error('Max Iterations of ' + str(MaxIts) + ' is too low! Stopping now.')
                 return self
 
             # Don't need to redo the pre-processing steps
@@ -475,7 +475,7 @@ class BoneSeg(object):
             self.SetShapeMaxIterations(MaxIts)
 
             if MaxIts > 3000:
-                print('Max Iterations of ' + str(MaxIts) + ' is too high! Stopping now.')
+                raise Error('Max Iterations of ' + str(MaxIts) + ' is too high! Stopping now.')
                 return self
 
             # Don't need to redo the pre-processing steps
