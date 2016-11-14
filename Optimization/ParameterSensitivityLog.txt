@@ -1,0 +1,9 @@
+0.0058,5.4,[array([205, 659,  77])],37.0570368767,/Users/Brent/Google Drive/Research/Projects/Carpal Bone Segmentation/MRI Images/Radiologist - MRI Carpal Bone Segmentation/Expert Segmentations/Automated Segmentations/Healthy_Men_1_Automated.nii,1
+0.0522,5.4,[array([140, 188,  34])],10.2580268383,/Users/Brent/Google Drive/Research/Projects/Carpal Bone Segmentation/MRI Images/Radiologist - MRI Carpal Bone Segmentation/Men/Healthy_Men_4.nii,1
+0.0601,5.4,[array([123, 193,  36])],14.7394959927,/Users/Brent/Google Drive/Research/Projects/Carpal Bone Segmentation/MRI Images/Radiologist - MRI Carpal Bone Segmentation/Men/Healthy_Men_4.nii,1
+0.0604,5.4,[array([137, 177,  42])],15.9809820652,/Users/Brent/Google Drive/Research/Projects/Carpal Bone Segmentation/MRI Images/Radiologist - MRI Carpal Bone Segmentation/Men/Healthy_Men_4.nii,1
+0.0604,5.4,[array([139, 183,  43])],11.8848440647,/Users/Brent/Google Drive/Research/Projects/Carpal Bone Segmentation/MRI Images/Radiologist - MRI Carpal Bone Segmentation/Men/Healthy_Men_4.nii,1
+0.0,5.4,[array([123, 188,  38])],11.5570380688,/Users/Brent/Google Drive/Research/Projects/Carpal Bone Segmentation/MRI Images/Radiologist - MRI Carpal Bone Segmentation/Men/Healthy_Men_4.nii,1
+0.0424,5.4,[array([ 97, 191,  56])],5.77537512779,/Users/Brent/Google Drive/Research/Projects/Carpal Bone Segmentation/MRI Images/Radiologist - MRI Carpal Bone Segmentation/Men/Healthy_Men_4.nii,4
+0.0289,5.4,[array([ 97, 158, 121])],15.0361199379,/Users/Brent/Google Drive/Research/Projects/Carpal Bone Segmentation/MRI Images/Radiologist - MRI Carpal Bone Segmentation/Women/Healthy_Women_2.nii,4
+0.939,5.4,[array([108, 164, 121])],25.7032318115,/Users/Brent/Google Drive/Research/Projects/Carpal Bone Segmentation/MRI Images/Radiologist - MRI Carpal Bone Segmentation/Women/Healthy_Women_2.nii,4
