@@ -332,6 +332,13 @@ class BoneSeg(object):
         return self
 
     def LeakageCheck(self):
+        # Check to see if the iterations are already too high
+        if self.GetShapeMaxIterations() > 3000:
+            return self
+        elif self.GetShapeMaxIterations() < 10:
+            return self
+
+
         # Check the image type of self.segImg and image are the same (for Python 3.3 and 3.4)
         # self.segImg = sitk.Cast(self.segImg, segmentation.GetPixelID()) #Can't be a 32 bit float
         # self.segImg.CopyInformation(segmentation)
@@ -474,8 +481,8 @@ class BoneSeg(object):
             print('Increasing iterations to = ' + str(MaxIts[0]))
             self.SetShapeMaxIterations(MaxIts)
 
-            if MaxIts > 3000:
-                raise Error('Max Iterations of ' + str(MaxIts) + ' is too high! Stopping now.')
+            if self.GetShapeMaxIterations() > 3000:
+                print('Max Iterations of ' + str(MaxIts) + ' is too high! Stopping now.')
                 return self
 
             # Don't need to redo the pre-processing steps

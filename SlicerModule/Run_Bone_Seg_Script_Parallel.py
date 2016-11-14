@@ -46,7 +46,7 @@ if __name__ == "__main__":
 	start_time = timeit.default_timer()
 
 	' Load the MRI image to be segmented'
-	input_image = sitk.ReadImage('/Users/Brent/Google Drive/Research/MRI Wrist Images/MRI Ground Truth Brent/Volunteer4_VIBE_we.nii')
+	input_image = sitk.ReadImage('E:\Google Drive\Research\MRI Wrist Images\MRI Ground Truth Brent\Volunteer4_VIBE_we.nii')
 
 	# sitk.Show(input_image, 'input_image')
 	
@@ -64,17 +64,17 @@ if __name__ == "__main__":
 	CurrBoneName = []
 
 	for i in range(0,8):
-		new_point = np.array([220, 565, 127], dtype=int)
-		seedPoints.append(new_point)
-		CurrBoneName.append('Hamate')
+		#new_point = np.array([220, 565, 127], dtype=int)
+		#seedPoints.append(new_point)
+		#CurrBoneName.append('Hamate')
 
-		# new_point = np.array([200, 670, 100], dtype=int)
-		# seedPoints.append(new_point)
-		# CurrBoneName.append('Pisiform')
+		#new_point = np.array([200, 670, 100], dtype=int)
+		#seedPoints.append(new_point)
+		#CurrBoneName.append('Pisiform')
 		
-		# new_point = np.array([290, 630, 160], dtype=int)
-		# seedPoints.append(new_point)
-		# CurrBoneName.append('Capitate')
+		new_point = np.array([290, 630, 160], dtype=int)
+		seedPoints.append(new_point)
+		CurrBoneName.append('Capitate')
 
 	print('Number of Points: ' + str(len(seedPoints)))
 

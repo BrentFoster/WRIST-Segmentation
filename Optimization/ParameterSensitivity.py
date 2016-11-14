@@ -11,7 +11,7 @@ def GetImagePaths():
 
 	# Brent's Lab PC image paths
 	MRI_Directory_Men   = 'E:/Google Drive/Research/Projects/Carpal Bone Segmentation/MRI Images/Radiologist - MRI Carpal Bone Segmentation/Men/'
-	MRI_Directory_Women = 'E://Google Drive/Research/Projects/Carpal Bone Segmentation/MRI Images/Radiologist - MRI Carpal Bone Segmentation/Women/'
+	MRI_Directory_Women = 'E:/Google Drive/Research/Projects/Carpal Bone Segmentation/MRI Images/Radiologist - MRI Carpal Bone Segmentation/Women/'
 	MRI_Filenames = [MRI_Directory_Women + 'Healthy_Women_1.nii',
 					MRI_Directory_Women  + 'Healthy_Women_2.hdr',
 					MRI_Directory_Women  + 'Healthy_Women_4.hdr',
@@ -195,16 +195,17 @@ def main(MRI_Filenames, GT_Filenames, GenderList, parameter, num_seeds=1, kernel
 
 					# sitk.Show(segmentedImg, 'segmentedImg')
 
-			# Save the log data to a text file
-			mean_dice = np.average(dice_array)
-			logData = str(round(mean_dice,4)) + ', ' + parameter_name + ', ' + str(temp_parameter) + ', ' + str(elapsed) + ',' + 'MRI_Num' + str(i)
+					# Save the log data to a text file
+					#mean_dice = np.average(dice_array)
+					logData = str(round(temp_dice,4)) + ', ' + parameter_name + ', ' + str(temp_parameter) + ', ' + str(elapsed) + ',' + 'MRI_Num' + str(i) +',' + ' Label: ' + ', ' + str(label)
 
-			filename = 'ParameterSensitivityLog.txt'
-			saveLog(filename, logData)
+					filename = 'ParameterSensitivityLog.txt'
+					saveLog(filename, logData)
 
 	return 0
 
 if __name__ == '__main__':
+	start_time = timeit.default_timer()
 	
 
 	displayColors = True #Change the color of the output text
@@ -220,9 +221,9 @@ if __name__ == '__main__':
 
 	# parameter = np.linspace(40, 110, num=10) # Sigmoid threshold level
 	# parameter = np.linspace(50, 2500, num=14) # Levelset maximum iterations
-	parameter = np.linspace(0.001, 0.015, num=20) # Levelset max RMS error
-	print('parameter is: ' + str(parameter))
-	asf
+	parameter = np.linspace(0.001, 0.025, num=20) # Levelset max RMS error
+	print('parameter values are: ' + str(parameter))
+	
 
 	parameter_name = 'Max_RMS'
 

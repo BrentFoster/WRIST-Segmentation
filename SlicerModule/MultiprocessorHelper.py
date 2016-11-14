@@ -21,12 +21,12 @@ def f(MRI_Array, SeedPoint, q, parameter):
 
 
 	# Set the parameters for the segmentation class object
-	segmentationClass.SetCurrentBone('Hamate')
+	segmentationClass.SetCurrentBone('Capitate')
 	segmentationClass.SetPatientGender('Male')
 
 	segmentationClass.SetShapeCurvatureScale(1)
 	segmentationClass.SetShapeMaxRMSError(0.002)
-	segmentationClass.SetShapeMaxIterations(100)
+	segmentationClass.SetShapeMaxIterations(600)
 	segmentationClass.SetShapePropagationScale(4)
 	segmentationClass.SetAnatomicalRelaxation(0.30)
 	segmentationClass.SetAnisotropicIts(5)
