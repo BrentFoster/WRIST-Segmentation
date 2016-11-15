@@ -15,22 +15,14 @@ def GetImagePaths():
 	# MRI_Filenames = ['/Users/Brent/Google Drive/Research/MRI Wrist Images/CMC OA/Filtered Images/Volunteer1_VIBE_we_filtered.hdr']
 
 	# Brent's Lab PC image paths
-	MRI_Directory = 'E:\Google Drive\Research\Projects\Carpal Bone Segmentation\MRI Images\Training Dataset\VIBE Images'
-	MRI_Filenames = [MRI_Directory + '\Volunteer1_VIBE_Neutral_1.hdr',\
-					MRI_Directory + '\Volunteer7_VIBE_Position_1.hdr',\
-					MRI_Directory + '\Volunteer9_VIBE_Position_1.hdr',\
-					MRI_Directory + '\Volunteer10_VIBE_Position_1.hdr',\
-					MRI_Directory + '\Volunteer11_VIBE_Neutral.hdr']
+	MRI_Directory = 'E:/Google Drive/Research/Projects/Carpal Bone Segmentation/MRI Images/Radiologist - MRI Carpal Bone Segmentation/Men/'
+	MRI_Filenames = [MRI_Directory + 'Healthy_Men_4.nii']
 
 	# Ground truth image paths (manually created using 3D Slicer)
-	GT_Directory = 'E:\Google Drive\Research\Projects\Carpal Bone Segmentation\MRI Images\Training Dataset\Segmented Images'
-	GT_Filenames = [GT_Directory + '\Volunteer1_Neutral.nii',\
-					GT_Directory + '\Volunteer7_VIBE_gt.nii',\
-					GT_Directory + '\Volunteer9_VIBE_gt.nii',\
-					GT_Directory + '\Volunteer10_VIBE_gt.nii',\
-					GT_Directory + '\Volunteer11_VIBE_gt.nii']
+	GT_Directory = 'E:/Google Drive/Research/Projects/Carpal Bone Segmentation/MRI Images/Radiologist - MRI Carpal Bone Segmentation/Expert Segmentations/Expert Segmentations in Nii Format/'
+	GT_Filenames = [GT_Directory + 'Healthy_Men_4_MB.nii']
 	
-	GenderList = ['Male', 'Male', 'Male', 'Female', 'Female']
+	GenderList = ['Male']
 
 
 	return MRI_Filenames, GT_Filenames, GenderList
@@ -142,9 +134,9 @@ def runSegmentation(parameter):
 	iter = 0
 	dice_array = []
 
-	for i in range(2,4): # MRI Filename Number
-		for j in range(2,5): # Bone Label Number
-			for k in range(1,4): # Seed Number
+	for i in range(0,1): # MRI Filename Number
+		for j in range(1,8): # Bone Label Number
+			for k in range(0,1): # Seed Number
 				try:
 
 					MRI_Filename = MRI_Filenames[i]
@@ -156,7 +148,7 @@ def runSegmentation(parameter):
 					MRI = sitk.ReadImage(MRI_Filename)
 					MRI = sitk.Cast(MRI, sitk.sitkUInt16)
 
-					MRI = BrentPython.FlipImageVertical(MRI)
+					# MRI = BrentPython.FlipImageVertical(MRI)
 
 					# Load GroundTruth and cast to 16 bit image type
 					GroundTruth = sitk.ReadImage(GT_Filename)
@@ -175,7 +167,7 @@ def runSegmentation(parameter):
 					# Set the currently being optimized parameters for the segmentation class object	
 					# bounds = [(400,1000), (0,0.30), (3,5), (0.001, 0.01)]			
 					segmentationClass.SetShapeMaxIterations(parameter[0])
-					segmentationClass.SetAnatomicalRelaxation(parameter[1])
+					segmentationClass.SetShapeCurvatureScale(parameter[1])
 					segmentationClass.SetShapePropagationScale(parameter[2])
 					segmentationClass.SetShapeMaxRMSError(parameter[3])			
 
@@ -184,7 +176,7 @@ def runSegmentation(parameter):
 					segmentationClass.SetCurrentBone(Current_Bone)	
 				
 					# Run segmentation with a randomly selected seed
-					segmentedImg = segmentationClass.Execute(MRI, seedPoint, verbose=False, returnSitkImage=True, convertSeedPhyscialFlag=False)
+					segmentedImg = segmentationClass.Execute(MRI, seedPoint, verbose=False, returnSitkImage=True, convertSeedPhyscialFlag=False, LeakageCheckFlag=False)
 
 					# # Save the segmented image (for debugging purposes)				
 					# imageWriter.Execute(segmentedImg, 'segmentedImg_Parameter_Optimization.nii', False)
@@ -221,7 +213,7 @@ def runSegmentation(parameter):
 					print(Fore.GREEN + str(round(mean_dice * 100,4)) + ','), #Round the dice coeffient only for better displaying
 					print(Fore.CYAN + 'Iterations = '),
 					print(str(round(parameter[0],0))),
-					print(Fore.CYAN + 'Relaxation = '),
+					print(Fore.CYAN + 'Curvature Scale = '),
 					print(str(round(parameter[1],2))),
 					print(Fore.CYAN + 'Propagation Scale = '),
 					print(str(round(parameter[2],2))),
@@ -255,9 +247,9 @@ if __name__ == '__main__':
 
 	# Run optimization
 	minimizer_kwargs = {"method": "Nelder-Mead"}
-	bounds = [(400,700), (0.05,0.30), (3.8, 4.2), (0.001, 0.006)]
+	bounds = [(100,1000), (0,2), (3.5, 4.5), (0.001, 0.02)]
 	print("Starting")
-	result = differential_evolution(runSegmentation, bounds, disp=True, popsize=2)
+	result = differential_evolution(runSegmentation, bounds, disp=True, popsize=1)
 
 	# Determine how long the algorithm took to run
 	elapsed = timeit.default_timer() - start_time
