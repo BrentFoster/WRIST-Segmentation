@@ -140,7 +140,7 @@ def main(MRI_Filenames, GT_Filenames, GenderList, parameter, num_seeds=1, kernel
 
 	for temp_parameter in parameter:
 
-		for i in range(1,2):#len(MRI_Filenames)): # Image Filename Number
+		for i in range(0,1):#len(MRI_Filenames)): # Image Filename Number
 			start_time = timeit.default_timer()
 
 			# Load MRI and cast to 16 bit image type
@@ -153,7 +153,7 @@ def main(MRI_Filenames, GT_Filenames, GenderList, parameter, num_seeds=1, kernel
 			# Define the gender of the volunteer
 			Subject_Gender = GenderList[i]
 
-			for label in range(1,8): # Bone Label Number
+			for label in range(3,7): # Bone Label Number
 
 				# Use the label number to determine which bone it is from (since the labels are in specified order)
 				Current_Bone = GetBoneLabel(label)
@@ -164,24 +164,25 @@ def main(MRI_Filenames, GT_Filenames, GenderList, parameter, num_seeds=1, kernel
 
 				
 					# Set the parameters for the segmentation class object
-					segmentationClass.SetShapeCurvatureScale(1)
+					segmentationClass.SetShapeCurvatureScale(temp_parameter)
 					# segmentationClass.SetShapeMaxRMSError(0.001)
-					# segmentationClass.SetShapeMaxIterations(800)
-					# segmentationClass.SetShapePropagationScale(4)
-					# segmentationClass.SetAnatomicalRelaxation(0.20)
+					# segmentationClass.SetShapeMaxIterations(temp_parameter)
+					# segmentationClass.SetShapePropagationScale(temp_parameter)
+					# segmentationClass.SetAnatomicalRelaxation(temp_parameter)
 					# segmentationClass.SetAnisotropicIts(5)
 
 					segmentationClass.SetPatientGender(Subject_Gender)
 					segmentationClass.SetCurrentBone(Current_Bone)	
 
 					# Use the current parameter to modify the segmentation class
-					segmentationClass.SetShapeMaxRMSError(temp_parameter)
+					# segmentationClass.SetShapeMaxRMSError()
 
 					print('temp_parameter = ' + str(temp_parameter))
 
 					try:
 						# Run segmentation with a randomly selected seed
-						segmentedImg = segmentationClass.Execute(MRI, seedPoint, verbose=False, returnSitkImage=True, convertSeedPhyscialFlag=False)
+						segmentedImg = segmentationClass.Execute(MRI, seedPoint, verbose=False, returnSitkImage=True, convertSeedPhyscialFlag=False,
+																LeakageCheckFlag=False)
 
 						# Determine how long the algorithm took to run
 						elapsed = timeit.default_timer() - start_time
@@ -219,13 +220,23 @@ if __name__ == '__main__':
 		print(Style.BRIGHT + Fore.YELLOW + 'Starting parameter sensitivity test code ')
 
 
-	# parameter = np.linspace(40, 110, num=10) # Sigmoid threshold level
-	# parameter = np.linspace(50, 2500, num=14) # Levelset maximum iterations
-	parameter = np.linspace(0.001, 0.025, num=20) # Levelset max RMS error
+	# parameter = np.linspace(40, 110, num=40) # Sigmoid threshold level
+	# parameter = np.linspace(50, 2000, num=40) # Levelset maximum iterations
+	# parameter = np.linspace(0.001, 0.025, num=20) # Levelset max RMS error
+	# parameter = np.linspace(0, 1, num=20) # Anatomical Relaxation
+	# parameter = np.linspace(1, 5, num=20) # Propagation Scale
+	parameter = np.linspace(0, 3, num=20) # Curvature Scale
+
+
+	# parameter = np.asarray([5.2105,    5.4210,    5.6315,    5.8420,    6.0525])
+
 	print('parameter values are: ' + str(parameter))
+
+
+	
 	
 
-	parameter_name = 'Max_RMS'
+	parameter_name = 'ShapeCurvatureScale'
 
 	# parameter = np.linspace(5.4, 6.5, num=1) # Levelset shape propagation scale
 

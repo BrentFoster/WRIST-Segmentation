@@ -5,7 +5,7 @@ import timeit
 
 class BoneSeg(object):
     """Class of BoneSegmentation. REQUIRED: BoneSeg(MRI_Image,SeedPoint)"""
-    def Execute(self, original_image, original_seedPoint, verbose=False, returnSitkImage=True, convertSeedPhyscialFlag=True):
+    def Execute(self, original_image, original_seedPoint, verbose=False, returnSitkImage=True, convertSeedPhyscialFlag=True, LeakageCheckFlag=True):
 
         start_time = timeit.default_timer() 
 
@@ -95,8 +95,9 @@ class BoneSeg(object):
             print(' ')
             print('\033[93m' + "Running Leakage Check...")
         # Don't run leakage check if relaxation is 100%
-        if self.AnatomicalRelaxation != 1:
-            self.LeakageCheck()
+        if LeakageCheckFlag == True:
+            if self.AnatomicalRelaxation != 1:
+                self.LeakageCheck()
 
         if self.verbose == True:
             print(' ')
