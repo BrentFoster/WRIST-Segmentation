@@ -1,10 +1,9 @@
-BoneSegmentation
+BoneSegmentation ![Current Build Status](https://img.shields.io/shippable/562c7f391895ca447420e213.svg?style=plastic)
 =============
 
-Current Build Status for Master Branch
--------
-
-![Current Build Status](https://img.shields.io/shippable/562c7f391895ca447420e213.svg?style=plastic)
+<p align="center">
+<img width="600" alt="Rendering Example" src="Documentation/ExampleRendering.png">
+</p>
 
 Purpose 
 -------
@@ -14,17 +13,23 @@ Segment the carpal bones from MR images given a set of user defined locations (s
 BoneSegmentation currently uses the [Confidence Connected Image Filter](http://www.itk.org/SimpleITKDoxygen/html/classitk_1_1simple_1_1ConfidenceConnectedImageFilter.html) along with some post-processing on the binary image to fill holes/smooth edges. Pre-processing to enhance edges and decrease the chances of leaking into the background will be added.
 
 
-Segmentation Example
+
+Segmentation Overview
 -------
 
-![Segmentation Example](Documentation/ExampleSegmentation.png?raw=true "Segmentation Example")
+<p align="center">
+<img width="600" alt="Segmentation Overview" src="Documentation/SlicerModuleSegmentationOverview.png">
+</p>
 
+<p align="center">
+<img width="600" alt="Partial Volume Example" src="Documentation/PartialVolumeExample.png">
+</p>
 
 Usage
 -------
 
 
-To use as a Sliclet Application:
+## To use as a Sliclet Application:
 
 ```
 $/path/to/Slicer.exe --no-main-window --python-script /path/to/BoneSegmentation.py 
@@ -37,7 +42,12 @@ $/path/to/Slicer.exe --no-main-window --python-script /path/to/BoneSegmentation.
 * The segmentation will take ~45 seconds and will appear as a label type image overlaid onto the original image
 * Save the segmentation by the **Save Data** button and selecting the corresponding image
 
-To use as a Slicer Module:
+
+<p align="center">
+<img width="300" alt="Slicelet GUI" src="Documentation/ExampleSegmentation.png">
+</p>
+
+## To use as a Slicer Module:
 
 * Open Slicer
 * Edit -> Application Settings -> Modules
@@ -47,6 +57,15 @@ To use as a Slicer Module:
 * Use the fiduical marker module to create the seed points
 * Select the volume in the **Input Volume** and click on **Compute**
 * The segmentation will take ~45 seconds and will appear as a label type image overlaid onto the original image
+
+
+
+
+<p align="center">
+<img width="300" alt="3D Slicer GUI" src="Documentation/SlicerGUI.png">
+</p>
+
+
 
 
 Install Python Requirements
@@ -61,32 +80,30 @@ Use the Requirements.txt to install only the needed libraries. This will also ch
 pip install -r /path/to/requirements.txt
 ```
 
-Build Commands
--------
+## Build Commands
 
-Create Python Requirements.txt
------
+
+### Create Python Requirements.txt
+
 
 ```
 $pipreqs /path/to/project
 ```
 
 
-Build Documentation using Sphinx
------
+### Build Documentation using Sphinx
 
 ``` 
 cd /Documentation
 make html
 ```
 
-Build Documentation using Doxygen
------
+### Build Documentation using Doxygen
+
 
 Use the Doxygen GUI (will use commands later if needed). Sphinx may be preferred
 
-Version Number
------
+### Version Number
 
 Will be following the [Semantic Versioning convention](http://semver.org/) where a given version number is  MAJOR.MINOR.PATCH, increment when:
 
@@ -104,8 +121,7 @@ git push origin v0.1.0
 
 
 
-Github Flow
------
+### Github Flow
 
 Branches will (hopefully) roughly follow this github work flow with three branches 
 
@@ -114,4 +130,7 @@ Branches will (hopefully) roughly follow this github work flow with three branch
 0. **Develop** branch for adding and fixing features (not ready for sharing and may not work yet)
 
 
-![Example Github Flow](http://2.bp.blogspot.com/-yoWbDW3NmcU/U2Ph7o77BXI/AAAAAAAAAUQ/zlETRqFMHsk/s1600/git_workflow_gitflow.jpg)
+
+<p align="center">
+<img width="400" alt="Rendering Example" src="http://2.bp.blogspot.com/-yoWbDW3NmcU/U2Ph7o77BXI/AAAAAAAAAUQ/zlETRqFMHsk/s1600/git_workflow_gitflow.jpg">
+</p>

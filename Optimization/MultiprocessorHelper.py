@@ -36,26 +36,26 @@ class Multiprocessor(object):
 		self.seedList = seedList
 		self.MRI_Image = MRI_Image
 		self.parameter = parameter
-		self.verbose = verbose #Show output to terminal or not
+		self.verbose = verbose # Show output to terminal or not
 
-		#Convert to voxel coordinates
+		# Convert to voxel coordinates
 		self.RoundSeedPoints() 
 
-		###Create an empty segmenationLabel array###
+		### Create an empty segmenationLabel array ###
 		nda = sitk.GetArrayFromImage(self.MRI_Image)
 		nda = np.asarray(nda)
 		nda = nda*0		
 		self.segmentationArray = nda
 		############################################
-		##Convert the SimpleITK images to arrays##
+		## Convert the SimpleITK images to arrays ##
 		self.MRI_Array = sitk.GetArrayFromImage(self.MRI_Image)
 		#####
 
-		#Check the number of cpu's in the computer and if the seed list is greater than 
-		#the number of cpu's then run the parallel computing twice
-		#TODO: Use a 'pool' of works for this may be more efficient
+		# Check the number of cpu's in the computer and if the seed list is greater than 
+		# the number of cpu's then run the parallel computing twice
+		# TODO: Use a 'pool' of works for this may be more efficient
 		num_CPUs = multiprocessing.cpu_count() #Might be better to subtract 1 since OS needs one
-		num_CPUs = 4
+		# num_CPUs = 1
 		if self.verbose == True:
 			print('\033[94m' + "Number of CPUs = "),
 			print(num_CPUs)
@@ -69,21 +69,21 @@ class Multiprocessor(object):
 		elif (len(self.seedList) > num_CPUs):
 			if self.verbose == True:
 				print('\033[93m' + "Splitting jobs since number of CPUs < number of seed points")
-			#Run the multiprocessing several times since there wasn't enough CPU's before
+			# Run the multiprocessing several times since there weren't enough CPU's before
 			jobOrder = self.SplitJobs(range(len(self.seedList)), num_CPUs)
 			if self.verbose == True:
 				print(jobOrder)
 			for x in range(len(jobOrder)):
 				self.segmentationArray = self.segmentationArray + (x+1)*self.RunMultiprocessing(jobOrder[x])
 
-		#Convert segmentationArray back into an image
+		# Convert segmentationArray back into an image
 		segmentationOutput = sitk.Cast(sitk.GetImageFromArray(self.segmentationArray), self.MRI_Image.GetPixelID())
 		segmentationOutput.CopyInformation(self.MRI_Image)
 
 		return segmentationOutput
 
-	###Split the Seed List using the multiprocessing library and then execute the pipeline###
-	#Helper functions for the multiprocessing
+	### Split the Seed List using the multiprocessing library and then execute the pipeline ###
+	# Helper functions for the multiprocessing
 	def RunMultiprocessing(self,jobOrder):
 		procs = []
 		q = multiprocessing.Queue()
@@ -96,7 +96,7 @@ class Multiprocessor(object):
 		if self.verbose == True:
 			print('\033[96m' + "Printing multiprocessing queue:")
 		for i in range(len(jobOrder)):
-			#Outputs an array (due to multiprocessing 'pickle' constraints)
+			# Outputs an array (due to multiprocessing 'pickle' constraints)
 			tempArray = tempArray + q.get() 
 		# Wait for all worker processes to finish by using .join()
 		for p in procs:
@@ -117,9 +117,9 @@ class Multiprocessor(object):
 	     output.append(jobs)
 	     return output
 
-	#Need to convert to voxel coordinates since we pass only the array due to a 'Pickle' error
-	#with the multiprocessing library and the ITK image type which means the header information
-	#is lost
+	# Need to convert to voxel coordinates since we pass only the array due to a 'Pickle' error
+	# with the multiprocessing library and the ITK image type which means the header information
+	# is lost
 	def RoundSeedPoints(self):	
 		seeds = []
 		for i in range(0,len(self.seedList)):

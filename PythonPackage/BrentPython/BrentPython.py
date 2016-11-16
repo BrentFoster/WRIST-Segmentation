@@ -3,6 +3,69 @@ import multiprocessing
 import numpy as np
 import timeit
 
+#Allowed levels are CRITICAL, ERROR, WARNING, INFO, DEBUG, NOTSET
+import logging 
+logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
+
+from sklearn.feature_extraction import image
+from sklearn.cluster import spectral_clustering
+
+
+def AddImages(sitkImageOne, sitkImageTwo, MakeBinary=True):
+	''' Add two SimpleITK type images together and optionally binarize the resulting image '''
+
+	ndaOne = np.asarray(sitk.GetArrayFromImage(sitkImageOne))
+	ndaTwo = np.asarray(sitk.GetArrayFromImage(sitkImageTwo))
+
+	ndaOutput = ndaOne + ndaTwo
+
+	if MakeBinary == True:
+		ndaOutput[ndaOutput != 0] = 1
+
+	outputImg = sitk.Cast(sitk.GetImageFromArray(ndaOutput), sitkImageOne.GetPixelID())
+
+	return outputImg
+
+
+
+def OverlayImages(sitkImage, labelImage, opacity=0.9, backgroundValue=0):
+	''' Apply a colormap to a label image and put it on top of the input image '''	
+
+	# BinaryToLabelFilter = sitk.BinaryImageToLabelMapFilter()
+	# labelImage = BinaryToLabelFilter.Execute(labelImage)
+
+	overlayFilter = sitk.LabelOverlayImageFilter() 
+	# print(labelImage)
+
+	sitkImage = sitk.Cast(sitkImage, sitk.sitkUInt16)
+	labelImage = sitk.Cast(labelImage, sitk.sitkUInt16)
+	# labelImage.CopyInformation(sitkImage)
+
+	ndaLabel = sitk.GetArrayFromImage(labelImage)
+	ndaLabel = np.asarray(ndaLabel)
+	ndaLabel = ndaLabel*700
+
+	ndaImage = sitk.GetArrayFromImage(sitkImage)
+	ndaImage = np.asarray(ndaImage)
+
+	ndaOverlay = ndaLabel + ndaImage
+
+	overlaidImg = sitk.Cast(sitk.GetImageFromArray(ndaOverlay), labelImage.GetPixelID())
+	overlaidImg.CopyInformation(sitkImage)
+
+
+	# overlaidImg = sitk.LabelOverlay(sitkImage, labelImage)
+
+	# overlaidImg = overlayFilter.Execute(sitkImage, labelImage, opacity, backgroundValue)
+
+	# overlaidImg = sitk.Cast(overlaidImg, sitk.sitkUInt8)
+
+	# addFilter = sitk.AddImageFilter()
+
+	# overlaidImg = addFilter.Execute(sitkImage, labelImage)
+
+	return overlaidImg
+
 def loadSeedPoints(filename):
 	"""
 	Function to load fiducial markers (seed points) saved in a .csv file
@@ -49,10 +112,9 @@ def SaveSegmentation(image, filename, verbose = False):
 		print("Saving segmentation to "),
 		print(filename)
 	imageWriter = sitk.ImageFileWriter()
-	imageWriter.Execute(image, filename, True)
+	imageWriter.Execute(image, filename, False)
 	if verbose == True:
 		print("Segmentation saved")
-
 
 def PointsToVoxel(textSeeds, sitkImage):
 	""" Take a dictionary of fiducial markers (from loadSeedPoints perhaps) and 
@@ -66,7 +128,28 @@ def PointsToVoxel(textSeeds, sitkImage):
 		SeedPoints.append(tempVoxelCoordinates)
 	return SeedPoints
 
-#############################################################################################
+def FillHoles(image, verbose=False):
+	''' Fill the holes of a binary SimpleITK image type. Uses the scipy package 
+	since the SimpleITK binary fill does not work well '''
+	
+	from scipy import ndimage
+
+	image  = sitk.Cast(image, sitk.sitkUInt16)
+	npImage = np.asarray(sitk.GetArrayFromImage(image), dtype=int)
+	
+	for i in range(0, npImage.shape[0]):
+		npImage[i,:,:] = ndimage.binary_fill_holes(npImage[i,:,:]).astype(int)
+
+		if verbose == True:
+			progress = round(np.divide(float(i), float(npImage.shape[0])), 2)*100
+			print(str(progress) + '%')
+
+	img_Output = sitk.Cast(sitk.GetImageFromArray(npImage), image.GetPixelID())
+	img_Output.CopyInformation(image)
+
+	return img_Output
+
+
 
 class AlgorithmTime(object):
 	"""Simple class for determining the time a section of code took to execute."""
@@ -85,8 +168,6 @@ class AlgorithmTime(object):
 		return self.elapsed
 		# except:
 			# print('Failed to calculate time. Did you remember to use start() first?')
-
-#############################################################################################
 
 class DiceCalulator(object):
 	"""DiceCalulator salculates the Dice overlap coefficient of two images.
@@ -174,8 +255,6 @@ class DiceCalulator(object):
 		""" Convert the two images to zeros and ones """
 		self.GroundTruth[self.GroundTruth != 0] = 1
 		self.Segmentation[self.Segmentation != 0] = 1
-
-#############################################################################################
 
 class Multiprocessor(object):
 	"""Helper class for sliptting a segmentation class (such as from SimpleITK) into
@@ -305,8 +384,6 @@ def f(MRI_Array, SeedPoint,q, parameter):
 	q.put(output)
 	q.close()
 
-#############################################################################################
-	
 class BoneSeg(object):
 	"""Class of BoneSegmentation for segmenting the bones of the wrist from MRI. 
 	REQUIRED: SimpleITK type MRI_Image and an array of SeedPoints"""
@@ -573,6 +650,8 @@ class BoneSeg(object):
 	def HoleFilling(self):
 		self.segImg  = sitk.Cast(self.segImg, sitk.sitkUInt16)
 		#Apply the filters to the binary image
+		self.dilateFilter.SetKernelRadius(3)
+		
 		self.segImg = self.fillFilter.Execute(self.segImg, True, 1)
 		self.segImg = self.dilateFilter.Execute(self.segImg, 0, 1, False)
 		self.segImg = self.fillFilter.Execute(self.segImg, True, 1)
@@ -712,4 +791,79 @@ class BoneSeg(object):
 
 		return self	 
 
-#############################################################################################
+class SpectralClutering(object):
+	''' Use spectral clustering on a binary image to remove the leakage areas '''
+
+	def __init__(self):
+		super(SpectralClutering, self).__init__()
+
+		# Set some default values
+		self.n_clusters = 2
+		self.ScalingFactor = [4, 4, 4]
+
+	def AddSeedLocation(self, seedPoint):
+		''' Seed location to choose which cluter to keep '''
+		self.seedPoint = seedPoint
+
+	def SetScaling(self, ScalingFactor):
+		self.ScalingFactor = ScalingFactor
+
+	def SetNumClusters(self, n_clusters):
+		self.n_clusters = n_clusters
+
+	def Execute(self, sitkImg):
+		''' Run the spectral clustering method '''
+		logging.info('Down sampling image')
+		shrinkFilter = sitk.ShrinkImageFilter()
+		shrinkFilter.SetShrinkFactors(self.ScalingFactor)
+
+		sitkImg = shrinkFilter.Execute(sitkImg)
+
+		logging.info('Converting to numpy array')
+
+		npImg = sitk.GetArrayFromImage(sitkImg)
+
+		mask = npImg
+		mask[mask != 0] = 1
+
+		mask = mask.astype(bool)
+		npImg = npImg.astype(int)
+
+		logging.info('Creating graph from image')
+
+		# Convert the image into a graph with the value of the gradient on the edges.
+		graph = image.img_to_graph(npImg, mask=mask)
+
+		# Take a decreasing function of the gradient
+		graph.data = np.exp(-graph.data / graph.data.std())
+
+		logging.info('Running spectral clustering')
+		labels = spectral_clustering(graph, self.n_clusters, eigen_solver='arpack')
+
+		logging.info('Spectral clustering post-processing')
+
+		npLabel = -np.ones(mask.shape)
+		npLabel[mask] = labels
+
+		# Keep only the label that intersects with the seed point location
+		for i in range(0, len(self.seedPoint)):
+			self.seedPoint[i] = round(self.seedPoint[i]/self.ScalingFactor[0],0)
+
+		cluster_index = npLabel[self.seedPoint[2], self.seedPoint[1], self.seedPoint[0]]
+		
+		tempLabel = npLabel*0
+		tempLabel[npLabel == cluster_index] = 1
+		npLabel = tempLabel
+
+
+		# Convert back to SimpleITK image type and upsample back to original size
+		expandFilter = sitk.ExpandImageFilter()
+		expandFilter.SetExpandFactors(self.ScalingFactor)
+
+		sitkImg = sitk.Cast(sitk.GetImageFromArray(npLabel), sitkImg.GetPixelID())
+		sitkImg = expandFilter.Execute(sitkImg)
+
+		return sitkImg
+
+
+

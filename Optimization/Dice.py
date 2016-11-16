@@ -9,7 +9,7 @@ class DiceCalulator(object):
 
 	def SetImages(self,GroundTruthImage, SegmentationImage, label=1):
 		#Convert images to numpy arrays
-		GroundTruthImage = self.FlipImage(GroundTruthImage) #Flip for now
+		# GroundTruthImage = self.FlipImage(GroundTruthImage) #Flip for now
 
 		self.GroundTruth = np.asarray(sitk.GetArrayFromImage(GroundTruthImage))
 		self.Segmentation = np.asarray(sitk.GetArrayFromImage(SegmentationImage))
@@ -24,7 +24,7 @@ class DiceCalulator(object):
 		self.label = label
 
 	def LoadImages(self,GroundTruthFile, SegmentationFile, label=1):
-		GroundTruth = sitk.ReadImage(GroundTruthFile)
+		GroundTruth  = sitk.ReadImage(GroundTruthFile)
 		Segmentation = sitk.ReadImage(SegmentationFile)
 		GroundTruth = self.FlipImage(GroundTruth)
 		self.label = label
