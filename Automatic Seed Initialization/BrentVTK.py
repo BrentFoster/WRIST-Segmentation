@@ -9,12 +9,15 @@ except:
 	# print('Adding vtk paths to Python... ')
 	import sys 
 
-	using_PC = False
+	using_PC = True
 	if using_PC == True:
 		# For Brent's PC
-		sys.path.append("C:/MyProjects/VTK-bin/bin/Release/")
-		sys.path.append("C:/MyProjects/VTK-bin/Wrapping/Python/")
-		sys.path.append("C:/MyProjects/VTK-bin/lib/")
+		sys.path.append("C:/MyProjects/VTK-github/VTK-bin/bin/Release/")
+		sys.path.append("C:/MyProjects/VTK-github/VTK-bin/Wrapping/Python/")
+		sys.path.append("C:/MyProjects/VTK-github/VTK-bin/lib/")
+		sys.path.append("C:/MyProjects/Python_Modules/")
+		sys.path.append("C:/MyProjects/VTK-github/VTK-bin/Wrapping/PythonCore/")
+		
 		# print sys.path
 	else: 
 		# For Brent's Mac
@@ -246,7 +249,7 @@ def Start_Animation(actor1, actor2):
 
 	return 0
 
-def ShrinkImage(sitkImg, ScalingFactor=[3,3,3]):
+def ShrinkImage(sitkImg, ScalingFactor=[2,2,2]):
 	
 	shrinkFilter = sitk.ShrinkImageFilter()
 	shrinkFilter.SetShrinkFactors(ScalingFactor)
@@ -382,7 +385,8 @@ def IterativeClosestPoint(source, target, transformImgFilename, labels):
 	resamplingFilter.Update()
 
 	imgWriter = vtk.vtkNIFTIImageWriter()
-	imgWriter.SetFileName(transformImgFilename[0:len(transformImgFilename)-4] + '_transformed.nii')
+	# imgWriter.SetFileName(transformImgFilename[0:len(transformImgFilename)-4] + '_transformed.nii')
+	imgWriter.SetFileName('movingMRItransformed_labels.nii')
 	imgWriter.SetInputConnection(resamplingFilter.GetOutputPort())
 	imgWriter.Update()
 

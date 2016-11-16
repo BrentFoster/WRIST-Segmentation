@@ -1,47 +1,41 @@
-import BoneSegmentation_Slicer as BrentSeg
+import BoneSegmentation
 import SimpleITK as sitk
 import timeit
 import Dice
 import numpy as np
+import BrentPython
+
+def GetImagePaths():
+	# Brent's MacBook image paths
+	# MRI_Filenames = ['/Users/Brent/Google Drive/Research/MRI Wrist Images/CMC OA/Filtered Images/Volunteer1_VIBE_we_filtered.hdr']
+
+	# Brent's Lab PC image paths
+	MRI_Directory_Men   = 'E:/Google Drive/Research/Projects/Carpal Bone Segmentation/MRI Images/Radiologist - MRI Carpal Bone Segmentation/Men/'
+	MRI_Directory_Women = 'E:/Google Drive/Research/Projects/Carpal Bone Segmentation/MRI Images/Radiologist - MRI Carpal Bone Segmentation/Women/'
+	MRI_Filenames = [MRI_Directory_Women + 'Healthy_Women_1.nii',
+					MRI_Directory_Women  + 'Healthy_Women_2.hdr',
+					MRI_Directory_Women  + 'Healthy_Women_4.hdr',
+					MRI_Directory_Women  + 'Healthy_Women_5.hdr',
+					MRI_Directory_Men + 'Healthy_Men_1.nii',
+					MRI_Directory_Men + 'Healthy_Men_2.nii',
+					MRI_Directory_Men + 'Healthy_Men_4.nii',
+					MRI_Directory_Men + 'Healthy_Men_5.nii']
+
+	# Ground truth image paths (manually created using 3D Slicer)
+	GT_Directory = 'E:/Google Drive/Research/Projects/Carpal Bone Segmentation/MRI Images/Radiologist - MRI Carpal Bone Segmentation/Expert Segmentations/Expert Segmentations in Nii Format/'
+	GT_Filenames = [GT_Directory + 'Healthy_Women_1_MB.nii',
+					GT_Directory + 'Healthy_Women_2_MB.nii',
+					GT_Directory + 'Healthy_Women_4_MB.nii',
+					GT_Directory + 'Healthy_Women_5_MB.nii',
+					GT_Directory + 'Healthy_Men_1_MB.nii',
+					GT_Directory + 'Healthy_Men_2_MB.nii',
+					GT_Directory + 'Healthy_Men_4_MB.nii',
+					GT_Directory + 'Healthy_Men_5_MB.nii']
+	
+	GenderList = ['Female', 'Female', 'Female', 'Female', 'Male', 'Male', 'Male', 'Male']
 
 
-# Brent's MacBook image paths
-MRI_Filenames = [\
-'/Users/Brent/Google Drive/Research/MRI Wrist Images/CMC OA/Volunteer 1/VIBE/Volunteer1_VIBE_we.hdr', \
-'/Users/Brent/Google Drive/Research/MRI Wrist Images/CMC OA/Volunteer 2/VIBE/Volunteer2_VIBE_we.hdr', \
-'/Users/Brent/Google Drive/Research/MRI Wrist Images/CMC OA/Volunteer 3/VIBE/Volunteer3_VIBE_we.hdr', \
-'/Users/Brent/Google Drive/Research/MRI Wrist Images/CMC OA/Volunteer 4/VIBE/Volunteer4_VIBE_we.hdr']
-
-GT_Filenames = [\
-'/Users/Brent/Google Drive/Research/MRI Wrist Images/CMC OA/VIBE Ground Truth/Volunteer1_GroundTruth.hdr',\
-'/Users/Brent/Google Drive/Research/MRI Wrist Images/CMC OA/VIBE Ground Truth/Volunteer2_GroundTruth.hdr',\
-'/Users/Brent/Google Drive/Research/MRI Wrist Images/CMC OA/VIBE Ground Truth/Volunteer3_GroundTruth.hdr',\
-'/Users/Brent/Google Drive/Research/MRI Wrist Images/CMC OA/VIBE Ground Truth/Volunteer4_GroundTruth.hdr']
-
-
-# Brent's Lab PC image paths
-MRI_Filenames = [\
-'E:/Google Drive/Research/MRI Wrist Images/CMC OA/Volunteer 1/VIBE/Volunteer1_VIBE_we.hdr', \
-'E:/Google Drive/Research/MRI Wrist Images/CMC OA/Volunteer 2/VIBE/Volunteer2_VIBE_we.hdr', \
-'E:/Google Drive/Research/MRI Wrist Images/CMC OA/Volunteer 3/VIBE/Volunteer3_VIBE_we.hdr', \
-'E:/Google Drive/Research/MRI Wrist Images/CMC OA/Volunteer 4/VIBE/Volunteer4_VIBE_we.hdr']
-
-GT_Filenames = [\
-'E:/Google Drive/Research/MRI Wrist Images/CMC OA/VIBE Ground Truth/Volunteer1_GroundTruth.hdr',\
-'E:/Google Drive/Research/MRI Wrist Images/CMC OA/VIBE Ground Truth/Volunteer2_GroundTruth.hdr',\
-'E:/Google Drive/Research/MRI Wrist Images/CMC OA/VIBE Ground Truth/Volunteer3_GroundTruth.hdr',\
-'E:/Google Drive/Research/MRI Wrist Images/CMC OA/VIBE Ground Truth/Volunteer4_GroundTruth.hdr']
-
-# segmentationClass.SetLevelSetLowerThreshold(0)
-# segmentationClass.SetLevelSetUpperThreshold(parameter[0])
-
-# Shape Detection Filter
-# segmentationClass.SetShapeCurvatureScale(1)
-# segmentationClass.SetShapeMaxRMSError(parameter[2])
-# segmentationClass.SetShapeMaxIterations(parameter[1])
-# segmentationClass.SetShapePropagationScale(parameter[3])
-# segmentationClass.SetScalingFactor(2)
-
+	return MRI_Filenames, GT_Filenames, GenderList
 
 def GetRandomSeeds(GT_Filename, num_seeds, kernelRadius, label):
 	''' Use the ground truth image to create random seed locations within bone '''
@@ -53,8 +47,6 @@ def GetRandomSeeds(GT_Filename, num_seeds, kernelRadius, label):
 	erodeFilter.SetKernelRadius(kernelRadius)
 	GroundTruth = erodeFilter.Execute(GroundTruth, 0, label, False) 
 
-	sitk.Show(GroundTruth, 'GroundTruth')
-	a
 
 	# Find all the locations within the ground truth bone with an intensity of 1 (current label)
 	ndaGT = sitk.GetArrayFromImage(GroundTruth)
@@ -72,9 +64,12 @@ def GetRandomSeeds(GT_Filename, num_seeds, kernelRadius, label):
 
 	return seedPoints
 
-def RemoveLabels(label, img, refImg):
+def RemoveLabels(label, img):
 	''' Remove the non-label intensities from the ground truth and make them zero '''
 	
+	# Keep a copy of the original image to get the pixel type later on
+	refImg = img
+
 	ndaGT = sitk.GetArrayFromImage(img)
 	ndaGT = np.asarray(ndaGT)
 	ndaGT[ndaGT != label] = 0
@@ -109,72 +104,110 @@ def saveLog(filename, logData):
 	except:
 		print("Failed writing log data to .txt file")
  
-def ComputeDice(GroundTruth, segmentedImg, seedPoint, elapsed, MRI_Filename, label, parameter):
+def ComputeDice(GroundTruth, segmentedImg, label):
 	''' Compute dice overlap between segmentation and ground truth '''
+
+	# Remove the non-label intensities from the ground truth and make them zero
+	GroundTruth = RemoveLabels(label, GroundTruth)
 
 	DiceCalulator = Dice.DiceCalulator()
 	DiceCalulator.SetImages(GroundTruth, segmentedImg)
 	dice_value = DiceCalulator.Calculate()
 	dice_value = round(dice_value,4)
 
-	print('Dice = ' + str(dice_value) + ' for location ' + str(seedPoint))
+	print('Dice = ' + str(dice_value) + ' for label ' + str(label))
 
-	# Save the log data to a text file
-	logData = str(dice_value) + ',' + str(parameter) + ',' + str(seedPoint) + ',' + str(elapsed) + ',' + \
-	MRI_Filename + ',' + str(label)
+	return dice_value
+
+def GetBoneLabel(label):
+	BoneList = ['Trapezium', 'Trapezoid', 'Scaphoid', 'Capitate', 'Lunate', 'Hamate', 'Triquetrum', 'Pisiform']
+	Current_Bone = BoneList[label-1] # Subtract one sice index starts at 0 and labels start at 1
+	return Current_Bone
+
+def main(MRI_Filenames, GT_Filenames, GenderList, parameter, num_seeds=1, kernelRadius=1, parameter_name=''):
 
 	filename = 'ParameterSensitivityLog.txt'
-	saveLog(filename, logData)
-
-	return 0
-
-def main(MRI_Filename, GT_Filename, label, parameter, num_seeds=1, kernelRadius=1):
-
-	# Load MRI and cast to 16 bit image type
-	MRI = sitk.ReadImage(MRI_Filename)
-	MRI = sitk.Cast(MRI, sitk.sitkUInt16)
-
-	# Load the ground truth image
-	GroundTruth = sitk.ReadImage(GT_Filename)
-
-	# sitk.Show(GroundTruth)
-
-	# Remove the non-label intensities from the ground truth and make them zero
-	GroundTruth = RemoveLabels(label, GroundTruth, MRI)
-
-	# Use the ground truth image to create random seed locations within bone label 
-	seedPoint = GetRandomSeeds(GT_Filename, num_seeds, kernelRadius, label)
-	print(seedPoint)
+	saveLog(filename, ' ')
+	saveLog(filename, 'New experiment....')
+	saveLog(filename, ' ')
 
 	# Initilize the needed python classes
-	segmentationClass = BrentSeg.BoneSeg()
+	segmentationClass = BoneSegmentation.BoneSeg()
 
 	start_time = timeit.default_timer()
 
-	for i in parameter:
-		# Use the current parameter to modify the segmentation class
-		# segmentationClass.SetLevelSetUpperThreshold(i)
-		# segmentationClass.SetShapeMaxIterations(i)
-		segmentationClass.SetShapeMaxRMSError(i)
-		# segmentationClass.SetShapeMaxRMSError(i)
+	dice_array = []
 
-		# segmentationClass.SetShapePropagationScale(i)
-	
-		# Run segmentation with a randomly selected seed
-		segmentedImg = segmentationClass.Execute(MRI, [seedPoint[0]], True)
+	for temp_parameter in parameter:
 
-		# Determine how long the algorithm took to run
-		elapsed = timeit.default_timer() - start_time
+		for i in range(0,1):#len(MRI_Filenames)): # Image Filename Number
+			start_time = timeit.default_timer()
 
-		ComputeDice(GroundTruth, segmentedImg, seedPoint, elapsed, MRI_Filename, label, i)
+			# Load MRI and cast to 16 bit image type
+			MRI = sitk.ReadImage(MRI_Filenames[i])
+			MRI = sitk.Cast(MRI, sitk.sitkUInt16)
 
-		# sitk.Show(segmentedImg, 'segmentedImg')
+			# Load the ground truth image
+			GroundTruth = sitk.ReadImage(GT_Filenames[i])
+
+			# Define the gender of the volunteer
+			Subject_Gender = GenderList[i]
+
+			for label in range(3,7): # Bone Label Number
+
+				# Use the label number to determine which bone it is from (since the labels are in specified order)
+				Current_Bone = GetBoneLabel(label)
+
+				for k in range(0,1): # Seed Number
+					# Use the ground truth image to create random seed locations within bone label 
+					seedPoint = GetRandomSeeds(GT_Filenames[i], num_seeds, kernelRadius, label)
+
+				
+					# Set the parameters for the segmentation class object
+					segmentationClass.SetShapeCurvatureScale(temp_parameter)
+					# segmentationClass.SetShapeMaxRMSError(0.001)
+					# segmentationClass.SetShapeMaxIterations(temp_parameter)
+					# segmentationClass.SetShapePropagationScale(temp_parameter)
+					# segmentationClass.SetAnatomicalRelaxation(temp_parameter)
+					# segmentationClass.SetAnisotropicIts(5)
+
+					segmentationClass.SetPatientGender(Subject_Gender)
+					segmentationClass.SetCurrentBone(Current_Bone)	
+
+					# Use the current parameter to modify the segmentation class
+					# segmentationClass.SetShapeMaxRMSError()
+
+					print('temp_parameter = ' + str(temp_parameter))
+
+					try:
+						# Run segmentation with a randomly selected seed
+						segmentedImg = segmentationClass.Execute(MRI, seedPoint, verbose=False, returnSitkImage=True, convertSeedPhyscialFlag=False,
+																LeakageCheckFlag=False)
+
+						# Determine how long the algorithm took to run
+						elapsed = timeit.default_timer() - start_time
+
+						temp_dice = ComputeDice(GroundTruth, segmentedImg, label)
+
+						dice_array.append(temp_dice)
+					except:
+						print('Failed to segment!')
+
+
+					# sitk.Show(segmentedImg, 'segmentedImg')
+
+					# Save the log data to a text file
+					#mean_dice = np.average(dice_array)
+					logData = str(round(temp_dice,4)) + ', ' + parameter_name + ', ' + str(temp_parameter) + ', ' + str(elapsed) + ',' + 'MRI_Num' + str(i) +',' + ' Label: ' + ', ' + str(label)
+
+					filename = 'ParameterSensitivityLog.txt'
+					saveLog(filename, logData)
 
 	return 0
 
 if __name__ == '__main__':
-	
 	start_time = timeit.default_timer()
+	
 
 	displayColors = True #Change the color of the output text
 	if displayColors == True:
@@ -187,21 +220,31 @@ if __name__ == '__main__':
 		print(Style.BRIGHT + Fore.YELLOW + 'Starting parameter sensitivity test code ')
 
 
-	i = 0
-	label = 1
-	# parameter = np.linspace(40, 110, num=10) # Sigmoid threshold level
-	# parameter = np.linspace(50, 2500, num=14) # Levelset maximum iterations
-	# parameter = np.linspace(0, 0.015, num=15) # Levelset max RMS error
+	# parameter = np.linspace(40, 110, num=40) # Sigmoid threshold level
+	# parameter = np.linspace(50, 2000, num=40) # Levelset maximum iterations
+	# parameter = np.linspace(0.001, 0.025, num=20) # Levelset max RMS error
+	# parameter = np.linspace(0, 1, num=20) # Anatomical Relaxation
+	# parameter = np.linspace(1, 5, num=20) # Propagation Scale
+	parameter = np.linspace(0, 3, num=20) # Curvature Scale
 
-	parameter = np.linspace(5.4, 6.5, num=1) # Levelset shape propagation scale
+
+	# parameter = np.asarray([5.2105,    5.4210,    5.6315,    5.8420,    6.0525])
+
+	print('parameter values are: ' + str(parameter))
 
 
-	MRI_Filename = MRI_Filenames[i]
-	GT_Filename = GT_Filenames[i]
+	
+	
+
+	parameter_name = 'ShapeCurvatureScale'
+
+	# parameter = np.linspace(5.4, 6.5, num=1) # Levelset shape propagation scale
+
+	[MRI_Filenames, GT_Filenames, GenderList] = GetImagePaths()
 
 	# num_seeds = 10 corresponds to ~3 hours
 	# kernelRadius = 5 seems to be a good amount
-	main(MRI_Filename, GT_Filename, label, parameter, num_seeds=1, kernelRadius=5)			
+	main(MRI_Filenames, GT_Filenames, GenderList, parameter, num_seeds=1, kernelRadius=2, parameter_name=parameter_name)			
 
 	# Determine how long the algorithm took to run
 	elapsed = timeit.default_timer() - start_time
@@ -230,3 +273,6 @@ if __name__ == '__main__':
 # return
 # sitk.Show(GroundTruth, 'GroundTruth')
 # sitk.Show(segmentedImg, 'segmentedImg')
+# TEST
+# GroundTruth = BrentPython.FlipImageVertical(GroundTruth)
+# END TEST

@@ -157,7 +157,7 @@ if __name__ == '__main__':
 
 		SeedPoints = loadSeedPoints(seedListFiles[k])
 
-		#Create opbjects of the needed classes
+		#Create objects of the needed classes
 		segmentationClass = BrentSeg.BoneSeg()
 		multiHelper = MultiprocessorHelper.Multiprocessor()
 		DiceCalulator = Dice.DiceCalulator()
@@ -165,8 +165,7 @@ if __name__ == '__main__':
 		
 		
 		#Run optimization
-
-		
+	
 		minimizer_kwargs = {"method": "Nelder-Mead"}
 		bounds = [(35,80), (400,1000), (0.001, 0.01), (1,4)]
 		print("Starting")

@@ -1,8 +1,17 @@
-#Mac virtual environment
+﻿#Mac virtual environment
 virtualenv --system-site-packages -p python3 venv_py
 #virtualenv --no-site-packages -p python venv_py
 source /Users/Brent/vtk/venv_py/bin/activate
 
+#Windows virtual environment
+virtualenv --no-site-packages -p 2.7 venv_py
+C:\Users\Brent\Python_Virtual_Machines\venv_py\Scripts\activate
+
+or
+
+C:\Users\Brent\Python_Virtual_Machines\64bit_python_venv\Scripts\activate
+
+for 64-bit (more RAM can be used)
 
 ########################################################################
 Create a python module distribution that is very easy for others to install!
@@ -15,6 +24,10 @@ $ python setup.py bdist
 To install run the following command
 $ python setup.py install --user 
 
+or just
+
+$ python setup.py install  
+
 To use the module at the top of python files write 
 
 import BrentPython
@@ -25,14 +38,30 @@ BrentPython.Dice(image1, image2)
 
 or alternatively
 
-import Dice from BrentPython
+from BrentPython import Dice 
 
 Dice(image1, image2)
 
 
 See this link for further details:
 https://docs.python.org/2/distutils/introduction.html#distutils-simple-example
+################
 
+Update the python package and reinstall script 
+# WINDOWS
+cd C:\Users\Brent\BoneSegmentation\PythonPackage & python setup.py bdist & python setup.py install  & cd C:\Users\Brent\BoneSegmentation\CLI & clear & python BoneSegmentation_CLI.py
+
+cd C:\Users\Brent\BoneSegmentation\PythonPackage & python setup.py bdist & python setup.py install  & cd C:\Users\Brent\BoneSegmentation\Optimization & clear & python SeedLocationSensitivity.py
+
+
+cd C:\Users\Brent\BoneSegmentation\PythonPackage & python setup.py bdist & python setup.py install  & cd C:\Users\Brent\GitRepositories\BoneSegmentation\SlicerModule\ & clear & python Test.py
+
+
+
+
+
+# MACBOOK
+cd /Users/Brent/BoneSegmentation/PythonPackage; python setup.py bdist; python setup.py install  & cd /Users/Brent/BoneSegmentation/Optimization; clear; python SeedLocationSensitivity.py 
 ################
 
 
