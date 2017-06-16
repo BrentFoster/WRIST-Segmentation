@@ -325,7 +325,7 @@ class BoneSegmentation_SlicerWidget:
         # Sigmoid threshold slider
         #
         self.label = qt.QLabel()
-        self.label.setText("Sigmoid Threshold Range: ")
+        self.label.setText("Sigmoid Threshold: ")
         self.label.setToolTip(
             "Select the threshold that the sigmoid filter will use. Set to 0 to try to automatically find a good value.")
         self.SigmoidInputSlider = ctk.ctkSliderWidget()
