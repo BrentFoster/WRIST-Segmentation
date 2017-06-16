@@ -47,10 +47,13 @@ class BoneSeg(object):
             print('\033[94m' + 'Estimating upper sigmoid threshold level')
 
         # Estimate the threshold level by image intensity statistics
-        LowerThreshold = self.EstimateSigmoid()
-        # LowerThreshold = 150
-
-        self.SetLevelSetLowerThreshold(LowerThreshold)
+        # Skip if the user selected a lower threshold already
+        if self.SkipTresholdCalculation == False:
+            LowerThreshold = self.EstimateSigmoid()
+            if self.verbose == True:
+                print(' ')
+                print('\033[94m' + 'LowerThreshold:' + str(lowerThreshold))
+            self.SetLevelSetLowerThreshold(LowerThreshold)
 
         # Crop the image so that it considers only a search space around the seed point
         # to speed up computation significantly!
@@ -100,7 +103,7 @@ class BoneSeg(object):
             print(' ')
             print('\033[93m' + "Filling Any Holes...")
         # Fill holes prior to uncropping image for much faster computation
-        self.HoleFilling()
+        # self.HoleFilling()
 
         # if self.verbose == True:
         #     print(' ')
@@ -638,6 +641,7 @@ class BoneSeg(object):
         self.BinaryMorphologicalRadius = []
         self.MaxVolume = []
         self.SeedListFilename = [] 
+        self.SkipTresholdCalculation = False # Flag for running the sigmoid threshold calculation
 
         ## Initilize the ITK filters ##
         # Filters to down/up sample the image for faster computation
@@ -703,6 +707,7 @@ class BoneSeg(object):
         self.sigFilter.SetBeta(int(lowerThreshold))
         self.thresholdFilter.SetLowerThreshold(int(lowerThreshold)+1) # Add one so the threshold is greater than Zero
         self.thresholdLevelSet.SetLowerThreshold(int(lowerThreshold))   
+
 
     def SetLevelSetUpperThreshold(self, upperThreshold):
         self.sigFilter.SetAlpha(int(upperThreshold))

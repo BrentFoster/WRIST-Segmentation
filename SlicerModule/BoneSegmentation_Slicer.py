@@ -94,22 +94,8 @@ class BoneSegmentation_SlicerWidget:
         frameLayout.addRow(self.markupSelectorLabel, self.markupSelector)
         self.markupSelector.connect('currentNodeChanged(vtkMRMLNode*)', self.onMarkupSelect)
 
-        # #
-        # # Level set threshold range slider
-        # #
-        # self.label = qt.QLabel()
-        # self.label.setText("Level Set Threshold Range: ")
-        # self.label.setToolTip(
-        #     "Select the threshold range that the level set will slow down when near the max/min")
-        # self.thresholdInputSlider = ctk.ctkRangeWidget()
-        # self.thresholdInputSlider.minimum = 0
-        # self.thresholdInputSlider.maximum = 150
-        # self.thresholdInputSlider.minimumValue = 0
-        # self.thresholdInputSlider.maximumValue = 60
-        # self.thresholdInputSlider.connect('valuesChanged(double,double)', self.onthresholdInputSliderRelease)
-        # frameLayout.addRow(self.label, self.thresholdInputSlider)
-        # #Set default value
-        # self.LevelSetThresholds = (self.thresholdInputSlider.minimumValue, self.thresholdInputSlider.maximumValue)
+     
+
 
         # #
         # # Level set maximum iterations slider
@@ -333,6 +319,24 @@ class BoneSegmentation_SlicerWidget:
         frameLayout.addRow(self.label, self.DiffusionItsSlider)
         #Set default value
         self.DiffusionIts = self.DiffusionItsSlider.value
+
+        
+        #
+        # Sigmoid threshold slider
+        #
+        self.label = qt.QLabel()
+        self.label.setText("Sigmoid Threshold Range: ")
+        self.label.setToolTip(
+            "Select the threshold that the sigmoid filter will use. Set to 0 to try to automatically find a good value.")
+        self.SigmoidInputSlider = ctk.ctkSliderWidget()
+        self.SigmoidInputSlider.minimum = 0
+        self.SigmoidInputSlider.maximum = 300
+        self.SigmoidInputSlider.value = 0
+        self.SigmoidThreshold = self.SigmoidInputSlider.value
+        self.SigmoidInputSlider.connect('valueChanged(double)', self.onSigmoidInputSliderChange)
+        frameLayout.addRow(self.label, self.SigmoidInputSlider)
+
+
        
         #
         # Compute button
@@ -401,6 +405,11 @@ class BoneSegmentation_SlicerWidget:
         print('BonesSelected')
         print(self.BonesSelected)
         print(' ')        
+
+
+
+    def onSigmoidInputSliderChange(self, newValue):
+        self.SigmoidThreshold = newValue
 
     def onRelaxationSliderChange(self, newValue):
         self.RelaxationAmount = newValue
@@ -488,7 +497,7 @@ class BoneSegmentation_SlicerWidget:
         multiHelper = Multiprocessor()
 
         parameters = [self.ShapeCurvatureScale, self.ShapeMaxRMSError, self.ShapeMaxIts, 
-                        self.ShapePropagationScale, self.selected_gender, self.BonesSelected, self.RelaxationAmount] 
+                        self.ShapePropagationScale, self.selected_gender, self.BonesSelected, self.RelaxationAmount, self.SigmoidThreshold] 
        
         NumCPUs = 1
         Segmentation = multiHelper.Execute(seedPoints, image, parameters, NumCPUs, True)
@@ -598,6 +607,12 @@ class Multiprocessor(object):
         segmentationClass.SetPatientGender(self.parameters[4])
         segmentationClass.SetCurrentBone(self.parameters[5][ndx])
         segmentationClass.SetAnatomicalRelaxation(self.parameters[6])
+
+        # Only set the sigmoid filter threshold if the user selected on (not equal to the default of zero)
+        if self.parameters[7] != 0:
+            segmentationClass.SetLevelSetLowerThreshold(self.parameters[7])
+            segmentationClass.SkipTresholdCalculation = True
+
 
         # segmentation = segmentationClass.Execute(self.MRI_Image,[SeedPoint])
         segmentation = segmentationClass.Execute(self.MRI_Image, [SeedPoint], verbose=True, 
