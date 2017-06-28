@@ -52,7 +52,7 @@ class BoneSeg(object):
             LowerThreshold = self.EstimateSigmoid()
             if self.verbose == True:
                 print(' ')
-                print('\033[94m' + 'LowerThreshold:' + str(lowerThreshold))
+                print('\033[94m' + 'LowerThreshold:' + str(LowerThreshold))
             self.SetLevelSetLowerThreshold(LowerThreshold)
 
         # Crop the image so that it considers only a search space around the seed point
